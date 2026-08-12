@@ -1,0 +1,7 @@
+# 防止環境變數檔與建置垃圾被上傳到 Vercel
+.env
+.env.*
+!.env.example
+.next
+node_modules
+.git
