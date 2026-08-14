@@ -81,3 +81,53 @@ export async function fetchProducts(): Promise<Product[]> {
     .filter((p): p is Product => p !== null);
 }
 
+/** 在 Notion 上架新商品 */
+export async function createProduct(productData: {
+  name: string;
+  category: string;
+  price: number;
+  weight_g: number;
+  cost50?: number;
+  cost100?: number;
+  image?: string;
+  description?: string;
+}) {
+  const response = await notion.pages.create({
+    parent: { database_id: PRODUCTS_DB_ID },
+    properties: {
+      Name: {
+        title: [{ text: { content: productData.name } }],
+      },
+      Category: {
+        select: { name: productData.category || "未分類" },
+      },
+      Price: {
+        number: Number(productData.price) || 0,
+      },
+      Weight_g: {
+        number: Number(productData.weight_g) || 0,
+      },
+      Cost_50: {
+        number: Number(productData.cost50) || 0,
+      },
+      Cost_100: {
+        number: Number(productData.cost100) || 0,
+      },
+      Image: {
+        url: productData.image && productData.image.trim() !== "" ? productData.image.trim() : null,
+      },
+      Description: {
+        rich_text: productData.description
+          ? [{ text: { content: productData.description } }]
+          : [],
+      },
+      Total_Sold: {
+        number: 0,
+      },
+    },
+  });
+
+  return response;
+}
+
+
