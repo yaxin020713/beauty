@@ -35,10 +35,11 @@ export default function LoginModal() {
       return;
     }
 
-    const isAdmin = trimmed.toLowerCase() === "yaxinzhu2002@gmail.com";
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yaxinzhu2002@gmail.com";
+    const isAdmin = trimmed.toLowerCase() === adminEmail.toLowerCase();
     setSuccessMsg(
       isAdmin
-        ? "登入成功！您已取得管理員權限 (yaxinzhu2002@gmail.com)"
+        ? `登入成功！您已取得管理員權限 (${adminEmail})`
         : `登入成功！已綁定 Email: ${trimmed}`
     );
 

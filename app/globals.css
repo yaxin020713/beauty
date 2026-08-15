@@ -1,3 +1,47 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+* {
+  @apply box-border;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* 自訂滾動條 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
+
+/* 平滑輸入焦點 */
+input,
+textarea,
+select {
+  @apply transition-colors;
+}
+
+/* 按鈕基本樣式 */
+button {
+  @apply active:scale-95 transition-transform;
+}
+
+/* 禁用文本選擇光標 */
+.no-select {
+  @apply select-none;
+}

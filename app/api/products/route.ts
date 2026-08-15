@@ -23,9 +23,10 @@ export async function POST(request: Request) {
     const { email, name, category, price, weight_g, cost50, cost100, image, description } = body;
 
     // 檢查是否為指定管理員
-    if (!email || email.trim() !== "yaxinzhu2002@gmail.com") {
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yaxinzhu2002@gmail.com";
+    if (!email || email.trim().toLowerCase() !== adminEmail.toLowerCase()) {
       return NextResponse.json(
-        { error: "權限不足，僅限管理員 (yaxinzhu2002@gmail.com) 上架商品" },
+        { error: `權限不足，僅限管理員 (${adminEmail}) 上架商品` },
         { status: 403 }
       );
     }

@@ -112,7 +112,8 @@ export default function Header() {
         open={isAdminModalOpen}
         onClose={() => setIsAdminModalOpen(false)}
         onSuccess={() => {
-          window.location.reload();
+          // 重新加載頁面以獲取最新商品列表
+          window.location.href = "/";
         }}
       />
     </>
