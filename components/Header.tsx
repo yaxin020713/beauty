@@ -30,27 +30,39 @@ export default function Header() {
           <div className="flex items-center gap-2 sm:gap-3">
             {user ? (
               <div className="flex items-center gap-2">
-                {user.isAdmin && (
+                {user.role === "admin" && (
                   <button
                     type="button"
                     onClick={() => setIsAdminModalOpen(true)}
-                    className="hidden sm:flex items-center gap-1.5 rounded-full bg-pink-600 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-pink-700"
+                    className="hidden sm:flex items-center gap-1.5 rounded-full bg-pink-600 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-pink-700 active:scale-95"
                   >
                     <ShieldPlus className="h-3.5 w-3.5" />
-                    <span>上架商品 (管理員)</span>
+                    <span>上架商品</span>
                   </button>
                 )}
 
-                <div className="flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-700">
-                  <User className="h-3.5 w-3.5 text-stone-500" />
-                  <span className="max-w-[140px] truncate sm:max-w-none">{user.email}</span>
+                <div
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
+                    user.role === "admin"
+                      ? "bg-pink-100 text-pink-700"
+                      : "bg-blue-100 text-blue-700"
+                  }`}
+                  title={`${user.role === "admin" ? "管理員" : "顧客"} - ${user.email}`}
+                >
+                  <User className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline max-w-[120px] truncate">
+                    {user.email}
+                  </span>
+                  <span className="sm:hidden">
+                    {user.role === "admin" ? "🛡️ Admin" : "👤 顧客"}
+                  </span>
                 </div>
 
                 <button
                   type="button"
                   onClick={logout}
                   title="登出"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200 hover:text-stone-700 transition"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200 hover:text-stone-700 transition active:scale-95"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -59,10 +71,10 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openLoginModal}
-                className="flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-stone-800"
+                className="flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-stone-800 active:scale-95"
               >
                 <User className="h-3.5 w-3.5" />
-                <span>顧客登入</span>
+                <span>登入</span>
               </button>
             )}
 
@@ -93,13 +105,15 @@ export default function Header() {
         </div>
 
         {/* 手機版管理員上架按鈕 */}
-        {user?.isAdmin && (
-          <div className="sm:hidden border-t border-stone-200 bg-pink-50/60 px-4 py-2 flex justify-between items-center">
-            <span className="text-xs text-pink-700 font-medium">管理員專區：可上架新商品</span>
+        {user?.role === "admin" && (
+          <div className="sm:hidden border-t border-stone-200 bg-pink-50 px-4 py-3 flex justify-between items-center gap-2">
+            <span className="text-xs text-pink-700 font-semibold">
+              🛡️ 管理員模式
+            </span>
             <button
               type="button"
               onClick={() => setIsAdminModalOpen(true)}
-              className="rounded-full bg-pink-600 px-3 py-1 text-xs font-medium text-white shadow-sm"
+              className="rounded-full bg-pink-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
             >
               上架商品
             </button>

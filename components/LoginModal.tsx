@@ -31,7 +31,7 @@ export default function LoginModal() {
 
     const ok = login(trimmed);
     if (!ok) {
-      setError("登入失敗，請檢查 Email 格式");
+      setError("Email 格式不正確，請重新輸入");
       return;
     }
 
@@ -39,13 +39,13 @@ export default function LoginModal() {
     const isAdmin = trimmed.toLowerCase() === adminEmail.toLowerCase();
     setSuccessMsg(
       isAdmin
-        ? `登入成功！您已取得管理員權限 (${adminEmail})`
-        : `登入成功！已綁定 Email: ${trimmed}`
+        ? `✨ 登入成功！\n您已取得管理員權限\n(${adminEmail})`
+        : `✓ 登入成功！\n已綁定為顧客\n(${trimmed})`
     );
 
     setTimeout(() => {
       closeLoginModal();
-    }, 1200);
+    }, 1500);
   };
 
   return (
@@ -89,9 +89,15 @@ export default function LoginModal() {
             </div>
 
             {successMsg ? (
-              <div className="flex flex-col items-center gap-3 py-6 text-center">
-                <CheckCircle2 className="h-12 w-12 text-emerald-600" />
-                <p className="text-sm font-medium text-stone-800">{successMsg}</p>
+              <div className="flex flex-col items-center gap-4 py-8 text-center">
+                <CheckCircle2 className="h-16 w-16 text-emerald-600" />
+                <div className="space-y-1">
+                  {successMsg.split("\n").map((line, i) => (
+                    <p key={i} className="text-sm font-medium text-stone-800">
+                      {line}
+                    </p>
+                  ))}
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,10 +122,36 @@ export default function LoginModal() {
                   </div>
                 )}
 
-                <div className="rounded-2xl bg-stone-50 p-3.5 text-xs text-stone-600 space-y-1">
-                  <p className="font-medium text-stone-700">💡 提示：</p>
-                  <p>• 輸入任意 Email 即可作為一般顧客身分登入選購與加入購物車。</p>
-                  <p className="text-pink-600 font-semibold">• 綁定 <code className="bg-pink-50 px-1 py-0.5 rounded">yaxinzhu2002@gmail.com</code> 將自動獲得管理員權限，可於後台上架商品。</p>
+                <div className="space-y-3">
+                  <div className="rounded-2xl bg-blue-50 p-3.5 text-xs text-blue-700 space-y-2">
+                    <p className="font-semibold flex items-center gap-1">
+                      👤 顧客登入
+                    </p>
+                    <p>輸入任意有效的 Email 地址即可作為顧客登入，可：</p>
+                    <ul className="list-disc list-inside space-y-1 ml-1">
+                      <li>瀏覽所有商品</li>
+                      <li>加入購物車</li>
+                      <li>進行結帳購買</li>
+                    </ul>
+                  </div>
+
+                  <div className="rounded-2xl bg-pink-50 p-3.5 text-xs text-pink-700 space-y-2">
+                    <p className="font-semibold flex items-center gap-1">
+                      🛡️ 管理員登入
+                    </p>
+                    <p>
+                      使用管理員 Email：{" "}
+                      <code className="bg-pink-100 px-2 py-1 rounded font-semibold">
+                        yaxinzhu2002@gmail.com
+                      </code>
+                    </p>
+                    <p>可額外使用：</p>
+                    <ul className="list-disc list-inside space-y-1 ml-1">
+                      <li>上架新商品</li>
+                      <li>編輯商品資訊</li>
+                      <li>管理訂單</li>
+                    </ul>
+                  </div>
                 </div>
 
                 <button

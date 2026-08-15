@@ -58,7 +58,12 @@ export default function AdminProductModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.email) {
-      setError("請先登入");
+      setError("請先以管理員身份登入");
+      return;
+    }
+
+    if (user.role !== "admin") {
+      setError("僅限管理員可上架商品");
       return;
     }
 

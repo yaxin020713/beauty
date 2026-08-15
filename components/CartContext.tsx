@@ -1,22 +1,31 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { Product } from "@/lib/types";
 
 export type CartItem = Product & { quantity: number };
 
-type User = {
+export enum UserRole {
+  Admin = "admin",
+  Customer = "customer",
+}
+
+export type User = {
   email: string;
-  isAdmin: boolean;
+  role: UserRole;
+  loginTime: number;
 };
 
 type AuthContextType = {
   user: User | null;
+  isLoading: boolean;
   login: (email: string) => boolean;
   logout: () => void;
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
+  isAdmin: boolean;
+  isCustomer: boolean;
 };
 
 type CartContextType = {
@@ -36,24 +45,75 @@ type CartContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const STORAGE_KEY = "auth_user";
+
+function validateEmail(email: string): boolean {
+  const trimmed = email.trim();
+  if (!trimmed) return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(trimmed);
+}
+
+function getUserRole(email: string, adminEmail: string): UserRole {
+  return email.toLowerCase() === adminEmail.toLowerCase()
+    ? UserRole.Admin
+    : UserRole.Customer;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yaxinzhu2002@gmail.com";
 
-  const login = useCallback((email: string) => {
-    const trimmed = email.trim();
-    if (!trimmed || !trimmed.includes("@")) {
-      return false;
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsedUser = JSON.parse(stored) as User;
+        setUser(parsedUser);
+      }
+    } catch (error) {
+      console.error("Failed to load user from localStorage:", error);
+      localStorage.removeItem(STORAGE_KEY);
+    } finally {
+      setIsLoading(false);
     }
-    const isAdmin = trimmed.toLowerCase() === adminEmail.toLowerCase();
-    setUser({ email: trimmed, isAdmin });
-    return true;
-  }, [adminEmail]);
+  }, []);
+
+  const login = useCallback(
+    (email: string): boolean => {
+      if (!validateEmail(email)) {
+        return false;
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const role = getUserRole(normalizedEmail, adminEmail);
+      const newUser: User = {
+        email: normalizedEmail,
+        role,
+        loginTime: Date.now(),
+      };
+
+      setUser(newUser);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
+      } catch (error) {
+        console.error("Failed to save user to localStorage:", error);
+      }
+      return true;
+    },
+    [adminEmail]
+  );
 
   const logout = useCallback(() => {
     setUser(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error("Failed to remove user from localStorage:", error);
+    }
   }, []);
 
   const openLoginModal = useCallback(() => {
@@ -64,9 +124,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoginModalOpen(false);
   }, []);
 
+  const isAdmin = user?.role === UserRole.Admin;
+  const isCustomer = user?.role === UserRole.Customer;
+
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, isLoginModalOpen, openLoginModal, closeLoginModal }}
+      value={{
+        user,
+        isLoading,
+        login,
+        logout,
+        isLoginModalOpen,
+        openLoginModal,
+        closeLoginModal,
+        isAdmin,
+        isCustomer,
+      }}
     >
       {children}
     </AuthContext.Provider>
