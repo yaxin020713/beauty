@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ShoppingBag, Sparkles, User, LogOut, ShieldPlus } from "lucide-react";
+import { ShoppingBag, Sparkles, User, LogOut, ShieldPlus, BarChart3 } from "lucide-react";
 import { useAuth, useCart } from "./CartContext";
 import LoginModal from "./LoginModal";
 import AdminProductModal from "./AdminProductModal";
+import AdminDashboard from "./AdminDashboard";
 
 export default function Header() {
   const { totalQuantity, openCart } = useCart();
   const { user, logout, openLoginModal } = useAuth();
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
 
   return (
     <>
@@ -31,14 +33,24 @@ export default function Header() {
             {user ? (
               <div className="flex items-center gap-2">
                 {user.role === "admin" && (
-                  <button
-                    type="button"
-                    onClick={() => setIsAdminModalOpen(true)}
-                    className="hidden sm:flex items-center gap-1.5 rounded-full bg-pink-600 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-pink-700 active:scale-95"
-                  >
-                    <ShieldPlus className="h-3.5 w-3.5" />
-                    <span>上架商品</span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsAdminModalOpen(true)}
+                      className="hidden sm:flex items-center gap-1.5 rounded-full bg-pink-600 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-pink-700 active:scale-95"
+                    >
+                      <ShieldPlus className="h-3.5 w-3.5" />
+                      <span>上架商品</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsDashboardOpen(true)}
+                      className="hidden sm:flex items-center gap-1.5 rounded-full bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-stone-800 active:scale-95"
+                    >
+                      <BarChart3 className="h-3.5 w-3.5" />
+                      <span>管理面板</span>
+                    </button>
+                  </>
                 )}
 
                 <div
@@ -110,13 +122,22 @@ export default function Header() {
             <span className="text-xs text-pink-700 font-semibold">
               🛡️ 管理員模式
             </span>
-            <button
-              type="button"
-              onClick={() => setIsAdminModalOpen(true)}
-              className="rounded-full bg-pink-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
-            >
-              上架商品
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAdminModalOpen(true)}
+                className="rounded-full bg-pink-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
+              >
+                上架商品
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDashboardOpen(true)}
+                className="rounded-full bg-stone-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
+              >
+                面板
+              </button>
+            </div>
           </div>
         )}
       </header>
@@ -129,6 +150,10 @@ export default function Header() {
           // 重新加載頁面以獲取最新商品列表
           window.location.href = "/";
         }}
+      />
+      <AdminDashboard
+        open={isDashboardOpen}
+        onClose={() => setIsDashboardOpen(false)}
       />
     </>
   );
