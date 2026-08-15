@@ -96,7 +96,7 @@ export default function CartDrawer() {
                   <ul className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
                     {cartItems.map((item) => (
                       <li
-                        key={item.productId}
+                        key={item.id}
                         className="flex gap-3 border-b border-stone-100 pb-4"
                       >
                         {/* 縮圖 */}
@@ -122,7 +122,7 @@ export default function CartDrawer() {
                             </p>
                             <button
                               type="button"
-                              onClick={() => removeFromCart(item.productId)}
+                              onClick={() => removeFromCart(item.id)}
                               aria-label={`移除 ${item.name}`}
                               className="rounded p-1 text-stone-400 transition hover:bg-red-50 hover:text-red-500"
                             >
@@ -139,7 +139,7 @@ export default function CartDrawer() {
                             <div className="flex items-center gap-1">
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.productId, -1)}
+                                onClick={() => updateQuantity(item.id, -1)}
                                 aria-label="減少數量"
                                 className={cn(
                                   "flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 text-stone-600 transition hover:bg-stone-50",
@@ -154,7 +154,7 @@ export default function CartDrawer() {
                               </span>
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.productId, 1)}
+                                onClick={() => updateQuantity(item.id, 1)}
                                 aria-label="增加數量"
                                 className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 text-stone-600 transition hover:bg-stone-50"
                               >

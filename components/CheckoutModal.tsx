@@ -64,8 +64,8 @@ export default function CheckoutModal({
           customerPhone,
           paymentLast5,
           items: cartItems.map(
-            ({ productId, name, price, weight_g, quantity }) => ({
-              productId,
+            ({ id, name, price, weight_g, quantity }) => ({
+              productId: id,
               name,
               price,
               weight_g,

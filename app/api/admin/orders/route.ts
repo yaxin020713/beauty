@@ -25,23 +25,23 @@ export async function GET(request: NextRequest) {
 
       const props = page.properties;
       const orderId =
-        props.Order_ID?.type === "title"
+        props.Order_ID?.type === "title" && Array.isArray(props.Order_ID.title)
           ? props.Order_ID.title[0]?.plain_text || ""
           : "";
       const customerName =
-        props.Customer_Name?.type === "rich_text"
+        props.Customer_Name?.type === "rich_text" && Array.isArray(props.Customer_Name.rich_text)
           ? props.Customer_Name.rich_text[0]?.plain_text || ""
           : "";
       const customerPhone =
-        props.Customer_Phone?.type === "rich_text"
+        props.Customer_Phone?.type === "rich_text" && Array.isArray(props.Customer_Phone.rich_text)
           ? props.Customer_Phone.rich_text[0]?.plain_text || ""
           : "";
       const paymentLast5 =
-        props.Payment_Last5?.type === "rich_text"
+        props.Payment_Last5?.type === "rich_text" && Array.isArray(props.Payment_Last5.rich_text)
           ? props.Payment_Last5.rich_text[0]?.plain_text || ""
           : "";
       const itemsDetail =
-        props.Items_Detail?.type === "rich_text"
+        props.Items_Detail?.type === "rich_text" && Array.isArray(props.Items_Detail.rich_text)
           ? props.Items_Detail.rich_text[0]?.plain_text || ""
           : "";
       const totalPrice =
@@ -51,12 +51,14 @@ export async function GET(request: NextRequest) {
           ? props.Total_Weight_kg.number || 0
           : 0;
       const orderStatus =
-        props.Status?.type === "select" ? props.Status.select?.name || "" : "";
-      const paymentStatus =
-        props.Payment_Status?.type === "select"
-          ? props.Payment_Status.select?.name || ""
+        props.Status?.type === "select" && props.Status.select
+          ? (props.Status.select as any).name || ""
           : "";
-      const createdTime = page.created_time || "";
+      const paymentStatus =
+        props.Payment_Status?.type === "select" && props.Payment_Status.select
+          ? (props.Payment_Status.select as any).name || ""
+          : "";
+      const createdTime = (page as any).created_time || "";
 
       return {
         id: page.id,
@@ -73,15 +75,16 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    orders = orders.filter((order) => order !== null);
+    const validOrders = orders.filter((order): order is NonNullable<typeof order> => order !== null);
 
     // 過濾訂單狀態
+    let filteredOrders = validOrders;
     if (status) {
-      orders = orders.filter((order) => order.status === status);
+      filteredOrders = filteredOrders.filter((order) => order.status === status);
     }
 
     // 限制返回數量
-    orders = orders.slice(0, limit);
+    orders = filteredOrders.slice(0, limit);
 
     return NextResponse.json({
       success: true,

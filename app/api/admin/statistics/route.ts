@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
       const props = page.properties;
       const name =
-        props.Name?.type === "title"
+        props.Name?.type === "title" && Array.isArray(props.Name.title)
           ? props.Name.title[0]?.plain_text || ""
           : "";
       const price =
@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
       const totalSold =
         props.Total_Sold?.type === "number" ? props.Total_Sold.number || 0 : 0;
       const category =
-        props.Category?.type === "select" ? props.Category.select?.name || "" : "";
+        props.Category?.type === "select" && props.Category.select
+          ? (props.Category.select as any).name || ""
+          : "";
 
       return {
         id: page.id,
@@ -47,14 +49,12 @@ export async function GET(request: NextRequest) {
     const filteredStats = statistics.filter((stat) => stat !== null);
 
     // 計算總銷售額和總銷售量
-    const totalRevenue = filteredStats.reduce(
-      (sum, product) => sum + product.price * product.totalSold,
-      0
-    );
-    const totalUnitsSold = filteredStats.reduce(
-      (sum, product) => sum + product.totalSold,
-      0
-    );
+    const totalRevenue = filteredStats.reduce((sum: number, product: any) => {
+      return sum + ((product.price || 0) * (product.totalSold || 0));
+    }, 0);
+    const totalUnitsSold = filteredStats.reduce((sum: number, product: any) => {
+      return sum + (product.totalSold || 0);
+    }, 0);
 
     return NextResponse.json({
       success: true,

@@ -70,7 +70,6 @@ export default function AdminDashboard({
     setError("");
 
     try {
-      // 並行獲取訂單和統計
       const [ordersRes, statsRes] = await Promise.all([
         fetch("/api/admin/orders"),
         fetch("/api/admin/statistics"),
@@ -131,7 +130,6 @@ export default function AdminDashboard({
               </p>
             </div>
 
-            {/* 標籤切換 */}
             <div className="mb-6 flex gap-2 border-b border-stone-200">
               <button
                 onClick={() => setTab("statistics")}
@@ -199,273 +197,83 @@ function StatisticsTab({
   statistics: Statistics | null;
   products: ProductStats[];
 }) {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleDateFilter = async () => {
-    if (!startDate || !endDate) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/admin/statistics?startDate=${startDate}&endDate=${endDate}`
-      );
-      const data = await res.json();
-      if (data.success) {
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error("篩選統計失敗:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* 日期範圍篩選 */}
-      <div className="rounded-xl bg-blue-50 p-4 space-y-3">
-        <p className="text-xs font-medium text-blue-900 uppercase tracking-wide">
-          日期範圍篩選
-        </p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-          <div>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-2 py-1.5 text-xs rounded-lg border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-            />
-          </div>
-          <div>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-2 py-1.5 text-xs rounded-lg border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20"
-            />
-          </div>
-          <button
-            onClick={handleDateFilter}
-            disabled={!startDate || !endDate || loading}
-            className="col-span-2 sm:col-span-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
-          >
-            {loading ? "篩選中..." : "篩選"}
-          </button>
-        </div>
-      </div>
-
-      {/* 統計卡片 */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-stone-600 uppercase tracking-wide">
-                商品總數
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-stone-900">
-                {statistics?.totalProductCount || 0}
-              </p>
-            </div>
-            <Package className="h-8 w-8 text-blue-600/40" />
-          </div>
+        <div className="rounded-xl bg-blue-50 p-4">
+          <p className="text-xs font-medium text-blue-600 uppercase">商品總數</p>
+          <p className="mt-2 text-2xl font-bold text-blue-900">
+            {statistics?.totalProductCount || 0}
+          </p>
         </div>
-
-        <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-stone-600 uppercase tracking-wide">
-                銷售總數
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-stone-900">
-                {statistics?.totalUnitsSold || 0}
-              </p>
-            </div>
-            <ShoppingBag className="h-8 w-8 text-emerald-600/40" />
-          </div>
+        <div className="rounded-xl bg-emerald-50 p-4">
+          <p className="text-xs font-medium text-emerald-600 uppercase">銷售總數</p>
+          <p className="mt-2 text-2xl font-bold text-emerald-900">
+            {statistics?.totalUnitsSold || 0}
+          </p>
         </div>
-
-        <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-stone-600 uppercase tracking-wide">
-                總銷售額
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-stone-900">
-                NT${(statistics?.totalRevenue || 0).toLocaleString()}
-              </p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-amber-600/40" />
-          </div>
+        <div className="rounded-xl bg-purple-50 p-4">
+          <p className="text-xs font-medium text-purple-600 uppercase">銷售額</p>
+          <p className="mt-2 text-2xl font-bold text-purple-900">
+            NT${(statistics?.totalRevenue || 0).toLocaleString()}
+          </p>
         </div>
       </div>
 
-      {/* 商品列表 */}
-      <div>
-        <h3 className="mb-4 text-sm font-semibold text-stone-900">
-          商品銷售排行
-        </h3>
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {products.length === 0 ? (
-            <p className="text-center text-sm text-stone-500 py-8">
-              暫無商品
-            </p>
-          ) : (
-            products.map((product, index) => {
-              const maxSold = Math.max(...products.map((p) => p.totalSold));
-              const progressPercent =
-                maxSold > 0 ? (product.totalSold / maxSold) * 100 : 0;
-
-              return (
-                <div
-                  key={product.id}
-                  className="rounded-xl bg-stone-50 p-3 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-stone-900">
-                        {index + 1}. {product.name}
-                      </p>
-                      <p className="text-xs text-stone-500 mt-1">
-                        {product.category} • NT${product.price}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-stone-900">
-                        {product.totalSold} 件
-                      </p>
-                      <p className="text-xs text-stone-500 mt-1">
-                        NT$
-                        {(
-                          product.price * product.totalSold
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="w-full bg-stone-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-pink-500 to-pink-600 h-full rounded-full transition-all"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        <p className="text-sm font-semibold text-stone-900">商品排行</p>
+        {products.map((product) => (
+          <div key={product.id} className="rounded-lg bg-stone-50 p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-stone-900">{product.name}</p>
+                <p className="text-xs text-stone-500">{product.category}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-stone-900">{product.totalSold}</p>
+                <p className="text-xs text-stone-500">NT${product.price}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 function OrdersTab({ orders }: { orders: OrderItem[] }) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("全部");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
-  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "新訂單":
-        return "bg-blue-100 text-blue-800";
-      case "已出貨":
-        return "bg-emerald-100 text-emerald-800";
-      case "已取消":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-stone-100 text-stone-800";
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case "待核帳":
-        return "bg-yellow-100 text-yellow-800";
-      case "已核帳":
-        return "bg-emerald-100 text-emerald-800";
-      case "已退款":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-stone-100 text-stone-800";
-    }
-  };
-
-  const handleUpdateOrder = async (
-    orderId: string,
-    status: string,
-    paymentStatus: string
-  ) => {
-    setUpdatingOrderId(orderId);
-    try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, paymentStatus }),
-      });
-
-      if (res.ok) {
-        setEditingOrderId(null);
-        // 重新載入數據
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error("更新訂單失敗:", error);
-    } finally {
-      setUpdatingOrderId(null);
-    }
-  };
-
-  const exportToCSV = () => {
-    const headers = ["訂單ID", "客戶", "電話", "商品", "金額", "重量", "狀態", "付款狀態"];
-    const rows = filteredOrders.map((order) => [
-      order.orderId,
-      order.customerName,
-      order.customerPhone,
-      order.itemsDetail,
-      order.totalPrice,
-      order.totalWeightKg,
-      order.status,
-      order.paymentStatus,
-    ]);
-
-    const csv = [headers, ...rows]
-      .map((row) =>
-        row
-          .map((cell) => {
-            const str = String(cell);
-            if (str.includes(",") || str.includes('"')) {
-              return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-          })
-          .join(",")
-      )
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `訂單匯出_${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
-  };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderId.includes(searchTerm) ||
       order.customerName.includes(searchTerm) ||
       order.customerPhone.includes(searchTerm);
-
-    const matchesStatus =
-      statusFilter === "全部" || order.status === statusFilter;
-
+    const matchesStatus = statusFilter === "全部" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
+  const handleUpdateOrder = async (orderId: string, status: string, paymentStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, paymentStatus }),
+      });
+      if (res.ok) {
+        setEditingOrderId(null);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("更新訂單失敗:", error);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* 搜尋和過濾欄 */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-2 bg-white">
           <Search className="h-4 w-4 text-stone-400" />
@@ -493,17 +301,8 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
             </button>
           ))}
         </div>
-
-        <button
-          onClick={exportToCSV}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition"
-        >
-          <Download className="h-3.5 w-3.5" />
-          匯出 CSV
-        </button>
       </div>
 
-      {/* 訂單列表 */}
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {filteredOrders.length === 0 ? (
           <p className="text-center text-sm text-stone-500 py-8">
@@ -511,147 +310,98 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
           </p>
         ) : (
           filteredOrders.map((order) => (
-          <div
-            key={order.id}
-            className="rounded-xl bg-stone-50 p-4 transition hover:bg-stone-100"
-          >
-            {editingOrderId === order.id ? (
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-stone-900">
-                  {order.orderId}
-                </p>
-                <div className="space-y-2">
-                  <div>
-                    <label className="text-xs font-medium text-stone-600 block mb-1">
-                      訂單狀態
-                    </label>
-                    <select
-                      id={`status-${order.id}`}
-                      defaultValue={order.status}
-                      className="w-full px-2 py-1.5 text-xs rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
-                    >
-                      <option value="新訂單">新訂單</option>
-                      <option value="已出貨">已出貨</option>
-                      <option value="已取消">已取消</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-stone-600 block mb-1">
-                      付款狀態
-                    </label>
-                    <select
-                      id={`payment-${order.id}`}
-                      defaultValue={order.paymentStatus}
-                      className="w-full px-2 py-1.5 text-xs rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900/20"
-                    >
-                      <option value="待核帳">待核帳</option>
-                      <option value="已核帳">已核帳</option>
-                      <option value="已退款">已退款</option>
-                    </select>
-                  </div>
+            <div
+              key={order.id}
+              className="rounded-xl bg-stone-50 p-4 cursor-pointer transition hover:bg-stone-100"
+              onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-stone-900">{order.orderId}</p>
+                  <p className="text-xs text-stone-500 mt-1">
+                    {order.customerName} ({order.customerPhone})
+                  </p>
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => {
-                      const statusSelect = document.getElementById(
-                        `status-${order.id}`
-                      ) as HTMLSelectElement;
-                      const paymentSelect = document.getElementById(
-                        `payment-${order.id}`
-                      ) as HTMLSelectElement;
-                      handleUpdateOrder(
-                        order.id,
-                        statusSelect.value,
-                        paymentSelect.value
-                      );
-                    }}
-                    disabled={updatingOrderId === order.id}
-                    className="flex-1 px-2 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition flex items-center justify-center gap-1"
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    保存
-                  </button>
-                  <button
-                    onClick={() => setEditingOrderId(null)}
-                    className="flex-1 px-2 py-1.5 text-xs font-medium rounded-lg bg-stone-200 text-stone-700 hover:bg-stone-300 transition"
-                  >
-                    取消
-                  </button>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-stone-900">
+                    NT${order.totalPrice.toLocaleString()}
+                  </p>
+                  <div className="mt-1 flex gap-1 justify-end">
+                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                      {order.status}
+                    </span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                      {order.paymentStatus}
+                    </span>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <>
-                <div
-                  onClick={() =>
-                    setExpandedId(expandedId === order.id ? null : order.id)
-                  }
-                  className="cursor-pointer flex items-start justify-between"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-stone-900">
-                      {order.orderId}
-                    </p>
-                    <p className="text-xs text-stone-500 mt-2">
-                      客戶: {order.customerName} ({order.customerPhone})
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-stone-900">
-                      NT${order.totalPrice.toLocaleString()}
-                    </p>
-                    <div className="mt-2 flex gap-1 justify-end flex-wrap">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(
-                          order.status
-                        )}`}
-                      >
-                        {order.status}
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full font-medium ${getPaymentStatusColor(
-                          order.paymentStatus
-                        )}`}
-                      >
-                        {order.paymentStatus}
-                      </span>
-                    </div>
-                  </div>
-                </div>
 
-                {expandedId === order.id && (
-                  <div className="mt-4 border-t border-stone-200 pt-4 text-xs text-stone-600 space-y-2">
-                    <p>
-                      <span className="font-medium text-stone-900">商品:</span>{" "}
-                      {order.itemsDetail}
-                    </p>
-                    <p>
-                      <span className="font-medium text-stone-900">重量:</span>{" "}
-                      {order.totalWeightKg} kg
-                    </p>
-                    <p>
-                      <span className="font-medium text-stone-900">
-                        匯款末五碼:
-                      </span>{" "}
-                      {order.paymentLast5 || "未提供"}
-                    </p>
-                    <p>
-                      <span className="font-medium text-stone-900">時間:</span>{" "}
-                      {new Date(order.createdTime).toLocaleString()}
-                    </p>
+              {expandedId === order.id && (
+                <div className="mt-4 border-t border-stone-200 pt-4 space-y-2 text-xs text-stone-600">
+                  <p><span className="font-medium text-stone-900">商品:</span> {order.itemsDetail}</p>
+                  <p><span className="font-medium text-stone-900">重量:</span> {order.totalWeightKg} kg</p>
+                  <p><span className="font-medium text-stone-900">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>
+                  <p><span className="font-medium text-stone-900">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
+
+                  {editingOrderId === order.id ? (
+                    <div className="mt-3 space-y-2">
+                      <select
+                        defaultValue={order.status}
+                        id={`status-${order.id}`}
+                        className="w-full px-2 py-1.5 text-xs rounded border border-stone-200"
+                      >
+                        <option value="新訂單">新訂單</option>
+                        <option value="已出貨">已出貨</option>
+                        <option value="已取消">已取消</option>
+                      </select>
+                      <select
+                        defaultValue={order.paymentStatus}
+                        id={`payment-${order.id}`}
+                        className="w-full px-2 py-1.5 text-xs rounded border border-stone-200"
+                      >
+                        <option value="待核帳">待核帳</option>
+                        <option value="已核帳">已核帳</option>
+                        <option value="已退款">已退款</option>
+                      </select>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            const statusSel = document.getElementById(
+                              `status-${order.id}`
+                            ) as HTMLSelectElement;
+                            const paymentSel = document.getElementById(
+                              `payment-${order.id}`
+                            ) as HTMLSelectElement;
+                            handleUpdateOrder(order.id, statusSel.value, paymentSel.value);
+                          }}
+                          className="flex-1 px-2 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setEditingOrderId(null)}
+                          className="flex-1 px-2 py-1.5 bg-stone-200 text-stone-700 rounded text-xs font-medium hover:bg-stone-300"
+                        >
+                          取消
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                     <button
                       onClick={() => setEditingOrderId(order.id)}
-                      className="mt-3 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                      className="mt-3 w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
                     >
                       <Edit2 className="h-3 w-3" />
                       編輯狀態
                     </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        ))
-      )}
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
