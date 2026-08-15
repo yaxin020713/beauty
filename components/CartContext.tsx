@@ -45,7 +45,8 @@ type CartContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const STORAGE_KEY = "auth_user";
+const AUTH_STORAGE_KEY = "auth_user";
+const CART_STORAGE_KEY = "cart_items";
 
 function validateEmail(email: string): boolean {
   const trimmed = email.trim();
@@ -69,14 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
       if (stored) {
         const parsedUser = JSON.parse(stored) as User;
         setUser(parsedUser);
       }
     } catch (error) {
       console.error("Failed to load user from localStorage:", error);
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(newUser);
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
       } catch (error) {
         console.error("Failed to save user to localStorage:", error);
       }
@@ -110,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch (error) {
       console.error("Failed to remove user from localStorage:", error);
     }
@@ -149,6 +150,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      if (stored) {
+        const parsedCart = JSON.parse(stored) as CartItem[];
+        setCartItems(parsedCart);
+      }
+    } catch (error) {
+      console.error("Failed to load cart from localStorage:", error);
+      localStorage.removeItem(CART_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (cartItems.length > 0) {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+      } else {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.error("Failed to save cart to localStorage:", error);
+    }
+  }, [cartItems]);
 
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce(
