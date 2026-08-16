@@ -3,6 +3,8 @@ import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
 import StorefrontContent from "@/components/StorefrontContent";
 
+export const dynamic = "force-dynamic";
+
 async function loadProducts(): Promise<Product[]> {
   try {
     const baseUrl =
@@ -12,7 +14,7 @@ async function loadProducts(): Promise<Product[]> {
         : "http://localhost:3000");
 
     const res = await fetch(`${baseUrl}/api/products`, {
-      next: { revalidate: 5 },
+      cache: "no-store",
     });
 
     const data = await res.json();
