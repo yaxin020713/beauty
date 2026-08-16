@@ -10,10 +10,13 @@ import {
   CreditCard,
   Landmark,
   X,
+  Truck,
+  Package,
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { cn } from "@/lib/utils";
 import { BANK_INFO } from "@/lib/bank";
+import { SHIPPING_COSTS, CONVENIENCE_711_STORES, type ShippingMethod } from "@/lib/shipping";
 
 type OrderResult = {
   orderId: string;
@@ -33,6 +36,8 @@ export default function CheckoutModal({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [paymentLast5, setPaymentLast5] = useState("");
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
+  const [selectedStore, setSelectedStore] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
@@ -45,12 +50,28 @@ export default function CheckoutModal({
       setError("");
       setOrderResult(null);
       setSubmitting(false);
+      setSelectedStore("");
     }
   }, [open]);
+
+  // 計算小計（不含運費）
+  const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  // 計算運費
+  const shippingFee = shippingMethod === "convenience_711" ? SHIPPING_COSTS.CONVENIENCE_711 : SHIPPING_COSTS.FACE_TO_FACE;
+
+  // 計算總額（含運費）
+  const total = subtotal + shippingFee;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cartItems.length === 0) return;
+
+    // 驗證 7-11 取貨是否選擇門市
+    if (shippingMethod === "convenience_711" && !selectedStore) {
+      setError("請選擇 7-11 超商門市");
+      return;
+    }
 
     setSubmitting(true);
     setError("");
@@ -63,6 +84,9 @@ export default function CheckoutModal({
           customerName,
           customerPhone,
           paymentLast5,
+          shippingMethod,
+          selectedStore: shippingMethod === "convenience_711" ? selectedStore : null,
+          shippingFee,
           items: cartItems.map(
             ({ id, name, price, weight_g, quantity }) => ({
               productId: id,
@@ -193,23 +217,131 @@ export default function CheckoutModal({
                   {/* 訂單摘要 */}
                   <div className="space-y-1 rounded-xl bg-stone-50 px-4 py-3 text-sm">
                     <div className="flex justify-between text-stone-500">
-                      <span>訂單金額</span>
+                      <span>商品小計</span>
                       <span className="font-medium text-stone-900">
-                        NT${cartItems
-                          .reduce(
-                            (sum, i) => sum + i.price * i.quantity,
-                            0
-                          )
-                          .toLocaleString()}
+                        NT${subtotal.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-stone-500">
+                      <span>運費</span>
+                      <span className="font-medium text-stone-900">
+                        {shippingFee > 0 ? `NT$${shippingFee}` : "免運"}
+                      </span>
+                    </div>
+                    <div className="border-t border-stone-200 pt-1 mt-1 flex justify-between">
+                      <span className="font-medium text-stone-900">訂單總額</span>
+                      <span className="font-medium text-stone-900">
+                        NT${total.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-stone-500 text-xs">
                       <span>品項數量</span>
                       <span className="font-medium text-stone-900">
                         {cartItems.reduce((sum, i) => sum + i.quantity, 0)} 件
                       </span>
                     </div>
                   </div>
+
+                  {/* 收貨方式選擇 */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-stone-900">
+                      收貨方式
+                    </p>
+                    <div className="space-y-2">
+                      {/* 7-11 超商取貨 */}
+                      <label className="flex items-start gap-3 p-3 border border-stone-200 rounded-xl cursor-pointer hover:bg-stone-50 transition">
+                        <input
+                          type="radio"
+                          name="shippingMethod"
+                          value="convenience_711"
+                          checked={shippingMethod === "convenience_711"}
+                          onChange={(e) => {
+                            setShippingMethod(e.target.value as ShippingMethod);
+                            setSelectedStore("");
+                          }}
+                          className="mt-1 w-4 h-4 text-pink-600 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-pink-600" />
+                            <span className="font-medium text-stone-900">7-11 超商取貨</span>
+                            <span className="text-xs text-pink-600 font-medium">+NT$60</span>
+                          </div>
+                          <p className="text-xs text-stone-500 mt-1">
+                            請填寫證件姓名，否則無法取貨
+                          </p>
+                        </div>
+                      </label>
+
+                      {/* 面交 */}
+                      <label className="flex items-start gap-3 p-3 border border-stone-200 rounded-xl cursor-pointer hover:bg-stone-50 transition">
+                        <input
+                          type="radio"
+                          name="shippingMethod"
+                          value="face_to_face"
+                          checked={shippingMethod === "face_to_face"}
+                          onChange={(e) => setShippingMethod(e.target.value as ShippingMethod)}
+                          className="mt-1 w-4 h-4 text-pink-600 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Truck className="h-4 w-4 text-emerald-600" />
+                            <span className="font-medium text-stone-900">面交</span>
+                            <span className="text-xs text-emerald-600 font-medium">免運</span>
+                          </div>
+                          <p className="text-xs text-stone-500 mt-1">
+                            需先聯繫小幫手確認交貨時間與地點
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* 7-11 門市選擇 */}
+                  {shippingMethod === "convenience_711" && (
+                    <div className="space-y-2">
+                      <label htmlFor="store-select" className="text-xs font-bold uppercase tracking-wider text-stone-900 block">
+                        選擇取貨門市 *
+                      </label>
+                      <select
+                        id="store-select"
+                        value={selectedStore}
+                        onChange={(e) => setSelectedStore(e.target.value)}
+                        className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"
+                      >
+                        <option value="">請選擇門市</option>
+                        {CONVENIENCE_711_STORES.map((store) => (
+                          <option key={store.id} value={store.id}>
+                            {store.name} ({store.address})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* 面交警告 */}
+                  {shippingMethod === "face_to_face" && (
+                    <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
+                      <div>
+                        <p className="font-medium mb-1">
+                          ⚠️ 請先聯繫小幫手確認面交詳細資訊
+                        </p>
+                        <p>
+                          如未與小幫手聯繫交貨細節請勿下單面交選項。{" "}
+                          <a
+                            href="https://line.me/ti/p/pYYPGYQMAm"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium underline hover:text-amber-900"
+                          >
+                            點擊連結加入 Line 好友
+                          </a>
+                          {" "}聯繫面交詳細資訊。
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <input
                     type="text"
@@ -303,13 +435,13 @@ export default function CheckoutModal({
 
                   <button
                     type="submit"
-                    disabled={submitting || cartItems.length === 0}
+                    disabled={submitting || cartItems.length === 0 || (shippingMethod === "convenience_711" && !selectedStore)}
                     className={cn(
                       "w-full rounded-full py-3 text-sm font-medium text-white transition",
                       "bg-stone-900 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-50"
                     )}
                   >
-                    {submitting ? "送出中…" : "確認送出訂單"}
+                    {submitting ? "送出中…" : `確認送出訂單（NT$${total.toLocaleString()}）`}
                   </button>
                 </form>
               )}

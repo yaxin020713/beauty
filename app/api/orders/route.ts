@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
+import { SHIPPING_COSTS, type ShippingMethod } from "@/lib/shipping";
 
 // 前台購物車單一項目的型別
 type CartItem = {
@@ -14,6 +15,8 @@ type OrderRequestBody = {
   customerName?: string;
   customerPhone?: string;
   paymentLast5?: string;
+  shippingMethod?: string;
+  selectedStore?: string;
   items?: CartItem[];
 };
 
@@ -35,6 +38,8 @@ export async function POST(request: NextRequest) {
     .replace(/\D/g, "")
     .slice(-5);
   const rawItems = Array.isArray(body.items) ? body.items : [];
+  const shippingMethod = (body.shippingMethod ?? "convenience_711") as ShippingMethod;
+  const selectedStore = (body.selectedStore ?? "").trim();
 
   if (!customerName || !customerPhone) {
     return NextResponse.json({ error: "請填寫姓名與電話" }, { status: 400 });
@@ -42,6 +47,11 @@ export async function POST(request: NextRequest) {
 
   if (rawItems.length === 0) {
     return NextResponse.json({ error: "購物車是空的" }, { status: 400 });
+  }
+
+  // 驗證收貨方式
+  if (shippingMethod === "convenience_711" && !selectedStore) {
+    return NextResponse.json({ error: "請選擇 7-11 超商門市" }, { status: 400 });
   }
 
   // 清理並正規化購物車資料，避免前端傳入非法數值
@@ -57,16 +67,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "購物車資料不完整" }, { status: 400 });
   }
 
+  // 自動計算運費（後端重新計算，不信任前端值）
+  const shippingFee = shippingMethod === "convenience_711" ? SHIPPING_COSTS.CONVENIENCE_711 : SHIPPING_COSTS.FACE_TO_FACE;
+
   // 自動計算總金額與總重量（kg）
-  const totalPrice = items.reduce(
+  const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  const totalPrice = subtotal + shippingFee;
   const totalWeightKg = Number(
     items
       .reduce((sum, item) => sum + (item.weight_g * item.quantity) / 1000, 0)
       .toFixed(3)
   );
+
+  // 組合收貨方式資訊
+  const shippingInfo = shippingMethod === "convenience_711"
+    ? `7-11 超商取貨 (門市編號: ${selectedStore})`
+    : "面交";
 
   // 組合商品明細文字，例："小黑瓶 x2, 白繃帶 x1"
   const itemsDetail = items
@@ -77,41 +96,49 @@ export async function POST(request: NextRequest) {
 
   try {
     // 1. 建立訂單頁面
+    // 在 Items_Detail 中附加運費、收貨方式與匯款末五碼資訊
+    const detailWithShipping = `${itemsDetail}\n運費: ${shippingFee > 0 ? `NT$${shippingFee}` : "免運"} | 取貨: ${shippingInfo}\n匯款末五碼: ${paymentLast5}`;
+
+    const properties: Record<string, any> = {
+      Order_ID: { title: [{ text: { content: orderId } }] },
+      Customer_Name: { rich_text: [{ text: { content: customerName } }] },
+      Customer_Phone: { rich_text: [{ text: { content: customerPhone } }] },
+      Items_Detail: { rich_text: [{ text: { content: detailWithShipping } }] },
+      Total_Price: { number: totalPrice },
+      Total_Weight_kg: { number: totalWeightKg },
+      Status: { select: { name: "新訂單" } },
+    };
+
     await notion.pages.create({
       parent: { database_id: ORDERS_DB_ID },
-      properties: {
-        Order_ID: { title: [{ text: { content: orderId } }] },
-        Customer_Name: { rich_text: [{ text: { content: customerName } }] },
-        Customer_Phone: { rich_text: [{ text: { content: customerPhone } }] },
-        Payment_Last5: { rich_text: [{ text: { content: paymentLast5 } }] },
-        Payment_Status: { select: { name: "待核帳" } },
-        Items_Detail: { rich_text: [{ text: { content: itemsDetail } }] },
-        Total_Price: { number: totalPrice },
-        Total_Weight_kg: { number: totalWeightKg },
-        Status: { select: { name: "新訂單" } },
-      },
+      properties,
     });
 
     // 2. 逐項更新商品的 Total_Sold（累加購買數量）
     for (const item of items) {
-      const productPage = await notion.pages.retrieve({
-        page_id: item.productId,
-      });
+      try {
+        const productPage = await notion.pages.retrieve({
+          page_id: item.productId,
+        });
 
-      let currentSold = 0;
-      if ("properties" in productPage) {
-        const prop = productPage.properties["Total_Sold"];
-        if (prop?.type === "number") {
-          currentSold = prop.number ?? 0;
+        let currentSold = 0;
+        if ("properties" in productPage) {
+          const prop = productPage.properties["Total_Sold"];
+          if (prop?.type === "number") {
+            currentSold = prop.number ?? 0;
+          }
         }
-      }
 
-      await notion.pages.update({
-        page_id: item.productId,
-        properties: {
-          Total_Sold: { number: currentSold + item.quantity },
-        },
-      });
+        await notion.pages.update({
+          page_id: item.productId,
+          properties: {
+            Total_Sold: { number: currentSold + item.quantity },
+          },
+        });
+      } catch (error) {
+        // 如果產品不存在或無法更新，繼續處理其他訂單項目
+        console.warn(`[api/orders] 無法更新商品 ${item.productId} 的銷量:`, error instanceof Error ? error.message : error);
+      }
     }
 
     return NextResponse.json(
@@ -120,6 +147,7 @@ export async function POST(request: NextRequest) {
         orderId,
         totalPrice,
         totalWeightKg,
+        shippingFee,
         itemsDetail,
       },
       { status: 201 }
