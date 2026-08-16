@@ -54,20 +54,14 @@ export default function Header() {
                 )}
 
                 <div
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
-                    user.role === "admin"
-                      ? "bg-pink-100 text-pink-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}
-                  title={`${user.role === "admin" ? "管理員" : "顧客"} - ${user.email}`}
+                  className="flex items-center gap-1.5 rounded-full bg-stone-100 text-stone-700 px-3 py-1.5 text-xs font-medium"
+                  title={user.email}
                 >
                   <User className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline max-w-[120px] truncate">
                     {user.email}
                   </span>
-                  <span className="sm:hidden">
-                    {user.role === "admin" ? "🛡️ Admin" : "👤 顧客"}
-                  </span>
+                  <span className="sm:hidden">已登入</span>
                 </div>
 
                 <button
