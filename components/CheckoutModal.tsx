@@ -204,16 +204,9 @@ export default function CheckoutModal({
                       </span>
                     </div>
                     <div className="flex justify-between text-stone-500">
-                      <span>總重量</span>
+                      <span>品項數量</span>
                       <span className="font-medium text-stone-900">
-                        {cartItems
-                          .reduce(
-                            (sum, i) =>
-                              sum + (i.weight_g * i.quantity) / 1000,
-                            0
-                          )
-                          .toFixed(3)}{" "}
-                        kg
+                        {cartItems.reduce((sum, i) => sum + i.quantity, 0)} 件
                       </span>
                     </div>
                   </div>
