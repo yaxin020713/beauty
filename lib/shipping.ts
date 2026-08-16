@@ -4,18 +4,39 @@ export const SHIPPING_COSTS = {
   FACE_TO_FACE: 0, // 面交無運費
 } as const;
 
-// 7-11 超商門市範例資料（可透過環境變數或 API 更新）
-export const CONVENIENCE_711_STORES = [
-  { id: "7001", name: "台北中山門市", address: "台北市中山區" },
-  { id: "7002", name: "台北信義門市", address: "台北市信義區" },
-  { id: "7003", name: "台北大安門市", address: "台北市大安區" },
-  { id: "7004", name: "台北松山門市", address: "台北市松山區" },
-  { id: "7005", name: "台北南港門市", address: "台北市南港區" },
-  { id: "7006", name: "新北板橋門市", address: "新北市板橋區" },
-  { id: "7007", name: "新北新店門市", address: "新北市新店區" },
-  { id: "7008", name: "桃園中壢門市", address: "桃園市中壢區" },
-  { id: "7009", name: "台中西屯門市", address: "台中市西屯區" },
-  { id: "7010", name: "高雄前金門市", address: "高雄市前金區" },
-] as const;
-
 export type ShippingMethod = "convenience_711" | "face_to_face";
+
+// 7-11 超商門市資料型別
+export type Store = {
+  id: string;
+  name: string;
+  address: string;
+};
+
+// 預設 7-11 超商門市資料（可透過 API /api/stores 動態更新）
+export const DEFAULT_CONVENIENCE_711_STORES: Store[] = [
+  { id: "7001", name: "台北中山門市", address: "台北市中山區南京東路二段111號" },
+  { id: "7002", name: "台北信義門市", address: "台北市信義區松壽路9號" },
+  { id: "7003", name: "台北大安門市", address: "台北市大安區敦化南路一段761號" },
+  { id: "7004", name: "台北松山門市", address: "台北市松山區南京東路五段99號" },
+  { id: "7005", name: "台北南港門市", address: "台北市南港區經貿二路190號" },
+  { id: "7006", name: "新北板橋門市", address: "新北市板橋區新站路39號" },
+  { id: "7007", name: "新北新店門市", address: "新北市新店區北新路三段101號" },
+  { id: "7008", name: "桃園中壢門市", address: "桃園市中壢區新生路42號" },
+  { id: "7009", name: "台中西屯門市", address: "台中市西屯區台灣大道三段727號" },
+  { id: "7010", name: "高雄前金門市", address: "高雄市前金區中山一路468號" },
+];
+
+// 動態獲取 7-11 門市列表（優先使用 API，否則使用預設）
+export async function getConvenience711Stores(): Promise<Store[]> {
+  try {
+    const response = await fetch("/api/stores", { cache: "force-cache" });
+    if (response.ok) {
+      const data = await response.json();
+      return data.stores || DEFAULT_CONVENIENCE_711_STORES;
+    }
+  } catch (error) {
+    console.warn("[shipping] 無法從 API 獲取門市資料:", error);
+  }
+  return DEFAULT_CONVENIENCE_711_STORES;
+}

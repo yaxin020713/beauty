@@ -16,7 +16,7 @@ import {
 import { useCart } from "./CartContext";
 import { cn } from "@/lib/utils";
 import { BANK_INFO } from "@/lib/bank";
-import { SHIPPING_COSTS, CONVENIENCE_711_STORES, type ShippingMethod } from "@/lib/shipping";
+import { SHIPPING_COSTS, DEFAULT_CONVENIENCE_711_STORES, getConvenience711Stores, type ShippingMethod, type Store } from "@/lib/shipping";
 
 type OrderResult = {
   orderId: string;
@@ -38,11 +38,31 @@ export default function CheckoutModal({
   const [paymentLast5, setPaymentLast5] = useState("");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
   const [selectedStore, setSelectedStore] = useState<string>("");
+  const [stores, setStores] = useState<Store[]>(DEFAULT_CONVENIENCE_711_STORES);
+  const [storesLoading, setStoresLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 加載 7-11 門市列表
+  useEffect(() => {
+    const loadStores = async () => {
+      setStoresLoading(true);
+      try {
+        const loadedStores = await getConvenience711Stores();
+        setStores(loadedStores);
+      } catch (err) {
+        console.error("載入門市失敗:", err);
+        setStores(DEFAULT_CONVENIENCE_711_STORES);
+      } finally {
+        setStoresLoading(false);
+      }
+    };
+
+    loadStores();
+  }, []);
 
   // 每次開啟時重置狀態
   useEffect(() => {
@@ -167,9 +187,9 @@ export default function CheckoutModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
-            className="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4"
+            className="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4 overflow-y-auto"
           >
-            <div className="w-full overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-w-sm sm:rounded-3xl">
+            <div className="w-full overflow-y-auto max-h-[100dvh] sm:max-h-none rounded-t-3xl bg-white shadow-2xl sm:max-w-sm sm:rounded-3xl flex flex-col">
               {/* 標題列 */}
               <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
                 <h2 className="text-base font-semibold text-stone-900">結帳</h2>
@@ -301,16 +321,19 @@ export default function CheckoutModal({
                   {shippingMethod === "convenience_711" && (
                     <div className="space-y-2">
                       <label htmlFor="store-select" className="text-xs font-bold uppercase tracking-wider text-stone-900 block">
-                        選擇取貨門市 *
+                        選擇取貨門市 * {storesLoading && <span className="text-xs text-stone-500">（載入中）</span>}
                       </label>
                       <select
                         id="store-select"
                         value={selectedStore}
                         onChange={(e) => setSelectedStore(e.target.value)}
-                        className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"
+                        disabled={storesLoading}
+                        className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <option value="">請選擇門市</option>
-                        {CONVENIENCE_711_STORES.map((store) => (
+                        <option value="">
+                          {storesLoading ? "載入門市中..." : "請選擇門市"}
+                        </option>
+                        {stores.map((store) => (
                           <option key={store.id} value={store.id}>
                             {store.name} ({store.address})
                           </option>
@@ -373,24 +396,24 @@ export default function CheckoutModal({
                       </p>
                     </div>
 
-                    <dl className="mt-3 space-y-2.5 text-sm">
-                      <div className="flex items-center justify-between gap-3">
-                        <dt className="text-stone-400">銀行代碼</dt>
-                        <dd className="font-medium">
+                    <dl className="mt-3 space-y-3 text-sm">
+                      <div className="space-y-1">
+                        <dt className="text-stone-400 text-xs">銀行代碼</dt>
+                        <dd className="font-medium break-words">
                           {BANK_INFO.code}（{BANK_INFO.bankName}）
                         </dd>
                       </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <dt className="text-stone-400">銀行帳號</dt>
-                        <dd className="flex items-center gap-2">
-                          <span className="font-medium tracking-wider">
+                      <div className="space-y-1">
+                        <dt className="text-stone-400 text-xs">銀行帳號</dt>
+                        <dd className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <span className="font-medium tracking-wider break-all">
                             {BANK_INFO.account}
                           </span>
                           <button
                             type="button"
                             onClick={handleCopyAccount}
                             aria-label="複製銀行帳號"
-                            className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-amber-300 transition hover:bg-white/20 active:scale-95"
+                            className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-amber-300 transition hover:bg-white/20 active:scale-95 self-start sm:self-auto flex-shrink-0"
                           >
                             {copied ? (
                               <CheckCheck className="h-3.5 w-3.5" />
