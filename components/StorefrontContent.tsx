@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { Product } from "@/lib/types";
+import { useCart } from "./CartContext";
 import ProductCard from "./ProductCard";
 
 export default function StorefrontContent({
@@ -11,10 +12,10 @@ export default function StorefrontContent({
 }: {
   products: Product[];
 }) {
+  const { mobileFilterOpen, closeMobileFilter } = useCart();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const categories = useMemo(() => {
     const cats = new Set(products.map((p) => p.category));
@@ -96,34 +97,24 @@ export default function StorefrontContent({
         </p>
       </section>
 
-      {/* 搜尋欄 + 手機過濾按鈕 */}
-      <div className="mb-8 flex items-center gap-2">
-        <div className="flex-1 flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-3 bg-white shadow-sm">
-          <Search className="h-5 w-5 text-stone-400 flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="搜尋商品名稱、品牌或分類..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
-          />
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-700 rounded hover:bg-stone-100 flex-shrink-0"
-            >
-              重設
-            </button>
-          )}
-        </div>
-        {/* 手機版過濾按鈕 */}
-        <button
-          onClick={() => setMobileFilterOpen(true)}
-          className="md:hidden flex items-center justify-center h-[44px] w-[44px] rounded-xl border border-stone-200 bg-white hover:bg-stone-50 transition"
-          aria-label="開啟過濾"
-        >
-          <Filter className="h-5 w-5 text-stone-600" />
-        </button>
+      {/* 搜尋欄 */}
+      <div className="mb-8 flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-3 bg-white shadow-sm">
+        <Search className="h-5 w-5 text-stone-400 flex-shrink-0" />
+        <input
+          type="text"
+          placeholder="搜尋商品名稱、品牌或分類..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
+        />
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-700 rounded hover:bg-stone-100"
+          >
+            重設
+          </button>
+        )}
       </div>
 
       <div className="flex gap-4 md:gap-6">
@@ -239,7 +230,7 @@ export default function StorefrontContent({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setMobileFilterOpen(false)}
+              onClick={closeMobileFilter}
               className="fixed inset-0 z-40 bg-stone-900/50 backdrop-blur-sm md:hidden"
             />
 
@@ -256,7 +247,7 @@ export default function StorefrontContent({
                   篩選
                 </h2>
                 <button
-                  onClick={() => setMobileFilterOpen(false)}
+                  onClick={closeMobileFilter}
                   className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-stone-100"
                   aria-label="關閉過濾"
                 >
@@ -330,7 +321,7 @@ export default function StorefrontContent({
                   <button
                     onClick={() => {
                       clearFilters();
-                      setMobileFilterOpen(false);
+                      closeMobileFilter();
                     }}
                     className="w-full rounded-xl bg-stone-100 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-200 transition"
                   >
@@ -340,7 +331,7 @@ export default function StorefrontContent({
 
                 {/* 確認按鈕 */}
                 <button
-                  onClick={() => setMobileFilterOpen(false)}
+                  onClick={closeMobileFilter}
                   className="w-full rounded-xl bg-stone-900 py-2.5 text-sm font-medium text-white hover:bg-stone-800 transition"
                 >
                   確認

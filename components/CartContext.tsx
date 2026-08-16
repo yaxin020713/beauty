@@ -40,6 +40,9 @@ type CartContextType = {
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
+  mobileFilterOpen: boolean;
+  openMobileFilter: () => void;
+  closeMobileFilter: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -150,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -229,6 +233,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setIsOpen(false);
   }, []);
 
+  const openMobileFilter = useCallback(() => {
+    setMobileFilterOpen(true);
+  }, []);
+
+  const closeMobileFilter = useCallback(() => {
+    setMobileFilterOpen(false);
+  }, []);
+
   return (
     <CartContext.Provider
       value={{
@@ -243,6 +255,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         openCart,
         closeCart,
+        mobileFilterOpen,
+        openMobileFilter,
+        closeMobileFilter,
       }}
     >
       {children}
