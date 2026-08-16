@@ -276,10 +276,6 @@ export default function CheckoutModal({
                           </button>
                         </dd>
                       </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <dt className="text-stone-400">戶名</dt>
-                        <dd className="font-medium">{BANK_INFO.accountName}</dd>
-                      </div>
                     </dl>
                   </div>
 
