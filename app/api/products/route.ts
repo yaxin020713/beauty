@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, name, category, price, weight_g, cost50, cost100, image, description } = body;
+    const { email, name, brand, category, price, weight_g, cost50, cost100, image, description } = body;
 
     // 檢查是否為指定管理員
     const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yaxinzhu2002@gmail.com";
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
 
     await createProduct({
       name,
+      brand,
       category,
       price: Number(price),
       weight_g: Number(weight_g) || 0,

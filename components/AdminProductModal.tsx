@@ -18,6 +18,7 @@ export default function AdminProductModal({
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
+    brand: "",
     category: "護膚",
     price: "",
     weight_g: "",
@@ -40,6 +41,7 @@ export default function AdminProductModal({
       setImagePreview("");
       setFormData({
         name: "",
+        brand: "",
         category: "護膚",
         price: "",
         weight_g: "",
@@ -119,6 +121,7 @@ export default function AdminProductModal({
         body: JSON.stringify({
           email: user.email,
           name: formData.name.trim(),
+          brand: formData.brand.trim(),
           category: formData.category.trim(),
           price: formData.price.trim(),
           weight_g: formData.weight_g.trim() || "0",
@@ -205,6 +208,20 @@ export default function AdminProductModal({
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="例如: 小黑瓶精華液"
+                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                    品牌
+                  </label>
+                  <input
+                    type="text"
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleChange}
+                    placeholder="例如: Estée Lauder"
                     className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
                   />
                 </div>

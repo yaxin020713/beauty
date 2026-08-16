@@ -14,6 +14,7 @@ import {
   Edit2,
   CheckCircle2,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { useAuth } from "./CartContext";
 
 type OrderItem = {
@@ -272,9 +273,84 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     }
   };
 
+  const exportToExcel = () => {
+    const workbook = XLSX.utils.book_new();
+
+    // Sheet 1: 客戶購買明細
+    const customerData: any[] = [];
+    const productSales: { [key: string]: number } = {};
+
+    orders.forEach((order) => {
+      const items = parseItems(order.itemsDetail);
+      items.forEach((item: any) => {
+        customerData.push({
+          "訂單編號": order.orderId,
+          "客戶名稱": order.customerName,
+          "客戶電話": order.customerPhone,
+          "商品名稱": item.name,
+          "購買數量": item.quantity,
+          "單價": item.price,
+          "小計": item.quantity * item.price,
+          "訂單狀態": order.status,
+          "付款狀態": order.paymentStatus,
+          "訂單時間": new Date(order.createdTime).toLocaleString(),
+        });
+
+        productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
+      });
+    });
+
+    const customerSheet = XLSX.utils.json_to_sheet(customerData);
+    XLSX.utils.book_append_sheet(workbook, customerSheet, "客戶購買明細");
+
+    // Sheet 2: 商品銷售統計
+    const productData = Object.entries(productSales)
+      .map(([name, quantity]) => ({
+        "商品名稱": name,
+        "總銷售數量": quantity,
+      }))
+      .sort((a, b) => b["總銷售數量"] - a["總銷售數量"]);
+
+    const productSheet = XLSX.utils.json_to_sheet(productData);
+    XLSX.utils.book_append_sheet(workbook, productSheet, "商品銷售統計");
+
+    // 設定列寬
+    customerSheet["!cols"] = [
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 8 },
+      { wch: 8 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 18 },
+    ];
+    productSheet["!cols"] = [{ wch: 15 }, { wch: 10 }];
+
+    XLSX.writeFile(workbook, `訂單報表_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
+  const parseItems = (itemsDetail: string): any[] => {
+    try {
+      return JSON.parse(itemsDetail);
+    } catch {
+      return [];
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="space-y-3">
+      <div className="space-y-3 flex flex-col">
+        <button
+          onClick={exportToExcel}
+          disabled={orders.length === 0}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:bg-stone-300 disabled:cursor-not-allowed"
+        >
+          <Download className="h-4 w-4" />
+          匯出Excel報表
+        </button>
         <div className="flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-2 bg-white">
           <Search className="h-4 w-4 text-stone-400" />
           <input
