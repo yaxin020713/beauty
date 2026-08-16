@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Search, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, X, Filter } from "lucide-react";
 import type { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 
@@ -14,6 +14,7 @@ export default function StorefrontContent({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const categories = useMemo(() => {
     const cats = new Set(products.map((p) => p.category));
@@ -95,24 +96,34 @@ export default function StorefrontContent({
         </p>
       </section>
 
-      {/* 搜尋欄 */}
-      <div className="mb-8 flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-3 bg-white shadow-sm">
-        <Search className="h-5 w-5 text-stone-400 flex-shrink-0" />
-        <input
-          type="text"
-          placeholder="搜尋商品名稱、品牌或分類..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
-        />
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-700 rounded hover:bg-stone-100"
-          >
-            重設
-          </button>
-        )}
+      {/* 搜尋欄 + 手機過濾按鈕 */}
+      <div className="mb-8 flex items-center gap-2">
+        <div className="flex-1 flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-3 bg-white shadow-sm">
+          <Search className="h-5 w-5 text-stone-400 flex-shrink-0" />
+          <input
+            type="text"
+            placeholder="搜尋商品名稱、品牌或分類..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
+          />
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-700 rounded hover:bg-stone-100 flex-shrink-0"
+            >
+              重設
+            </button>
+          )}
+        </div>
+        {/* 手機版過濾按鈕 */}
+        <button
+          onClick={() => setMobileFilterOpen(true)}
+          className="md:hidden flex items-center justify-center h-[44px] w-[44px] rounded-xl border border-stone-200 bg-white hover:bg-stone-50 transition"
+          aria-label="開啟過濾"
+        >
+          <Filter className="h-5 w-5 text-stone-600" />
+        </button>
       </div>
 
       <div className="flex gap-4 md:gap-6">
@@ -218,6 +229,127 @@ export default function StorefrontContent({
           )}
         </div>
       </div>
+
+      {/* 手機版過濾抽屜 */}
+      <AnimatePresence>
+        {mobileFilterOpen && (
+          <>
+            {/* 背景遮罩 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileFilterOpen(false)}
+              className="fixed inset-0 z-40 bg-stone-900/50 backdrop-blur-sm md:hidden"
+            />
+
+            {/* 過濾抽屜 */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed left-0 top-0 z-50 h-full w-72 bg-white overflow-y-auto md:hidden"
+            >
+              <div className="sticky top-0 bg-white border-b border-stone-200 px-4 py-4 flex items-center justify-between">
+                <h2 className="font-serif text-lg font-semibold text-stone-900">
+                  篩選
+                </h2>
+                <button
+                  onClick={() => setMobileFilterOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-stone-100"
+                  aria-label="關閉過濾"
+                >
+                  <X className="h-5 w-5 text-stone-600" />
+                </button>
+              </div>
+
+              <div className="space-y-6 px-4 py-6">
+                {/* 分類過濾 */}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-3">
+                    分類
+                  </h3>
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <label
+                        key={category}
+                        className="flex items-center gap-2 cursor-pointer hover:text-pink-600 transition"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.has(category) && category !== "全部"}
+                          onChange={() => {
+                            if (category === "全部") {
+                              setSelectedCategories(new Set());
+                            } else {
+                              toggleCategory(category);
+                            }
+                          }}
+                          disabled={category === "全部"}
+                          className="w-4 h-4 rounded border-stone-300 text-pink-600 cursor-pointer disabled:opacity-50"
+                        />
+                        <span className="text-sm text-stone-700">{category}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 品牌過濾 */}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 mb-3">
+                    品牌
+                  </h3>
+                  <div className="space-y-2">
+                    {brands.map((brand) => (
+                      <label
+                        key={brand}
+                        className="flex items-center gap-2 cursor-pointer hover:text-pink-600 transition"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedBrands.has(brand) && brand !== "全部品牌"}
+                          onChange={() => {
+                            if (brand === "全部品牌") {
+                              setSelectedBrands(new Set());
+                            } else {
+                              toggleBrand(brand);
+                            }
+                          }}
+                          disabled={brand === "全部品牌"}
+                          className="w-4 h-4 rounded border-stone-300 text-pink-600 cursor-pointer disabled:opacity-50"
+                        />
+                        <span className="text-sm text-stone-700">{brand}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 清除過濾按鈕 */}
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      clearFilters();
+                      setMobileFilterOpen(false);
+                    }}
+                    className="w-full rounded-xl bg-stone-100 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-200 transition"
+                  >
+                    清除所有篩選
+                  </button>
+                )}
+
+                {/* 確認按鈕 */}
+                <button
+                  onClick={() => setMobileFilterOpen(false)}
+                  className="w-full rounded-xl bg-stone-900 py-2.5 text-sm font-medium text-white hover:bg-stone-800 transition"
+                >
+                  確認
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
