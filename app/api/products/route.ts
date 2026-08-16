@@ -6,10 +6,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    console.log("[api/products GET] 開始讀取商品");
     const products = await fetchProducts();
+    console.log("[api/products GET] 成功讀取", products.length, "個商品");
     return NextResponse.json({ products });
   } catch (error) {
-    console.error("[api/products] 讀取商品失敗:", error);
+    console.error("[api/products GET] 讀取商品失敗:", error);
     return NextResponse.json(
       { error: "讀取商品失敗，請檢查 Notion API 設定" },
       { status: 500 }
