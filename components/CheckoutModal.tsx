@@ -297,33 +297,35 @@ export default function CheckoutModal({
                   </div>
 
                   {/* 銀行轉帳資訊 */}
-                  <div className="bg-stone-900 text-white p-4 rounded-lg space-y-3">
-                    <p className="text-sm font-bold">銀行轉帳資訊</p>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-stone-400">銀行代碼：</span>
-                        <span className="font-medium">{BANK_INFO.code}（{BANK_INFO.bankName}）</span>
+                  <div className="bg-black text-white p-4 rounded-lg">
+                    <p className="text-sm font-bold mb-3">銀行轉帳資訊</p>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs text-gray-300 mb-1">銀行代碼：</p>
+                        <p className="text-white font-bold text-base">{BANK_INFO.code}（{BANK_INFO.bankName}）</p>
                       </div>
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-stone-400">銀行帳號：</span>
-                        <span className="font-medium font-mono">{BANK_INFO.account}</span>
-                        <button
-                          type="button"
-                          onClick={handleCopyAccount}
-                          className="ml-2 flex items-center gap-1 bg-white text-stone-900 px-2 py-1 rounded text-xs font-medium hover:bg-stone-200 transition"
-                        >
-                          {copied ? (
-                            <>
-                              <CheckCheck className="h-3.5 w-3.5" />
-                              已複製
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-3.5 w-3.5" />
-                              複製
-                            </>
-                          )}
-                        </button>
+                      <div>
+                        <p className="text-xs text-gray-300 mb-1">銀行帳號：</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-white font-bold text-lg font-mono">{BANK_INFO.account}</p>
+                          <button
+                            type="button"
+                            onClick={handleCopyAccount}
+                            className="ml-3 flex items-center gap-1 bg-white text-black px-3 py-1.5 rounded text-xs font-bold hover:bg-gray-200 transition"
+                          >
+                            {copied ? (
+                              <>
+                                <CheckCheck className="h-4 w-4" />
+                                已複製
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-4 w-4" />
+                                複製
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
