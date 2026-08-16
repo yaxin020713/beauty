@@ -8,30 +8,21 @@ export async function GET() {
   try {
     console.log("[api/products GET] 開始讀取商品");
 
-    // 先獲取原始 Notion 數據
-    const { notion, PRODUCTS_DB_ID } = await import("@/lib/notion");
-    const rawResponse = await notion.databases.query({
-      database_id: PRODUCTS_DB_ID,
-      page_size: 3,
-    });
-
-    if (rawResponse.results.length > 0 && "properties" in rawResponse.results[0]) {
-      const firstProduct = rawResponse.results[0].properties as Record<string, unknown>;
-      console.log("[api/products GET] 第一個商品原始數據:", {
-        name: firstProduct["Name"],
-        brand: firstProduct["品牌"],
-      });
-    }
+    // 測試字符串
+    const testData = {
+      test: "Lancome 蘭蔻 超極光淨緻毛孔洗面乳",
+      chinese: "你好世界",
+    };
+    console.log("[api/products GET] 測試字符:", testData);
 
     const products = await fetchProducts();
     console.log("[api/products GET] 成功讀取", products.length, "個商品");
-    if (products.length > 0) {
-      console.log("[api/products GET] 第一個商品轉換後:", {
-        name: products[0].name,
-        brand: products[0].brand,
-      });
-    }
-    return NextResponse.json({ products });
+
+    // 返回包括測試數據和實際產品
+    return NextResponse.json({
+      test: testData,
+      products,
+    });
   } catch (error) {
     console.error("[api/products GET] 讀取商品失敗:", error);
     return NextResponse.json(
