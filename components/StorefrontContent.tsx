@@ -115,9 +115,9 @@ export default function StorefrontContent({
         )}
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex gap-4 md:gap-6">
         {/* 側邊欄 - 分類與品牌過濾 */}
-        <aside className="hidden lg:block w-48 flex-shrink-0">
+        <aside className="hidden md:block w-40 md:w-48 flex-shrink-0">
           <div className="sticky top-20 space-y-8">
             {/* 分類過濾 */}
             <div>
@@ -199,7 +199,7 @@ export default function StorefrontContent({
 
           {/* 商品網格 */}
           {filteredProducts.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {filteredProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
