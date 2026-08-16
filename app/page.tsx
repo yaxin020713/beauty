@@ -13,20 +13,28 @@ async function loadProducts(): Promise<Product[]> {
         ? "https://beauty-storefront.vercel.app"
         : "http://localhost:3000");
 
+    console.log("[page.tsx] 正在加载商品，baseUrl:", baseUrl);
+
     const res = await fetch(`${baseUrl}/api/products`, {
       cache: "no-store",
     });
 
+    console.log("[page.tsx] API 响应状态:", res.status);
+
     const data = await res.json();
+    console.log("[page.tsx] API 响应数据:", data);
+
     if (!res.ok) {
       throw new Error(data?.error ?? "讀取商品失敗");
     }
     if (!Array.isArray(data.products)) {
       throw new Error("商品資料格式錯誤");
     }
+
+    console.log("[page.tsx] 成功加载", data.products.length, "个商品");
     return data.products;
   } catch (err) {
-    console.error("Failed to load products:", err);
+    console.error("[page.tsx] 加载商品失败:", err);
     return [];
   }
 }
