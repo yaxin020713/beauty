@@ -244,6 +244,8 @@ export default function AdminProductEditModal({
                     <option value="香水">香水</option>
                     <option value="身體">身體</option>
                     <option value="清潔">清潔</option>
+                    <option value="髮品">髮品</option>
+                    <option value="防曬">防曬</option>
                     <option value="其他">其他</option>
                   </select>
                 </div>
