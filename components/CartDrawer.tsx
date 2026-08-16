@@ -16,7 +16,6 @@ export default function CartDrawer() {
     updateQuantity,
     removeFromCart,
     totalPrice,
-    totalWeightKg,
     totalQuantity,
   } = useCart();
 
@@ -172,13 +171,7 @@ export default function CartDrawer() {
                   </ul>
 
                   {/* 底部：總額與前往結帳 */}
-                  <div className="space-y-3 border-t border-stone-100 bg-stone-50/60 px-5 py-4">
-                    <div className="flex justify-between text-sm text-stone-600">
-                      <span>總重量</span>
-                      <span className="font-medium text-stone-900">
-                        {totalWeightKg} kg
-                      </span>
-                    </div>
+                  <div className="space-y-2 border-t border-stone-100 bg-stone-50/60 px-5 py-4">
                     <div className="flex items-baseline justify-between">
                       <span className="text-sm text-stone-600">訂單總金額</span>
                       <span className="text-2xl font-semibold text-stone-900">
