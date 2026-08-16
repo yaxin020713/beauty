@@ -315,7 +315,7 @@ export default function AdminProductModal({
 
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
-                    商品圖片
+                    商品圖片 (選填)
                   </label>
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -352,7 +352,7 @@ export default function AdminProductModal({
 
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
-                    商品描述
+                    商品描述 (選填)
                   </label>
                   <textarea
                     name="description"
