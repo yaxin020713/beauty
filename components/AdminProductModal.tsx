@@ -30,11 +30,14 @@ export default function AdminProductModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [imagePreview, setImagePreview] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (open) {
       setError("");
       setSuccess(false);
+      setImagePreview("");
       setFormData({
         name: "",
         category: "護膚",
@@ -53,6 +56,45 @@ export default function AdminProductModal({
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("請選擇圖片檔案");
+      return;
+    }
+
+    setUploadingImage(true);
+    setError("");
+
+    try {
+      const formDataForUpload = new FormData();
+      formDataForUpload.append("file", file);
+      formDataForUpload.append("upload_preset", "beauty_products");
+      formDataForUpload.append("cloud_name", "ugcd0jm5");
+
+      const res = await fetch("https://api.cloudinary.com/v1_1/ugcd0jm5/image/upload", {
+        method: "POST",
+        body: formDataForUpload,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.secure_url) {
+        setError("圖片上傳失敗，請重試");
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, image: data.secure_url }));
+      setImagePreview(data.secure_url);
+    } catch {
+      setError("圖片上傳失敗，請檢查網路連線");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,16 +298,39 @@ export default function AdminProductModal({
 
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
-                    商品圖片 URL
+                    商品圖片
                   </label>
-                  <input
-                    type="url"
-                    name="image"
-                    value={formData.image}
-                    onChange={handleChange}
-                    placeholder="https://..."
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
-                  />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                        className="flex-1 text-sm"
+                      />
+                      {uploadingImage && (
+                        <span className="text-xs text-stone-500">上傳中...</span>
+                      )}
+                    </div>
+
+                    {imagePreview && (
+                      <div className="relative w-full h-40 rounded-xl overflow-hidden bg-stone-100">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imagePreview}
+                          alt="圖片預覽"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {!imagePreview && (
+                      <div className="w-full h-40 rounded-xl border-2 border-dashed border-stone-200 flex items-center justify-center bg-stone-50">
+                        <p className="text-xs text-stone-500">上傳圖片後預覽</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
