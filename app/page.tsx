@@ -12,7 +12,7 @@ async function loadProducts(): Promise<Product[]> {
         : "http://localhost:3000");
 
     const res = await fetch(`${baseUrl}/api/products`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 5 },
     });
 
     const data = await res.json();

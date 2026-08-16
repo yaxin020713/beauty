@@ -135,4 +135,77 @@ export async function createProduct(productData: {
   return response;
 }
 
+/** 更新商品資料 */
+export async function updateProduct(
+  pageId: string,
+  productData: {
+    name?: string;
+    brand?: string;
+    category?: string;
+    price?: number;
+    weight_g?: number;
+    cost50?: number;
+    cost100?: number;
+    image?: string;
+    description?: string;
+  }
+) {
+  const properties: Record<string, unknown> = {};
+
+  if (productData.name !== undefined) {
+    properties.Name = {
+      title: [{ text: { content: productData.name } }],
+    };
+  }
+  if (productData.brand !== undefined) {
+    properties["品牌"] = {
+      rich_text: productData.brand ? [{ text: { content: productData.brand } }] : [],
+    };
+  }
+  if (productData.category !== undefined) {
+    properties.Category = {
+      select: { name: productData.category },
+    };
+  }
+  if (productData.price !== undefined) {
+    properties.Price = {
+      number: Number(productData.price) || 0,
+    };
+  }
+  if (productData.weight_g !== undefined) {
+    properties.Weight_g = {
+      number: Number(productData.weight_g) || 0,
+    };
+  }
+  if (productData.cost50 !== undefined) {
+    properties.Cost_50 = {
+      number: Number(productData.cost50) || 0,
+    };
+  }
+  if (productData.cost100 !== undefined) {
+    properties.Cost_100 = {
+      number: Number(productData.cost100) || 0,
+    };
+  }
+  if (productData.image !== undefined) {
+    properties.Image = {
+      url: productData.image && productData.image.trim() !== "" ? productData.image.trim() : null,
+    };
+  }
+  if (productData.description !== undefined) {
+    properties.Description = {
+      rich_text: productData.description
+        ? [{ text: { content: productData.description } }]
+        : [],
+    };
+  }
+
+  const response = await notion.pages.update({
+    page_id: pageId,
+    properties,
+  });
+
+  return response;
+}
+
 

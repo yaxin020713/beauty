@@ -15,7 +15,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import type { Product } from "@/lib/types";
 import { useAuth } from "./CartContext";
+import AdminProductEditModal from "./AdminProductEditModal";
 
 type OrderItem = {
   id: string;
@@ -53,12 +55,15 @@ export default function AdminDashboard({
   onClose: () => void;
 }) {
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState<"orders" | "statistics">("statistics");
+  const [tab, setTab] = useState<"orders" | "statistics" | "products">("statistics");
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [products, setProducts] = useState<ProductStats[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     if (open && isAdmin) {
@@ -71,20 +76,24 @@ export default function AdminDashboard({
     setError("");
 
     try {
-      const [ordersRes, statsRes] = await Promise.all([
+      const [ordersRes, statsRes, productsRes] = await Promise.all([
         fetch("/api/admin/orders"),
         fetch("/api/admin/statistics"),
+        fetch("/api/products"),
       ]);
 
       if (!ordersRes.ok) throw new Error("獲取訂單失敗");
       if (!statsRes.ok) throw new Error("獲取統計失敗");
+      if (!productsRes.ok) throw new Error("獲取商品失敗");
 
       const ordersData = await ordersRes.json();
       const statsData = await statsRes.json();
+      const productsData = await productsRes.json();
 
       if (ordersData.orders) setOrders(ordersData.orders);
       if (statsData.summary) setStatistics(statsData.summary);
       if (statsData.products) setProducts(statsData.products);
+      if (productsData.products) setAllProducts(productsData.products);
     } catch (err) {
       setError(err instanceof Error ? err.message : "載入數據失敗");
     } finally {
@@ -131,10 +140,10 @@ export default function AdminDashboard({
               </p>
             </div>
 
-            <div className="mb-6 flex gap-2 border-b border-stone-200">
+            <div className="mb-6 flex gap-2 border-b border-stone-200 overflow-x-auto">
               <button
                 onClick={() => setTab("statistics")}
-                className={`px-4 py-3 text-sm font-medium transition ${
+                className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "statistics"
                     ? "border-b-2 border-pink-600 text-pink-600"
                     : "text-stone-600 hover:text-stone-900"
@@ -146,8 +155,21 @@ export default function AdminDashboard({
                 </span>
               </button>
               <button
+                onClick={() => setTab("products")}
+                className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
+                  tab === "products"
+                    ? "border-b-2 border-pink-600 text-pink-600"
+                    : "text-stone-600 hover:text-stone-900"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  商品管理 ({allProducts.length})
+                </span>
+              </button>
+              <button
                 onClick={() => setTab("orders")}
-                className={`px-4 py-3 text-sm font-medium transition ${
+                className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "orders"
                     ? "border-b-2 border-pink-600 text-pink-600"
                     : "text-stone-600 hover:text-stone-900"
@@ -173,6 +195,14 @@ export default function AdminDashboard({
               </div>
             ) : tab === "statistics" ? (
               <StatisticsTab statistics={statistics} products={products} />
+            ) : tab === "products" ? (
+              <ProductsTab
+                products={allProducts}
+                onEdit={(product) => {
+                  setEditingProduct(product);
+                  setShowEditModal(true);
+                }}
+              />
             ) : (
               <OrdersTab orders={orders} />
             )}
@@ -185,6 +215,16 @@ export default function AdminDashboard({
               {loading ? "刷新中..." : "刷新數據"}
             </button>
           </motion.div>
+
+          <AdminProductEditModal
+            open={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            onSuccess={() => {
+              setShowEditModal(false);
+              fetchData();
+            }}
+            product={editingProduct}
+          />
         </div>
       )}
     </AnimatePresence>
@@ -474,6 +514,105 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                   )}
                 </div>
               )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProductsTab({
+  products,
+  onEdit,
+}: {
+  products: Product[];
+  onEdit: (product: Product) => void;
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("全部");
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.includes(searchTerm) ||
+      product.brand.includes(searchTerm) ||
+      product.category.includes(searchTerm);
+    const matchesCategory = categoryFilter === "全部" || product.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = ["全部", ...new Set(products.map((p) => p.category))];
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-3 flex flex-col">
+        <div className="flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-2 bg-white">
+          <Search className="h-4 w-4 text-stone-400" />
+          <input
+            type="text"
+            placeholder="搜尋商品名稱、品牌或分類..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
+          />
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setCategoryFilter(category)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition ${
+                categoryFilter === category
+                  ? "bg-stone-900 text-white"
+                  : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {filteredProducts.length === 0 ? (
+          <p className="text-center text-sm text-stone-500 py-8">
+            {products.length === 0 ? "暫無商品" : "未找到匹配的商品"}
+          </p>
+        ) : (
+          filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className="rounded-xl bg-stone-50 p-4 hover:bg-stone-100 transition"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-stone-900 truncate">{product.name}</p>
+                  {product.brand && (
+                    <p className="text-xs text-stone-500">{product.brand}</p>
+                  )}
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
+                      {product.category}
+                    </span>
+                    <span className="text-xs text-stone-600">
+                      NT${product.price}
+                    </span>
+                    {product.totalSold > 0 && (
+                      <span className="text-xs text-emerald-700 font-medium">
+                        已售 {product.totalSold} 件
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => onEdit(product)}
+                  className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 whitespace-nowrap"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  編輯
+                </button>
+              </div>
             </div>
           ))
         )}
