@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Mail, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 import { useAuth } from "./CartContext";
 
 export default function LoginModal() {
@@ -35,17 +37,42 @@ export default function LoginModal() {
       return;
     }
 
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yaxinzhu2002@gmail.com";
-    const isAdmin = trimmed.toLowerCase() === adminEmail.toLowerCase();
-    setSuccessMsg(
-      isAdmin
-        ? `✨ 登入成功！\n您已取得管理員權限\n(${adminEmail})`
-        : `✓ 登入成功！\n已綁定為顧客\n(${trimmed})`
-    );
+    setSuccessMsg(`✓ 登入成功！\n(${trimmed})`);
 
     setTimeout(() => {
       closeLoginModal();
     }, 1500);
+  };
+
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+    try {
+      const decoded = jwtDecode<{ email: string }>(credentialResponse.credential!);
+      const email = decoded.email;
+
+      if (!email) {
+        setError("無法從 Google 帳戶取得 Email");
+        return;
+      }
+
+      const ok = login(email);
+      if (!ok) {
+        setError("Google 登入失敗，請重試");
+        return;
+      }
+
+      setSuccessMsg(`✓ 登入成功！\n(${email})`);
+
+      setTimeout(() => {
+        closeLoginModal();
+      }, 1500);
+    } catch (error) {
+      console.error("Google 登入解析失敗:", error);
+      setError("Google 登入失敗，請重試");
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google 登入失敗，請重試");
   };
 
   return (
@@ -81,10 +108,10 @@ export default function LoginModal() {
                 <Mail className="h-5 w-5" />
               </span>
               <h2 className="font-serif text-2xl font-semibold text-stone-900">
-                顧客登入 / 綁定 Email
+                登入 / 綁定 Email
               </h2>
               <p className="mt-1 text-sm text-stone-500">
-                以 Email 作為您的唯一身分識別
+                透過 Email 登入以購買商品
               </p>
             </div>
 
@@ -122,44 +149,26 @@ export default function LoginModal() {
                   </div>
                 )}
 
-                <div className="space-y-3">
-                  <div className="rounded-2xl bg-blue-50 p-3.5 text-xs text-blue-700 space-y-2">
-                    <p className="font-semibold flex items-center gap-1">
-                      👤 顧客登入
-                    </p>
-                    <p>輸入任意有效的 Email 地址即可作為顧客登入，可：</p>
-                    <ul className="list-disc list-inside space-y-1 ml-1">
-                      <li>瀏覽所有商品</li>
-                      <li>加入購物車</li>
-                      <li>進行結帳購買</li>
-                    </ul>
-                  </div>
-
-                  <div className="rounded-2xl bg-pink-50 p-3.5 text-xs text-pink-700 space-y-2">
-                    <p className="font-semibold flex items-center gap-1">
-                      🛡️ 管理員登入
-                    </p>
-                    <p>
-                      使用管理員 Email：{" "}
-                      <code className="bg-pink-100 px-2 py-1 rounded font-semibold">
-                        yaxinzhu2002@gmail.com
-                      </code>
-                    </p>
-                    <p>可額外使用：</p>
-                    <ul className="list-disc list-inside space-y-1 ml-1">
-                      <li>上架新商品</li>
-                      <li>編輯商品資訊</li>
-                      <li>管理訂單</li>
-                    </ul>
-                  </div>
-                </div>
-
                 <button
                   type="submit"
                   className="w-full rounded-xl bg-stone-900 py-3.5 text-sm font-medium text-white transition hover:bg-stone-800 active:scale-[0.99]"
                 >
-                  確認登入 / 綁定
+                  確認登入
                 </button>
+
+                <div className="relative flex items-center gap-3">
+                  <div className="flex-1 border-t border-stone-200" />
+                  <span className="text-xs text-stone-500">或</span>
+                  <div className="flex-1 border-t border-stone-200" />
+                </div>
+
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    size="large"
+                  />
+                </div>
               </form>
             )}
           </motion.div>
