@@ -58,15 +58,29 @@ export async function fetchProducts(): Promise<Product[]> {
     page_size: 100,
   });
 
+  console.log("[fetchProducts] 從 Notion 獲取", response.results.length, "個商品頁面");
+
   return response.results
-    .map((page) => {
+    .map((page, idx) => {
       if (!("properties" in page)) return null;
       const props = page.properties as Record<string, unknown>;
 
+      const name = asTitle(props["Name"]);
+      const brand = asRichText(props["品牌"]);
+
+      if (idx < 2) {
+        console.log(`[fetchProducts] 商品${idx + 1}:`, {
+          nameRaw: props["Name"],
+          name,
+          brandRaw: props["品牌"],
+          brand,
+        });
+      }
+
       const product: Product = {
         id: page.id,
-        name: asTitle(props["Name"]),
-        brand: asRichText(props["品牌"]),
+        name,
+        brand,
         category: asSelect(props["Category"]),
         price: asNumber(props["Price"]),
         weight_g: asNumber(props["Weight_g"]),
