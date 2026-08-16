@@ -16,7 +16,7 @@ import {
 import { useCart } from "./CartContext";
 import { cn } from "@/lib/utils";
 import { BANK_INFO } from "@/lib/bank";
-import { SHIPPING_COSTS, DEFAULT_CONVENIENCE_711_STORES, getConvenience711Stores, type ShippingMethod, type Store } from "@/lib/shipping";
+import { SHIPPING_COSTS, type ShippingMethod } from "@/lib/shipping";
 
 type OrderResult = {
   orderId: string;
@@ -38,31 +38,11 @@ export default function CheckoutModal({
   const [paymentLast5, setPaymentLast5] = useState("");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
   const [selectedStore, setSelectedStore] = useState<string>("");
-  const [stores, setStores] = useState<Store[]>(DEFAULT_CONVENIENCE_711_STORES);
-  const [storesLoading, setStoresLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // 加載 7-11 門市列表
-  useEffect(() => {
-    const loadStores = async () => {
-      setStoresLoading(true);
-      try {
-        const loadedStores = await getConvenience711Stores();
-        setStores(loadedStores);
-      } catch (err) {
-        console.error("載入門市失敗:", err);
-        setStores(DEFAULT_CONVENIENCE_711_STORES);
-      } finally {
-        setStoresLoading(false);
-      }
-    };
-
-    loadStores();
-  }, []);
 
   // 每次開啟時重置狀態
   useEffect(() => {
@@ -317,28 +297,76 @@ export default function CheckoutModal({
                     </div>
                   </div>
 
+                  {/* 銀行轉帳資訊 - 移到前面顯示 */}
+                  <div className="rounded-2xl bg-gradient-to-br from-amber-900 to-stone-900 p-4 text-white shadow-lg border border-amber-500/30">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Landmark className="h-5 w-5 text-amber-300" strokeWidth={2} />
+                      <p className="text-base font-bold">銀行轉帳資訊</p>
+                    </div>
+
+                    <div className="space-y-4 text-sm">
+                      <div>
+                        <p className="text-amber-200 text-xs font-semibold mb-1.5">銀行代碼</p>
+                        <div className="bg-stone-800/80 rounded-lg px-4 py-3 font-mono text-lg font-bold text-amber-100">
+                          {BANK_INFO.code} · {BANK_INFO.bankName}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-amber-200 text-xs font-semibold mb-1.5">銀行帳號</p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <div className="flex-1 bg-stone-800/80 rounded-lg px-4 py-3 font-mono text-lg font-bold text-amber-100 break-all">
+                            {BANK_INFO.account}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleCopyAccount}
+                            className="flex items-center justify-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-900 px-4 py-3 font-semibold transition active:scale-95 whitespace-nowrap"
+                          >
+                            {copied ? (
+                              <>
+                                <CheckCheck className="h-5 w-5" />
+                                已複製！
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-5 w-5" />
+                                複製
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* 7-11 門市選擇 */}
                   {shippingMethod === "convenience_711" && (
                     <div className="space-y-2">
-                      <label htmlFor="store-select" className="text-xs font-bold uppercase tracking-wider text-stone-900 block">
-                        選擇取貨門市 * {storesLoading && <span className="text-xs text-stone-500">（載入中）</span>}
+                      <label htmlFor="store-input" className="text-xs font-bold uppercase tracking-wider text-stone-900 block">
+                        7-11 門市店號 *
                       </label>
-                      <select
-                        id="store-select"
+                      <input
+                        id="store-input"
+                        type="text"
+                        required
+                        placeholder="例：7001 或 查詢店號 https://emap.pcsc.com.tw"
                         value={selectedStore}
-                        onChange={(e) => setSelectedStore(e.target.value)}
-                        disabled={storesLoading}
-                        className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <option value="">
-                          {storesLoading ? "載入門市中..." : "請選擇門市"}
-                        </option>
-                        {stores.map((store) => (
-                          <option key={store.id} value={store.id}>
-                            {store.name} ({store.address})
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(e) => setSelectedStore(e.target.value.trim())}
+                        className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"
+                      />
+                      <p className="text-xs text-stone-500">
+                        💡 點擊{" "}
+                        <a
+                          href="https://emap.pcsc.com.tw/ecmap/default.aspx"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-pink-600 underline hover:text-pink-700 font-medium"
+                        >
+                          連結
+                        </a>
+                        {" "}查詢 7-11 門市店號
+                      </p>
                     </div>
                   )}
 
@@ -384,49 +412,6 @@ export default function CheckoutModal({
                     placeholder="電話 *"
                     className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"
                   />
-                  {/* 銀行轉帳資訊 */}
-                  <div className="rounded-2xl bg-stone-900 p-4 text-white shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <Landmark
-                        className="h-4 w-4 text-amber-400"
-                        strokeWidth={2}
-                      />
-                      <p className="text-sm font-semibold tracking-wide">
-                        銀行轉帳資訊
-                      </p>
-                    </div>
-
-                    <dl className="mt-3 space-y-3 text-sm">
-                      <div className="space-y-1">
-                        <dt className="text-stone-400 text-xs">銀行代碼</dt>
-                        <dd className="font-medium break-words">
-                          {BANK_INFO.code}（{BANK_INFO.bankName}）
-                        </dd>
-                      </div>
-                      <div className="space-y-1">
-                        <dt className="text-stone-400 text-xs">銀行帳號</dt>
-                        <dd className="flex flex-col sm:flex-row sm:items-center gap-2">
-                          <span className="font-medium tracking-wider break-all">
-                            {BANK_INFO.account}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={handleCopyAccount}
-                            aria-label="複製銀行帳號"
-                            className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-amber-300 transition hover:bg-white/20 active:scale-95 self-start sm:self-auto flex-shrink-0"
-                          >
-                            {copied ? (
-                              <CheckCheck className="h-3.5 w-3.5" />
-                            ) : (
-                              <Copy className="h-3.5 w-3.5" />
-                            )}
-                            {copied ? "已複製" : "複製"}
-                          </button>
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-
                   {/* 匯款提醒 */}
                   <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
                     <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
