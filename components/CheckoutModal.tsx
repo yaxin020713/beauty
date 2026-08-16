@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Copy,
   CreditCard,
-  Landmark,
   X,
   Truck,
   Package,
@@ -297,45 +296,34 @@ export default function CheckoutModal({
                     </div>
                   </div>
 
-                  {/* 銀行轉帳資訊 - 移到前面顯示 */}
-                  <div className="rounded-2xl bg-gradient-to-br from-amber-900 to-stone-900 p-4 text-white shadow-lg border border-amber-500/30">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Landmark className="h-5 w-5 text-amber-300" strokeWidth={2} />
-                      <p className="text-base font-bold">銀行轉帳資訊</p>
-                    </div>
-
-                    <div className="space-y-4 text-sm">
-                      <div>
-                        <p className="text-amber-200 text-xs font-semibold mb-1.5">銀行代碼</p>
-                        <div className="bg-stone-800/80 rounded-lg px-4 py-3 font-mono text-lg font-bold text-amber-100">
-                          {BANK_INFO.code} · {BANK_INFO.bankName}
-                        </div>
+                  {/* 銀行轉帳資訊 */}
+                  <div className="bg-stone-900 text-white p-4 rounded-lg space-y-3">
+                    <p className="text-sm font-bold">銀行轉帳資訊</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-stone-400">銀行代碼：</span>
+                        <span className="font-medium">{BANK_INFO.code}（{BANK_INFO.bankName}）</span>
                       </div>
-
-                      <div>
-                        <p className="text-amber-200 text-xs font-semibold mb-1.5">銀行帳號</p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <div className="flex-1 bg-stone-800/80 rounded-lg px-4 py-3 font-mono text-lg font-bold text-amber-100 break-all">
-                            {BANK_INFO.account}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleCopyAccount}
-                            className="flex items-center justify-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-900 px-4 py-3 font-semibold transition active:scale-95 whitespace-nowrap"
-                          >
-                            {copied ? (
-                              <>
-                                <CheckCheck className="h-5 w-5" />
-                                已複製！
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-5 w-5" />
-                                複製
-                              </>
-                            )}
-                          </button>
-                        </div>
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-stone-400">銀行帳號：</span>
+                        <span className="font-medium font-mono">{BANK_INFO.account}</span>
+                        <button
+                          type="button"
+                          onClick={handleCopyAccount}
+                          className="ml-2 flex items-center gap-1 bg-white text-stone-900 px-2 py-1 rounded text-xs font-medium hover:bg-stone-200 transition"
+                        >
+                          {copied ? (
+                            <>
+                              <CheckCheck className="h-3.5 w-3.5" />
+                              已複製
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3.5 w-3.5" />
+                              複製
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                   </div>
