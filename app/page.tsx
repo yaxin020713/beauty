@@ -7,15 +7,9 @@ export const dynamic = "force-dynamic";
 
 async function loadProducts(): Promise<Product[]> {
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === "production"
-        ? "https://beauty-storefront.vercel.app"
-        : "http://localhost:3000");
+    console.log("[page.tsx] 正在加载商品");
 
-    console.log("[page.tsx] 正在加载商品，baseUrl:", baseUrl);
-
-    const res = await fetch(`${baseUrl}/api/products`, {
+    const res = await fetch(`/api/products`, {
       cache: "no-store",
     });
 
