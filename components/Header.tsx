@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ShoppingBag, Sparkles, User, LogOut, ShieldPlus, BarChart3, Filter } from "lucide-react";
+import { ShoppingBag, Sparkles, User, LogOut, ShieldPlus, BarChart3, Menu } from "lucide-react";
 import { useAuth, useCart } from "./CartContext";
 import LoginModal from "./LoginModal";
 import AdminProductModal from "./AdminProductModal";
@@ -18,8 +18,18 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-40 border-b border-stone-200/70 bg-[#FCFBF9]/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-          {/* 品牌 Logo + 手機版過濾按鈕 */}
-          <div className="flex items-center gap-3">
+          {/* 左側：手機版過濾按鈕 + 品牌 Logo */}
+          <div className="flex items-center gap-2">
+            {/* 手機版過濾按鈕 */}
+            <button
+              onClick={openMobileFilter}
+              className="md:hidden flex items-center justify-center h-9 w-9 rounded-full hover:bg-stone-100 transition"
+              aria-label="開啟篩選"
+              title="篩選"
+            >
+              <Menu className="h-5 w-5 text-stone-600" />
+            </button>
+
             <a href="#" className="flex items-center gap-2.5" aria-label="美妝選物店">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-pink-600/10 ring-1 ring-pink-600/20">
                 <Sparkles className="h-4 w-4 text-pink-600" />
@@ -28,16 +38,6 @@ export default function Header() {
                 美妝選物店
               </span>
             </a>
-
-            {/* 手機版過濾按鈕 */}
-            <button
-              onClick={openMobileFilter}
-              className="md:hidden flex items-center justify-center h-9 w-9 rounded-full hover:bg-stone-100 transition"
-              aria-label="開啟篩選"
-              title="篩選"
-            >
-              <Filter className="h-5 w-5 text-stone-600" />
-            </button>
           </div>
 
           {/* 右側：登入 / 管理員後台 / 購物車 */}
