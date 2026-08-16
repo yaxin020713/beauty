@@ -9,40 +9,15 @@ import { useAuth } from "./CartContext";
 
 export default function LoginModal() {
   const { user, login, isLoginModalOpen, closeLoginModal } = useAuth();
-  const [emailInput, setEmailInput] = useState("");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     if (isLoginModalOpen) {
-      setEmailInput(user?.email ?? "");
       setError("");
       setSuccessMsg("");
     }
-  }, [isLoginModalOpen, user]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    const trimmed = emailInput.trim();
-
-    if (!trimmed || !trimmed.includes("@")) {
-      setError("請輸入有效的 Email 地址");
-      return;
-    }
-
-    const ok = login(trimmed);
-    if (!ok) {
-      setError("Email 格式不正確，請重新輸入");
-      return;
-    }
-
-    setSuccessMsg(`✓ 登入成功！\n(${trimmed})`);
-
-    setTimeout(() => {
-      closeLoginModal();
-    }, 1500);
-  };
+  }, [isLoginModalOpen]);
 
   const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
     try {
@@ -103,15 +78,15 @@ export default function LoginModal() {
               <X className="h-4 w-4" />
             </button>
 
-            <div className="mb-6 text-center">
+            <div className="mb-8 text-center">
               <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-pink-600/10 text-pink-600 ring-1 ring-pink-600/20">
                 <Mail className="h-5 w-5" />
               </span>
               <h2 className="font-serif text-2xl font-semibold text-stone-900">
-                登入 / 綁定 Email
+                登入
               </h2>
               <p className="mt-1 text-sm text-stone-500">
-                透過 Email 登入以購買商品
+                使用 Google 帳號快速登入
               </p>
             </div>
 
@@ -127,21 +102,7 @@ export default function LoginModal() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
-                    電子郵件 (Email)
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="例如: user@example.com 或 yaxinzhu2002@gmail.com"
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
-                  />
-                </div>
-
+              <div className="space-y-4">
                 {error && (
                   <div className="rounded-xl bg-red-50 p-3 text-xs text-red-600 flex items-center gap-2">
                     <ShieldAlert className="h-4 w-4 shrink-0" />
@@ -149,27 +110,14 @@ export default function LoginModal() {
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  className="w-full rounded-xl bg-stone-900 py-3.5 text-sm font-medium text-white transition hover:bg-stone-800 active:scale-[0.99]"
-                >
-                  確認登入
-                </button>
-
-                <div className="relative flex items-center gap-3">
-                  <div className="flex-1 border-t border-stone-200" />
-                  <span className="text-xs text-stone-500">或</span>
-                  <div className="flex-1 border-t border-stone-200" />
-                </div>
-
-                <div className="flex justify-center">
+                <div className="flex justify-center py-4">
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={handleGoogleError}
                     size="large"
                   />
                 </div>
-              </form>
+              </div>
             )}
           </motion.div>
         </div>
