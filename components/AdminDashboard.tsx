@@ -541,7 +541,7 @@ function ProductsTab({
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ["全部", ...new Set(products.map((p) => p.category))];
+  const categories = ["全部", ...Array.from(new Set(products.map((p) => p.category)))];
 
   return (
     <div className="space-y-4">
