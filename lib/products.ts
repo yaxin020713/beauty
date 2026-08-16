@@ -66,7 +66,7 @@ export async function fetchProducts(): Promise<Product[]> {
       const product: Product = {
         id: page.id,
         name: asTitle(props["Name"]),
-        brand: asTitle(props["Brand"]),
+        brand: asRichText(props["品牌"]),
         category: asSelect(props["Category"]),
         price: asNumber(props["Price"]),
         weight_g: asNumber(props["Weight_g"]),
@@ -100,8 +100,8 @@ export async function createProduct(productData: {
       Name: {
         title: [{ text: { content: productData.name } }],
       },
-      Brand: {
-        title: productData.brand ? [{ text: { content: productData.brand } }] : [],
+      品牌: {
+        rich_text: productData.brand ? [{ text: { content: productData.brand } }] : [],
       },
       Category: {
         select: { name: productData.category || "未分類" },
