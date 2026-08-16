@@ -167,11 +167,11 @@ export default function CheckoutModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
-            className="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4 overflow-y-auto"
+            className="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4"
           >
-            <div className="w-full overflow-y-auto max-h-[100dvh] sm:max-h-none rounded-t-3xl bg-white shadow-2xl sm:max-w-sm sm:rounded-3xl flex flex-col">
+            <div className="w-full max-h-[90dvh] sm:max-h-[95dvh] rounded-t-3xl bg-white shadow-2xl sm:max-w-sm sm:rounded-3xl flex flex-col overflow-hidden">
               {/* 標題列 */}
-              <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
+              <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4 flex-shrink-0">
                 <h2 className="text-base font-semibold text-stone-900">結帳</h2>
                 <button
                   type="button"
@@ -185,7 +185,7 @@ export default function CheckoutModal({
 
               {orderResult ? (
                 /* 訂單成立 */
-                <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+                <div className="flex-1 overflow-y-auto flex flex-col items-center gap-3 px-6 py-10 text-center justify-center">
                   <CheckCircle2
                     className="h-12 w-12 text-emerald-500"
                     strokeWidth={1.5}
@@ -213,7 +213,7 @@ export default function CheckoutModal({
                 </div>
               ) : (
                 /* 結帳表單 */
-                <form onSubmit={handleSubmit} className="space-y-3 px-5 py-5">
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-3 px-5 py-5">
                   {/* 訂單摘要 */}
                   <div className="space-y-1 rounded-xl bg-stone-50 px-4 py-3 text-sm">
                     <div className="flex justify-between text-stone-500">
@@ -358,7 +358,7 @@ export default function CheckoutModal({
                       <p className="text-xs text-stone-500">
                         💡 點擊{" "}
                         <a
-                          href="https://emap.pcsc.com.tw/ecmap/default.aspx"
+                          href="https://www.ibon.com.tw/mobile/retail_inquiry.aspx"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-pink-600 underline hover:text-pink-700 font-medium"
