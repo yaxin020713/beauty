@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { Search } from "lucide-react";
 import type { Product } from "@/lib/types";
 import ProductCard from "./ProductCard";
 
@@ -9,6 +11,20 @@ export default function StorefrontContent({
 }: {
   products: Product[];
 }) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm.trim()) return products;
+
+    const query = searchTerm.toLowerCase();
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.brand.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query)
+    );
+  }, [products, searchTerm]);
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
       {/* 頁首文案 */}
@@ -24,6 +40,26 @@ export default function StorefrontContent({
         </p>
       </section>
 
+      {/* 搜尋欄 */}
+      <div className="mb-8 flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-3 bg-white shadow-sm">
+        <Search className="h-5 w-5 text-stone-400 flex-shrink-0" />
+        <input
+          type="text"
+          placeholder="搜尋商品名稱、品牌或分類..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm("")}
+            className="px-2 py-1 text-xs font-medium text-stone-500 hover:text-stone-700 rounded hover:bg-stone-100"
+          >
+            清除
+          </button>
+        )}
+      </div>
+
       {/* 無商品 */}
       {products.length === 0 && (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-300 px-6 py-20 text-center">
@@ -31,10 +67,17 @@ export default function StorefrontContent({
         </div>
       )}
 
+      {/* 無搜尋結果 */}
+      {products.length > 0 && filteredProducts.length === 0 && (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-300 px-6 py-20 text-center">
+          <p className="text-sm text-stone-400">未找到符合的商品</p>
+        </div>
+      )}
+
       {/* 商品網格 */}
-      {products.length > 0 && (
+      {filteredProducts.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-          {products.map((product, index) => (
+          {filteredProducts.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 20 }}
