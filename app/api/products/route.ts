@@ -7,8 +7,30 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     console.log("[api/products GET] 開始讀取商品");
+
+    // 先獲取原始 Notion 數據
+    const { notion, PRODUCTS_DB_ID } = await import("@/lib/notion");
+    const rawResponse = await notion.databases.query({
+      database_id: PRODUCTS_DB_ID,
+      page_size: 3,
+    });
+
+    if (rawResponse.results.length > 0 && "properties" in rawResponse.results[0]) {
+      const firstProduct = rawResponse.results[0].properties as Record<string, unknown>;
+      console.log("[api/products GET] 第一個商品原始數據:", {
+        name: firstProduct["Name"],
+        brand: firstProduct["品牌"],
+      });
+    }
+
     const products = await fetchProducts();
     console.log("[api/products GET] 成功讀取", products.length, "個商品");
+    if (products.length > 0) {
+      console.log("[api/products GET] 第一個商品轉換後:", {
+        name: products[0].name,
+        brand: products[0].brand,
+      });
+    }
     return NextResponse.json({ products });
   } catch (error) {
     console.error("[api/products GET] 讀取商品失敗:", error);
