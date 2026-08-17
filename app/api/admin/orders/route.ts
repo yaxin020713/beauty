@@ -36,8 +36,12 @@ export async function GET(request: NextRequest) {
         props.Customer_Phone?.type === "rich_text" && Array.isArray(props.Customer_Phone.rich_text)
           ? props.Customer_Phone.rich_text[0]?.plain_text || ""
           : "";
+      const paymentLast5Number =
+        props["帳號末5碼"]?.type === "number" ? props["帳號末5碼"].number : null;
       const paymentLast5 =
-        props.Payment_Last5?.type === "rich_text" && Array.isArray(props.Payment_Last5.rich_text)
+        paymentLast5Number !== null
+          ? String(paymentLast5Number).padStart(5, "0")
+          : props.Payment_Last5?.type === "rich_text" && Array.isArray(props.Payment_Last5.rich_text)
           ? props.Payment_Last5.rich_text[0]?.plain_text || ""
           : "";
       const itemsDetail =

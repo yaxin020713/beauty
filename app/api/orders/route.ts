@@ -116,6 +116,11 @@ export async function POST(request: NextRequest) {
       properties["面交否"] = { rich_text: [{ text: { content: "面交" } }] };
     }
 
+    // 帳號末5碼（數字型別）
+    if (paymentLast5) {
+      properties["帳號末5碼"] = { number: Number(paymentLast5) };
+    }
+
     await notion.pages.create({
       parent: { database_id: ORDERS_DB_ID },
       properties,

@@ -461,7 +461,10 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
               </div>
 
               {expandedId === order.id && (
-                <div className="mt-4 border-t border-stone-200 pt-4 space-y-2 text-xs text-stone-600">
+                <div
+                  className="mt-4 border-t border-stone-200 pt-4 space-y-2 text-xs text-stone-600"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <p><span className="font-medium text-stone-900">商品:</span> {order.itemsDetail}</p>
                   <p><span className="font-medium text-stone-900">重量:</span> {order.totalWeightKg} kg</p>
                   <p><span className="font-medium text-stone-900">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>
