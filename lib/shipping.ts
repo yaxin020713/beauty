@@ -1,6 +1,6 @@
 // 運費設定
 export const SHIPPING_COSTS = {
-  CONVENIENCE_711: 60, // 7-11 超商取貨運費
+  CONVENIENCE_711: 100, // 7-11 超商取貨運費
   FACE_TO_FACE: 0, // 面交無運費
 } as const;
 
