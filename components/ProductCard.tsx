@@ -70,8 +70,6 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         <div className="flex items-center gap-2 text-xs text-taupe-400">
-          <span>單瓶 {product.weight_g}g</span>
-          <span className="h-1 w-1 rounded-full bg-taupe-300" />
           <span>已售 {product.totalSold} 瓶</span>
         </div>
 

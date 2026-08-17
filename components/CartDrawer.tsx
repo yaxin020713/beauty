@@ -129,8 +129,7 @@ export default function CartDrawer() {
                             </button>
                           </div>
                           <p className="text-sm text-taupe-500">
-                            NT${item.price.toLocaleString()}・單瓶{" "}
-                            {item.weight_g}g
+                            NT${item.price.toLocaleString()}
                           </p>
 
                           {/* 數量控制 */}

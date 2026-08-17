@@ -87,9 +87,9 @@ export async function POST(request: NextRequest) {
     ? `7-11 超商取貨 (門市編號: ${selectedStore})`
     : "面交";
 
-  // 組合商品明細文字，例："小黑瓶 x2, 白繃帶 x1"
+  // 組合商品明細文字，附上該商品此訂單的總重量，例："小黑瓶 x2（200g）, 白繃帶 x1（50g）"
   const itemsDetail = items
-    .map((item) => `${item.name} x${item.quantity}`)
+    .map((item) => `${item.name} x${item.quantity}（${item.weight_g * item.quantity}g）`)
     .join(", ");
 
   const orderId = `訂單-${Date.now()}`;
