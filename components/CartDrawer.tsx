@@ -7,6 +7,7 @@ import { useCart } from "./CartContext";
 import CheckoutModal from "./CheckoutModal";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { cn } from "@/lib/utils";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_COSTS } from "@/lib/shipping";
 
 export default function CartDrawer() {
   const {
@@ -180,6 +181,9 @@ export default function CartDrawer() {
                         {totalPrice.toLocaleString()}
                       </span>
                     </div>
+                    <p className="text-xs text-taupe-400">
+                      (未滿 ${FREE_SHIPPING_THRESHOLD.toLocaleString()} 運費(含包材費) ${SHIPPING_COSTS.CONVENIENCE_711})
+                    </p>
                     <button
                       type="button"
                       onClick={handleCheckoutClick}
