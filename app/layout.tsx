@@ -20,7 +20,7 @@ const notoSansTC = Noto_Sans_TC({
 
 export const metadata: Metadata = {
   title: "Vesper's Vanity",
-  description: "私人梳妝台的精選清單・精緻保養與彩妝選品｜官方正貨保證｜快速出貨",
+  description: "私人梳妝台的精選清單・精緻保養與彩妝選品｜官方正貨保證",
 };
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";

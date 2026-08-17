@@ -93,7 +93,7 @@ export default function StorefrontContent({
           私人梳妝台的精選清單
         </h1>
         <p className="mt-2 text-sm text-taupe-500 sm:text-base">
-          精緻保養與彩妝選品 ｜ 官方正貨保證 ｜ 快速出貨
+          精緻保養與彩妝選品 ｜ 官方正貨保證
         </p>
       </section>
 
