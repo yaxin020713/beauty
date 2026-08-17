@@ -58,6 +58,14 @@ export async function GET(request: NextRequest) {
         props.Payment_Status?.type === "select" && props.Payment_Status.select
           ? (props.Payment_Status.select as any).name || ""
           : "";
+      const storeNumber =
+        props["7-11取貨店號"]?.type === "rich_text" && Array.isArray(props["7-11取貨店號"].rich_text)
+          ? props["7-11取貨店號"].rich_text[0]?.plain_text || ""
+          : "";
+      const faceToFace =
+        props["面交否"]?.type === "rich_text" && Array.isArray(props["面交否"].rich_text)
+          ? props["面交否"].rich_text[0]?.plain_text || ""
+          : "";
       const createdTime = (page as any).created_time || "";
 
       return {
@@ -71,6 +79,8 @@ export async function GET(request: NextRequest) {
         totalWeightKg,
         status: orderStatus,
         paymentStatus,
+        storeNumber,
+        faceToFace,
         createdTime,
       };
     });

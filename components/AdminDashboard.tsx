@@ -30,6 +30,8 @@ type OrderItem = {
   totalWeightKg: number;
   status: string;
   paymentStatus: string;
+  storeNumber: string;
+  faceToFace: string;
   createdTime: string;
 };
 
@@ -297,12 +299,17 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     return matchesSearch && matchesStatus;
   });
 
-  const handleUpdateOrder = async (orderId: string, status: string, paymentStatus: string) => {
+  const handleUpdateOrder = async (
+    orderId: string,
+    status: string,
+    paymentStatus: string,
+    faceToFace: string
+  ) => {
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, paymentStatus }),
+        body: JSON.stringify({ status, paymentStatus, faceToFace }),
       });
       if (res.ok) {
         setEditingOrderId(null);
@@ -458,6 +465,10 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                   <p><span className="font-medium text-stone-900">商品:</span> {order.itemsDetail}</p>
                   <p><span className="font-medium text-stone-900">重量:</span> {order.totalWeightKg} kg</p>
                   <p><span className="font-medium text-stone-900">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>
+                  {order.storeNumber && (
+                    <p><span className="font-medium text-stone-900">7-11 店號:</span> {order.storeNumber}</p>
+                  )}
+                  <p><span className="font-medium text-stone-900">面交:</span> {order.faceToFace || "未提供"}</p>
                   <p><span className="font-medium text-stone-900">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
 
                   {editingOrderId === order.id ? (
@@ -480,6 +491,13 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                         <option value="已核帳">已核帳</option>
                         <option value="已退款">已退款</option>
                       </select>
+                      <textarea
+                        defaultValue={order.faceToFace}
+                        id={`facetoface-${order.id}`}
+                        placeholder="面交細節（例：時間、地點）"
+                        rows={2}
+                        className="w-full px-2 py-1.5 text-xs rounded border border-stone-200"
+                      />
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
@@ -489,7 +507,15 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                             const paymentSel = document.getElementById(
                               `payment-${order.id}`
                             ) as HTMLSelectElement;
-                            handleUpdateOrder(order.id, statusSel.value, paymentSel.value);
+                            const faceToFaceInput = document.getElementById(
+                              `facetoface-${order.id}`
+                            ) as HTMLTextAreaElement;
+                            handleUpdateOrder(
+                              order.id,
+                              statusSel.value,
+                              paymentSel.value,
+                              faceToFaceInput.value
+                            );
                           }}
                           className="flex-1 px-2 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700"
                         >

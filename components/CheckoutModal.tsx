@@ -20,7 +20,7 @@ import { SHIPPING_COSTS, type ShippingMethod } from "@/lib/shipping";
 type OrderResult = {
   orderId: string;
   totalPrice: number;
-  totalWeightKg: number;
+  totalItemCount: number;
 };
 
 export default function CheckoutModal({
@@ -108,7 +108,7 @@ export default function CheckoutModal({
       setOrderResult({
         orderId: data.orderId,
         totalPrice: data.totalPrice,
-        totalWeightKg: data.totalWeightKg,
+        totalItemCount: cartItems.reduce((sum, i) => sum + i.quantity, 0),
       });
       clearCart();
     } catch {
@@ -197,7 +197,7 @@ export default function CheckoutModal({
                   </p>
                   <p className="text-sm text-stone-500">
                     合計 NT${orderResult.totalPrice.toLocaleString()}・
-                    {orderResult.totalWeightKg} kg
+                    共 {orderResult.totalItemCount} 件
                   </p>
                   <p className="text-xs text-stone-400">
                     訂單編號：{orderResult.orderId}
@@ -340,7 +340,7 @@ export default function CheckoutModal({
                         id="store-input"
                         type="text"
                         required
-                        placeholder="例：7001 或 查詢店號 https://emap.pcsc.com.tw"
+                        placeholder="例：110817 或 查詢店號 https://emap.pcsc.com.tw"
                         value={selectedStore}
                         onChange={(e) => setSelectedStore(e.target.value.trim())}
                         className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"

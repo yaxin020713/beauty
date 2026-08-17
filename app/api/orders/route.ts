@@ -109,6 +109,13 @@ export async function POST(request: NextRequest) {
       Status: { select: { name: "新訂單" } },
     };
 
+    // 7-11 取貨：寫入門市店號；面交：於面交否欄位標記「面交」
+    if (shippingMethod === "convenience_711") {
+      properties["7-11取貨店號"] = { rich_text: [{ text: { content: selectedStore } }] };
+    } else if (shippingMethod === "face_to_face") {
+      properties["面交否"] = { rich_text: [{ text: { content: "面交" } }] };
+    }
+
     await notion.pages.create({
       parent: { database_id: ORDERS_DB_ID },
       properties,

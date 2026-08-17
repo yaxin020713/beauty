@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 type UpdateRequest = {
   status?: string;
   paymentStatus?: string;
+  faceToFace?: string;
 };
 
 export async function PATCH(
@@ -24,6 +25,10 @@ export async function PATCH(
 
     if (body.paymentStatus) {
       updateProps.Payment_Status = { select: { name: body.paymentStatus } };
+    }
+
+    if (body.faceToFace !== undefined) {
+      updateProps["面交否"] = { rich_text: [{ text: { content: body.faceToFace } }] };
     }
 
     if (Object.keys(updateProps).length === 0) {
