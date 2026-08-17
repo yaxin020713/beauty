@@ -114,7 +114,7 @@ export default function AdminDashboard({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-taupe-900/50 backdrop-blur-sm"
           />
 
           <motion.div
@@ -128,27 +128,27 @@ export default function AdminDashboard({
               type="button"
               onClick={onClose}
               aria-label="關閉視窗"
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-taupe-400 transition hover:bg-taupe-100 hover:text-taupe-700"
             >
               <X className="h-4 w-4" />
             </button>
 
             <div className="mb-6">
-              <h2 className="font-serif text-2xl font-semibold text-stone-900">
+              <h2 className="font-serif text-2xl font-semibold text-taupe-900">
                 管理員面板
               </h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-taupe-500">
                 查看訂單和銷售統計
               </p>
             </div>
 
-            <div className="mb-6 flex gap-2 border-b border-stone-200 overflow-x-auto">
+            <div className="mb-6 flex gap-2 border-b border-taupe-200 overflow-x-auto">
               <button
                 onClick={() => setTab("statistics")}
                 className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "statistics"
-                    ? "border-b-2 border-pink-600 text-pink-600"
-                    : "text-stone-600 hover:text-stone-900"
+                    ? "border-b-2 border-sapphire-600 text-sapphire-600"
+                    : "text-taupe-600 hover:text-taupe-900"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -160,8 +160,8 @@ export default function AdminDashboard({
                 onClick={() => setTab("products")}
                 className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "products"
-                    ? "border-b-2 border-pink-600 text-pink-600"
-                    : "text-stone-600 hover:text-stone-900"
+                    ? "border-b-2 border-sapphire-600 text-sapphire-600"
+                    : "text-taupe-600 hover:text-taupe-900"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -173,8 +173,8 @@ export default function AdminDashboard({
                 onClick={() => setTab("orders")}
                 className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "orders"
-                    ? "border-b-2 border-pink-600 text-pink-600"
-                    : "text-stone-600 hover:text-stone-900"
+                    ? "border-b-2 border-sapphire-600 text-sapphire-600"
+                    : "text-taupe-600 hover:text-taupe-900"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export default function AdminDashboard({
 
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-stone-400" />
+                <Loader2 className="h-8 w-8 animate-spin text-taupe-400" />
               </div>
             ) : tab === "statistics" ? (
               <StatisticsTab statistics={statistics} products={products} />
@@ -212,7 +212,7 @@ export default function AdminDashboard({
             <button
               onClick={fetchData}
               disabled={loading}
-              className="mt-6 w-full rounded-xl bg-stone-100 py-2.5 text-sm font-medium text-stone-900 transition hover:bg-stone-200 disabled:opacity-50"
+              className="mt-6 w-full rounded-xl bg-taupe-100 py-2.5 text-sm font-medium text-taupe-900 transition hover:bg-taupe-200 disabled:opacity-50"
             >
               {loading ? "刷新中..." : "刷新數據"}
             </button>
@@ -264,17 +264,17 @@ function StatisticsTab({
       </div>
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
-        <p className="text-sm font-semibold text-stone-900">商品排行</p>
+        <p className="text-sm font-semibold text-taupe-900">商品排行</p>
         {products.map((product) => (
-          <div key={product.id} className="rounded-lg bg-stone-50 p-3">
+          <div key={product.id} className="rounded-lg bg-taupe-50 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-stone-900">{product.name}</p>
-                <p className="text-xs text-stone-500">{product.category}</p>
+                <p className="text-sm font-medium text-taupe-900">{product.name}</p>
+                <p className="text-xs text-taupe-500">{product.category}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-stone-900">{product.totalSold}</p>
-                <p className="text-xs text-stone-500">NT${product.price}</p>
+                <p className="text-sm font-bold text-taupe-900">{product.totalSold}</p>
+                <p className="text-xs text-taupe-500">NT${product.price}</p>
               </div>
             </div>
           </div>
@@ -393,19 +393,19 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
         <button
           onClick={exportToExcel}
           disabled={orders.length === 0}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:bg-stone-300 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
         >
           <Download className="h-4 w-4" />
           匯出Excel報表
         </button>
-        <div className="flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-2 bg-white">
-          <Search className="h-4 w-4 text-stone-400" />
+        <div className="flex items-center gap-2 rounded-xl border border-taupe-200 px-4 py-2 bg-white">
+          <Search className="h-4 w-4 text-taupe-400" />
           <input
             type="text"
             placeholder="搜尋訂單ID、客戶名稱或電話..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
+            className="w-full bg-transparent text-sm outline-none text-taupe-900 placeholder:text-taupe-400"
           />
         </div>
 
@@ -416,8 +416,8 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
               onClick={() => setStatusFilter(status)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition ${
                 statusFilter === status
-                  ? "bg-stone-900 text-white"
-                  : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  ? "bg-taupe-900 text-white"
+                  : "bg-taupe-100 text-taupe-700 hover:bg-taupe-200"
               }`}
             >
               {status}
@@ -428,25 +428,25 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {filteredOrders.length === 0 ? (
-          <p className="text-center text-sm text-stone-500 py-8">
+          <p className="text-center text-sm text-taupe-500 py-8">
             {orders.length === 0 ? "暫無訂單" : "未找到匹配的訂單"}
           </p>
         ) : (
           filteredOrders.map((order) => (
             <div
               key={order.id}
-              className="rounded-xl bg-stone-50 p-4 cursor-pointer transition hover:bg-stone-100"
+              className="rounded-xl bg-taupe-50 p-4 cursor-pointer transition hover:bg-taupe-100"
               onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-stone-900">{order.orderId}</p>
-                  <p className="text-xs text-stone-500 mt-1">
+                  <p className="text-sm font-semibold text-taupe-900">{order.orderId}</p>
+                  <p className="text-xs text-taupe-500 mt-1">
                     {order.customerName} ({order.customerPhone})
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-stone-900">
+                  <p className="text-sm font-semibold text-taupe-900">
                     NT${order.totalPrice.toLocaleString()}
                   </p>
                   <div className="mt-1 flex gap-1 justify-end">
@@ -462,24 +462,24 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
 
               {expandedId === order.id && (
                 <div
-                  className="mt-4 border-t border-stone-200 pt-4 space-y-2 text-xs text-stone-600"
+                  className="mt-4 border-t border-taupe-200 pt-4 space-y-2 text-xs text-taupe-600"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <p><span className="font-medium text-stone-900">商品:</span> {order.itemsDetail}</p>
-                  <p><span className="font-medium text-stone-900">重量:</span> {order.totalWeightKg} kg</p>
-                  <p><span className="font-medium text-stone-900">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>
+                  <p><span className="font-medium text-taupe-900">商品:</span> {order.itemsDetail}</p>
+                  <p><span className="font-medium text-taupe-900">重量:</span> {order.totalWeightKg} kg</p>
+                  <p><span className="font-medium text-taupe-900">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>
                   {order.storeNumber && (
-                    <p><span className="font-medium text-stone-900">7-11 店號:</span> {order.storeNumber}</p>
+                    <p><span className="font-medium text-taupe-900">7-11 店號:</span> {order.storeNumber}</p>
                   )}
-                  <p><span className="font-medium text-stone-900">面交:</span> {order.faceToFace || "未提供"}</p>
-                  <p><span className="font-medium text-stone-900">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
+                  <p><span className="font-medium text-taupe-900">面交:</span> {order.faceToFace || "未提供"}</p>
+                  <p><span className="font-medium text-taupe-900">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
 
                   {editingOrderId === order.id ? (
                     <div className="mt-3 space-y-2">
                       <select
                         defaultValue={order.status}
                         id={`status-${order.id}`}
-                        className="w-full px-2 py-1.5 text-xs rounded border border-stone-200"
+                        className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
                       >
                         <option value="新訂單">新訂單</option>
                         <option value="已出貨">已出貨</option>
@@ -488,7 +488,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                       <select
                         defaultValue={order.paymentStatus}
                         id={`payment-${order.id}`}
-                        className="w-full px-2 py-1.5 text-xs rounded border border-stone-200"
+                        className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
                       >
                         <option value="待核帳">待核帳</option>
                         <option value="已核帳">已核帳</option>
@@ -499,7 +499,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                         id={`facetoface-${order.id}`}
                         placeholder="面交細節（例：時間、地點）"
                         rows={2}
-                        className="w-full px-2 py-1.5 text-xs rounded border border-stone-200"
+                        className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
                       />
                       <div className="flex gap-2">
                         <button
@@ -526,7 +526,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                         </button>
                         <button
                           onClick={() => setEditingOrderId(null)}
-                          className="flex-1 px-2 py-1.5 bg-stone-200 text-stone-700 rounded text-xs font-medium hover:bg-stone-300"
+                          className="flex-1 px-2 py-1.5 bg-taupe-200 text-taupe-700 rounded text-xs font-medium hover:bg-taupe-300"
                         >
                           取消
                         </button>
@@ -575,14 +575,14 @@ function ProductsTab({
   return (
     <div className="space-y-4">
       <div className="space-y-3 flex flex-col">
-        <div className="flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-2 bg-white">
-          <Search className="h-4 w-4 text-stone-400" />
+        <div className="flex items-center gap-2 rounded-xl border border-taupe-200 px-4 py-2 bg-white">
+          <Search className="h-4 w-4 text-taupe-400" />
           <input
             type="text"
             placeholder="搜尋商品名稱、品牌或分類..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none text-stone-900 placeholder:text-stone-400"
+            className="w-full bg-transparent text-sm outline-none text-taupe-900 placeholder:text-taupe-400"
           />
         </div>
 
@@ -593,8 +593,8 @@ function ProductsTab({
               onClick={() => setCategoryFilter(category)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition ${
                 categoryFilter === category
-                  ? "bg-stone-900 text-white"
-                  : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  ? "bg-taupe-900 text-white"
+                  : "bg-taupe-100 text-taupe-700 hover:bg-taupe-200"
               }`}
             >
               {category}
@@ -605,26 +605,26 @@ function ProductsTab({
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {filteredProducts.length === 0 ? (
-          <p className="text-center text-sm text-stone-500 py-8">
+          <p className="text-center text-sm text-taupe-500 py-8">
             {products.length === 0 ? "暫無商品" : "未找到匹配的商品"}
           </p>
         ) : (
           filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="rounded-xl bg-stone-50 p-4 hover:bg-stone-100 transition"
+              className="rounded-xl bg-taupe-50 p-4 hover:bg-taupe-100 transition"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-stone-900 truncate">{product.name}</p>
+                  <p className="font-medium text-taupe-900 truncate">{product.name}</p>
                   {product.brand && (
-                    <p className="text-xs text-stone-500">{product.brand}</p>
+                    <p className="text-xs text-taupe-500">{product.brand}</p>
                   )}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
                     <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
                       {product.category}
                     </span>
-                    <span className="text-xs text-stone-600">
+                    <span className="text-xs text-taupe-600">
                       NT${product.price}
                     </span>
                     {product.totalSold > 0 && (

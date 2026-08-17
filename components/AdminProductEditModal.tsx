@@ -163,7 +163,7 @@ export default function AdminProductEditModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-taupe-900/50 backdrop-blur-sm"
           />
 
           <motion.div
@@ -177,16 +177,16 @@ export default function AdminProductEditModal({
               type="button"
               onClick={onClose}
               aria-label="關閉視窗"
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-taupe-400 transition hover:bg-taupe-100 hover:text-taupe-700"
             >
               <X className="h-4 w-4" />
             </button>
 
             <div className="mb-6 text-center">
-              <h2 className="font-serif text-2xl font-semibold text-stone-900">
+              <h2 className="font-serif text-2xl font-semibold text-taupe-900">
                 編輯商品
               </h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-taupe-500">
                 限管理員操作
               </p>
             </div>
@@ -194,14 +194,14 @@ export default function AdminProductEditModal({
             {success ? (
               <div className="flex flex-col items-center gap-3 py-6 text-center">
                 <CheckCircle2 className="h-12 w-12 text-emerald-600" />
-                <p className="text-sm font-medium text-stone-800">
+                <p className="text-sm font-medium text-taupe-800">
                   商品已成功更新！
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                     商品名稱 *
                   </label>
                   <input
@@ -211,12 +211,12 @@ export default function AdminProductEditModal({
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="例如: 小黑瓶精華液"
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                     品牌
                   </label>
                   <input
@@ -225,19 +225,19 @@ export default function AdminProductEditModal({
                     value={formData.brand}
                     onChange={handleChange}
                     placeholder="例如: Estée Lauder"
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                     分類 *
                   </label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                   >
                     <option value="護膚">護膚</option>
                     <option value="彩妝">彩妝</option>
@@ -252,7 +252,7 @@ export default function AdminProductEditModal({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                    <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                       售價 (NT$) *
                     </label>
                     <input
@@ -264,12 +264,12 @@ export default function AdminProductEditModal({
                       placeholder="0"
                       min="0"
                       step="1"
-                      className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                    <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                       單瓶重量 (g)
                     </label>
                     <input
@@ -280,14 +280,14 @@ export default function AdminProductEditModal({
                       placeholder="0"
                       min="0"
                       step="1"
-                      className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                    <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                       50瓶成本 (NT$)
                     </label>
                     <input
@@ -298,12 +298,12 @@ export default function AdminProductEditModal({
                       placeholder="0"
                       min="0"
                       step="0.01"
-                      className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                    <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                       100瓶成本 (NT$)
                     </label>
                     <input
@@ -314,13 +314,13 @@ export default function AdminProductEditModal({
                       placeholder="0"
                       min="0"
                       step="0.01"
-                      className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                     商品圖片 (選填)
                   </label>
                   <div className="space-y-3">
@@ -333,12 +333,12 @@ export default function AdminProductEditModal({
                         className="flex-1 text-sm"
                       />
                       {uploadingImage && (
-                        <span className="text-xs text-stone-500">上傳中...</span>
+                        <span className="text-xs text-taupe-500">上傳中...</span>
                       )}
                     </div>
 
                     {imagePreview && (
-                      <div className="relative w-full h-40 rounded-xl overflow-hidden bg-stone-100">
+                      <div className="relative w-full h-40 rounded-xl overflow-hidden bg-taupe-100">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={imagePreview}
@@ -349,15 +349,15 @@ export default function AdminProductEditModal({
                     )}
 
                     {!imagePreview && (
-                      <div className="w-full h-40 rounded-xl border-2 border-dashed border-stone-200 flex items-center justify-center bg-stone-50">
-                        <p className="text-xs text-stone-500">上傳圖片後預覽</p>
+                      <div className="w-full h-40 rounded-xl border-2 border-dashed border-taupe-200 flex items-center justify-center bg-taupe-50">
+                        <p className="text-xs text-taupe-500">上傳圖片後預覽</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-stone-600 mb-1.5">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-1.5">
                     商品描述 (選填)
                   </label>
                   <textarea
@@ -366,7 +366,7 @@ export default function AdminProductEditModal({
                     onChange={handleChange}
                     placeholder="商品特色、使用方式等..."
                     rows={3}
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-600/20 resize-none"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20 resize-none"
                   />
                 </div>
 
@@ -383,8 +383,8 @@ export default function AdminProductEditModal({
                   className={cn(
                     "w-full rounded-xl py-3.5 text-sm font-medium text-white transition",
                     submitting
-                      ? "cursor-not-allowed bg-stone-400"
-                      : "bg-stone-900 hover:bg-stone-800"
+                      ? "cursor-not-allowed bg-taupe-400"
+                      : "bg-taupe-900 hover:bg-taupe-800"
                   )}
                 >
                   {submitting ? (

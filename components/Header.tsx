@@ -16,25 +16,25 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-stone-200/70 bg-[#FCFBF9]/85 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-taupe-200/70 bg-taupe-100/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           {/* 左側：手機版過濾按鈕 + 品牌 Logo */}
           <div className="flex items-center gap-2">
             {/* 手機版過濾按鈕 */}
             <button
               onClick={openMobileFilter}
-              className="md:hidden flex items-center justify-center h-9 w-9 rounded-full hover:bg-stone-100 transition"
+              className="md:hidden flex items-center justify-center h-9 w-9 rounded-full hover:bg-taupe-100 transition"
               aria-label="開啟篩選"
               title="篩選"
             >
-              <Menu className="h-5 w-5 text-stone-600" />
+              <Menu className="h-5 w-5 text-taupe-600" />
             </button>
 
             <a href="#" className="flex items-center gap-2.5" aria-label="美妝選物店">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-pink-600/10 ring-1 ring-pink-600/20">
-                <Sparkles className="h-4 w-4 text-pink-600" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sapphire-600/10 ring-1 ring-sapphire-600/20">
+                <Sparkles className="h-4 w-4 text-sapphire-600" />
               </span>
-              <span className="font-serif text-lg font-semibold tracking-wide text-stone-900">
+              <span className="font-serif text-lg font-semibold tracking-wide text-taupe-900">
                 美妝選物店
               </span>
             </a>
@@ -49,7 +49,7 @@ export default function Header() {
                     <button
                       type="button"
                       onClick={() => setIsAdminModalOpen(true)}
-                      className="hidden sm:flex items-center gap-1.5 rounded-full bg-pink-600 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-pink-700 active:scale-95"
+                      className="hidden sm:flex items-center gap-1.5 rounded-full bg-navy-800 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-navy-900 active:scale-95"
                     >
                       <ShieldPlus className="h-3.5 w-3.5" />
                       <span>上架商品</span>
@@ -57,7 +57,7 @@ export default function Header() {
                     <button
                       type="button"
                       onClick={() => setIsDashboardOpen(true)}
-                      className="hidden sm:flex items-center gap-1.5 rounded-full bg-stone-900 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-stone-800 active:scale-95"
+                      className="hidden sm:flex items-center gap-1.5 rounded-full bg-taupe-900 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-taupe-800 active:scale-95"
                     >
                       <BarChart3 className="h-3.5 w-3.5" />
                       <span>管理面板</span>
@@ -66,7 +66,7 @@ export default function Header() {
                 )}
 
                 <div
-                  className="flex items-center gap-1.5 rounded-full bg-stone-100 text-stone-700 px-3 py-1.5 text-xs font-medium"
+                  className="flex items-center gap-1.5 rounded-full bg-taupe-100 text-taupe-700 px-3 py-1.5 text-xs font-medium"
                   title={user.email}
                 >
                   <User className="h-3.5 w-3.5" />
@@ -80,7 +80,7 @@ export default function Header() {
                   type="button"
                   onClick={logout}
                   title="登出"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200 hover:text-stone-700 transition active:scale-95"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-taupe-400 hover:bg-taupe-200 hover:text-taupe-700 transition active:scale-95"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -89,7 +89,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openLoginModal}
-                className="flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-stone-800 active:scale-95"
+                className="flex items-center gap-1.5 rounded-full bg-taupe-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-taupe-800 active:scale-95"
               >
                 <User className="h-3.5 w-3.5" />
                 <span>登入</span>
@@ -101,7 +101,7 @@ export default function Header() {
               type="button"
               onClick={openCart}
               aria-label="開啟購物車"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-stone-700 transition hover:bg-stone-900/5 hover:text-stone-900"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-taupe-700 transition hover:bg-taupe-900/5 hover:text-taupe-900"
             >
               <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
               <AnimatePresence>
@@ -112,7 +112,7 @@ export default function Header() {
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.4, opacity: 0 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                    className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-600 px-1 text-[11px] font-bold text-white"
+                    className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-navy-800 px-1 text-[11px] font-bold text-white"
                   >
                     {totalQuantity > 99 ? "99+" : totalQuantity}
                   </motion.span>
@@ -124,22 +124,22 @@ export default function Header() {
 
         {/* 手機版管理員上架按鈕 */}
         {user?.role === "admin" && (
-          <div className="sm:hidden border-t border-stone-200 bg-pink-50 px-4 py-3 flex justify-between items-center gap-2">
-            <span className="text-xs text-pink-700 font-semibold">
+          <div className="sm:hidden border-t border-taupe-200 bg-sapphire-50 px-4 py-3 flex justify-between items-center gap-2">
+            <span className="text-xs text-sapphire-700 font-semibold">
               🛡️ 管理員模式
             </span>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setIsAdminModalOpen(true)}
-                className="rounded-full bg-pink-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
+                className="rounded-full bg-navy-800 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
               >
                 上架商品
               </button>
               <button
                 type="button"
                 onClick={() => setIsDashboardOpen(true)}
-                className="rounded-full bg-stone-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
+                className="rounded-full bg-taupe-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm active:scale-95 transition"
               >
                 面板
               </button>

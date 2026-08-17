@@ -21,12 +21,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+  background: #d6d2c8;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
+  background: #aaa08b;
 }
 
 /* 平滑輸入焦點 */

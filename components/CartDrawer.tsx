@@ -61,16 +61,16 @@ export default function CartDrawer() {
               )}
             >
               {/* 標題列 */}
-              <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
-                <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900">
-                  <ShoppingBag className="h-5 w-5 text-pink-600" />
+              <div className="flex items-center justify-between border-b border-taupe-100 px-5 py-4">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-taupe-900">
+                  <ShoppingBag className="h-5 w-5 text-sapphire-600" />
                   購物車（{totalQuantity} 件）
                 </h2>
                 <button
                   type="button"
                   onClick={closeCart}
                   aria-label="關閉購物車"
-                  className="rounded-full p-2 text-stone-400 transition hover:bg-stone-100"
+                  className="rounded-full p-2 text-taupe-400 transition hover:bg-taupe-100"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -78,13 +78,13 @@ export default function CartDrawer() {
 
               {cartItems.length === 0 ? (
                 /* 空購物車 */
-                <div className="flex flex-1 flex-col items-center justify-center gap-3 text-stone-400">
+                <div className="flex flex-1 flex-col items-center justify-center gap-3 text-taupe-400">
                   <ShoppingBag className="h-12 w-12" strokeWidth={1.2} />
                   <p className="text-base">購物車是空的</p>
                   <button
                     type="button"
                     onClick={closeCart}
-                    className="text-sm text-pink-600 underline"
+                    className="text-sm text-sapphire-600 underline"
                   >
                     繼續逛逛
                   </button>
@@ -96,10 +96,10 @@ export default function CartDrawer() {
                     {cartItems.map((item) => (
                       <li
                         key={item.id}
-                        className="flex gap-3 border-b border-stone-100 pb-4"
+                        className="flex gap-3 border-b border-taupe-100 pb-4"
                       >
                         {/* 縮圖 */}
-                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-stone-100">
+                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-taupe-100">
                           {item.image ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
@@ -108,7 +108,7 @@ export default function CartDrawer() {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <span className="text-xs text-stone-400">
+                            <span className="text-xs text-taupe-400">
                               無圖
                             </span>
                           )}
@@ -116,19 +116,19 @@ export default function CartDrawer() {
 
                         <div className="flex flex-1 flex-col">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="font-medium leading-snug text-stone-900">
+                            <p className="font-medium leading-snug text-taupe-900">
                               {item.name}
                             </p>
                             <button
                               type="button"
                               onClick={() => removeFromCart(item.id)}
                               aria-label={`移除 ${item.name}`}
-                              className="rounded p-1 text-stone-400 transition hover:bg-red-50 hover:text-red-500"
+                              className="rounded p-1 text-taupe-400 transition hover:bg-red-50 hover:text-red-500"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
-                          <p className="text-sm text-stone-500">
+                          <p className="text-sm text-taupe-500">
                             NT${item.price.toLocaleString()}・單瓶{" "}
                             {item.weight_g}g
                           </p>
@@ -141,21 +141,21 @@ export default function CartDrawer() {
                                 onClick={() => updateQuantity(item.id, -1)}
                                 aria-label="減少數量"
                                 className={cn(
-                                  "flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 text-stone-600 transition hover:bg-stone-50",
+                                  "flex h-7 w-7 items-center justify-center rounded-full border border-taupe-200 text-taupe-600 transition hover:bg-taupe-50",
                                   item.quantity === 1 &&
                                     "hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                                 )}
                               >
                                 <Minus className="h-3.5 w-3.5" />
                               </button>
-                              <span className="w-8 text-center text-sm font-medium text-stone-900">
+                              <span className="w-8 text-center text-sm font-medium text-taupe-900">
                                 {item.quantity}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => updateQuantity(item.id, 1)}
                                 aria-label="增加數量"
-                                className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 text-stone-600 transition hover:bg-stone-50"
+                                className="flex h-7 w-7 items-center justify-center rounded-full border border-taupe-200 text-taupe-600 transition hover:bg-taupe-50"
                               >
                                 <Plus className="h-3.5 w-3.5" />
                               </button>
@@ -163,7 +163,7 @@ export default function CartDrawer() {
                           </div>
                         </div>
 
-                        <p className="flex-shrink-0 text-sm font-semibold text-stone-900">
+                        <p className="flex-shrink-0 text-sm font-semibold text-taupe-900">
                           NT${(item.price * item.quantity).toLocaleString()}
                         </p>
                       </li>
@@ -171,11 +171,11 @@ export default function CartDrawer() {
                   </ul>
 
                   {/* 底部：總額與前往結帳 */}
-                  <div className="space-y-2 border-t border-stone-100 bg-stone-50/60 px-5 py-4">
+                  <div className="space-y-2 border-t border-taupe-100 bg-taupe-50/60 px-5 py-4">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-sm text-stone-600">訂單總金額</span>
-                      <span className="text-2xl font-semibold text-stone-900">
-                        <span className="mr-0.5 align-top text-sm font-normal text-stone-400">
+                      <span className="text-sm text-taupe-600">訂單總金額</span>
+                      <span className="text-2xl font-semibold text-taupe-900">
+                        <span className="mr-0.5 align-top text-sm font-normal text-taupe-400">
                           NT$
                         </span>
                         {totalPrice.toLocaleString()}
@@ -184,7 +184,7 @@ export default function CartDrawer() {
                     <button
                       type="button"
                       onClick={handleCheckoutClick}
-                      className="flex w-full items-center justify-center gap-2 rounded-full bg-stone-900 py-3.5 text-sm font-medium text-white transition hover:bg-stone-700"
+                      className="flex w-full items-center justify-center gap-2 rounded-full bg-taupe-900 py-3.5 text-sm font-medium text-white transition hover:bg-taupe-700"
                     >
                       前往結帳
                       <ArrowRight className="h-4 w-4" strokeWidth={2.2} />

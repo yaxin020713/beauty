@@ -59,7 +59,7 @@ export default function LoginModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeLoginModal}
-            className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-taupe-900/50 backdrop-blur-sm"
           />
 
           <motion.div
@@ -73,19 +73,19 @@ export default function LoginModal() {
               type="button"
               onClick={closeLoginModal}
               aria-label="關閉視窗"
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-taupe-400 transition hover:bg-taupe-100 hover:text-taupe-700"
             >
               <X className="h-4 w-4" />
             </button>
 
             <div className="mb-8 text-center">
-              <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-pink-600/10 text-pink-600 ring-1 ring-pink-600/20">
+              <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sapphire-600/10 text-sapphire-600 ring-1 ring-sapphire-600/20">
                 <Mail className="h-5 w-5" />
               </span>
-              <h2 className="font-serif text-2xl font-semibold text-stone-900">
+              <h2 className="font-serif text-2xl font-semibold text-taupe-900">
                 登入
               </h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-taupe-500">
                 使用 Google 帳號快速登入
               </p>
             </div>
@@ -95,7 +95,7 @@ export default function LoginModal() {
                 <CheckCircle2 className="h-16 w-16 text-emerald-600" />
                 <div className="space-y-1">
                   {successMsg.split("\n").map((line, i) => (
-                    <p key={i} className="text-sm font-medium text-stone-800">
+                    <p key={i} className="text-sm font-medium text-taupe-800">
                       {line}
                     </p>
                   ))}

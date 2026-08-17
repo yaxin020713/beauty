@@ -170,13 +170,13 @@ export default function CheckoutModal({
           >
             <div className="w-full max-h-[90dvh] sm:max-h-[95dvh] rounded-t-3xl bg-white shadow-2xl sm:max-w-sm sm:rounded-3xl flex flex-col overflow-hidden">
               {/* 標題列 */}
-              <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4 flex-shrink-0">
-                <h2 className="text-base font-semibold text-stone-900">結帳</h2>
+              <div className="flex items-center justify-between border-b border-taupe-100 px-5 py-4 flex-shrink-0">
+                <h2 className="text-base font-semibold text-taupe-900">結帳</h2>
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label="關閉結帳視窗"
-                  className="rounded-full p-2 text-stone-400 transition hover:bg-stone-100"
+                  className="rounded-full p-2 text-taupe-400 transition hover:bg-taupe-100"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -189,23 +189,23 @@ export default function CheckoutModal({
                     className="h-12 w-12 text-emerald-500"
                     strokeWidth={1.5}
                   />
-                  <p className="text-base font-semibold text-stone-900">
+                  <p className="text-base font-semibold text-taupe-900">
                     🎉 訂單已送出！
                   </p>
-                  <p className="text-sm leading-relaxed text-stone-600">
+                  <p className="text-sm leading-relaxed text-taupe-600">
                     已收到您的轉帳末五碼資訊，確認核帳後將立即為您安排叫貨。
                   </p>
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-taupe-500">
                     合計 NT${orderResult.totalPrice.toLocaleString()}・
                     共 {orderResult.totalItemCount} 件
                   </p>
-                  <p className="text-xs text-stone-400">
+                  <p className="text-xs text-taupe-400">
                     訂單編號：{orderResult.orderId}
                   </p>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="mt-2 w-full rounded-full bg-stone-900 py-3 text-sm font-medium text-white transition hover:bg-stone-700"
+                    className="mt-2 w-full rounded-full bg-taupe-900 py-3 text-sm font-medium text-white transition hover:bg-taupe-700"
                   >
                     完成
                   </button>
@@ -214,28 +214,28 @@ export default function CheckoutModal({
                 /* 結帳表單 */
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-3 px-5 py-5">
                   {/* 訂單摘要 */}
-                  <div className="space-y-1 rounded-xl bg-stone-50 px-4 py-3 text-sm">
-                    <div className="flex justify-between text-stone-500">
+                  <div className="space-y-1 rounded-xl bg-taupe-50 px-4 py-3 text-sm">
+                    <div className="flex justify-between text-taupe-500">
                       <span>商品小計</span>
-                      <span className="font-medium text-stone-900">
+                      <span className="font-medium text-taupe-900">
                         NT${subtotal.toLocaleString()}
                       </span>
                     </div>
-                    <div className="flex justify-between text-stone-500">
+                    <div className="flex justify-between text-taupe-500">
                       <span>運費</span>
-                      <span className="font-medium text-stone-900">
+                      <span className="font-medium text-taupe-900">
                         {shippingFee > 0 ? `NT$${shippingFee}` : "免運"}
                       </span>
                     </div>
-                    <div className="border-t border-stone-200 pt-1 mt-1 flex justify-between">
-                      <span className="font-medium text-stone-900">訂單總額</span>
-                      <span className="font-medium text-stone-900">
+                    <div className="border-t border-taupe-200 pt-1 mt-1 flex justify-between">
+                      <span className="font-medium text-taupe-900">訂單總額</span>
+                      <span className="font-medium text-taupe-900">
                         NT${total.toLocaleString()}
                       </span>
                     </div>
-                    <div className="flex justify-between text-stone-500 text-xs">
+                    <div className="flex justify-between text-taupe-500 text-xs">
                       <span>品項數量</span>
-                      <span className="font-medium text-stone-900">
+                      <span className="font-medium text-taupe-900">
                         {cartItems.reduce((sum, i) => sum + i.quantity, 0)} 件
                       </span>
                     </div>
@@ -243,12 +243,12 @@ export default function CheckoutModal({
 
                   {/* 收貨方式選擇 */}
                   <div className="space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-wider text-stone-900">
+                    <p className="text-xs font-bold uppercase tracking-wider text-taupe-900">
                       收貨方式
                     </p>
                     <div className="space-y-2">
                       {/* 7-11 超商取貨 */}
-                      <label className="flex items-start gap-3 p-3 border border-stone-200 rounded-xl cursor-pointer hover:bg-stone-50 transition">
+                      <label className="flex items-start gap-3 p-3 border border-taupe-200 rounded-xl cursor-pointer hover:bg-taupe-50 transition">
                         <input
                           type="radio"
                           name="shippingMethod"
@@ -258,37 +258,37 @@ export default function CheckoutModal({
                             setShippingMethod(e.target.value as ShippingMethod);
                             setSelectedStore("");
                           }}
-                          className="mt-1 w-4 h-4 text-pink-600 cursor-pointer"
+                          className="mt-1 w-4 h-4 text-sapphire-600 cursor-pointer"
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4 text-pink-600" />
-                            <span className="font-medium text-stone-900">7-11 超商取貨</span>
-                            <span className="text-xs text-pink-600 font-medium">+NT$60</span>
+                            <Package className="h-4 w-4 text-sapphire-600" />
+                            <span className="font-medium text-taupe-900">7-11 超商取貨</span>
+                            <span className="text-xs text-sapphire-600 font-medium">+NT$60</span>
                           </div>
-                          <p className="text-xs text-stone-500 mt-1">
+                          <p className="text-xs text-taupe-500 mt-1">
                             請填寫證件姓名，否則無法取貨
                           </p>
                         </div>
                       </label>
 
                       {/* 面交 */}
-                      <label className="flex items-start gap-3 p-3 border border-stone-200 rounded-xl cursor-pointer hover:bg-stone-50 transition">
+                      <label className="flex items-start gap-3 p-3 border border-taupe-200 rounded-xl cursor-pointer hover:bg-taupe-50 transition">
                         <input
                           type="radio"
                           name="shippingMethod"
                           value="face_to_face"
                           checked={shippingMethod === "face_to_face"}
                           onChange={(e) => setShippingMethod(e.target.value as ShippingMethod)}
-                          className="mt-1 w-4 h-4 text-pink-600 cursor-pointer"
+                          className="mt-1 w-4 h-4 text-sapphire-600 cursor-pointer"
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <Truck className="h-4 w-4 text-emerald-600" />
-                            <span className="font-medium text-stone-900">面交</span>
+                            <span className="font-medium text-taupe-900">面交</span>
                             <span className="text-xs text-emerald-600 font-medium">免運</span>
                           </div>
-                          <p className="text-xs text-stone-500 mt-1">
+                          <p className="text-xs text-taupe-500 mt-1">
                             需先聯繫小幫手確認交貨時間與地點
                           </p>
                         </div>
@@ -333,7 +333,7 @@ export default function CheckoutModal({
                   {/* 7-11 門市選擇 */}
                   {shippingMethod === "convenience_711" && (
                     <div className="space-y-2">
-                      <label htmlFor="store-input" className="text-xs font-bold uppercase tracking-wider text-stone-900 block">
+                      <label htmlFor="store-input" className="text-xs font-bold uppercase tracking-wider text-taupe-900 block">
                         7-11 門市店號 *
                       </label>
                       <input
@@ -343,15 +343,15 @@ export default function CheckoutModal({
                         placeholder="例：110817 或 查詢店號 https://emap.pcsc.com.tw"
                         value={selectedStore}
                         onChange={(e) => setSelectedStore(e.target.value.trim())}
-                        className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"
+                        className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm outline-none transition focus:border-sapphire-500"
                       />
-                      <p className="text-xs text-stone-500">
+                      <p className="text-xs text-taupe-500">
                         💡 點擊{" "}
                         <a
                           href="https://www.ibon.com.tw/mobile/retail_inquiry.aspx"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-pink-600 underline hover:text-pink-700 font-medium"
+                          className="text-sapphire-600 underline hover:text-sapphire-700 font-medium"
                         >
                           連結
                         </a>
@@ -391,7 +391,7 @@ export default function CheckoutModal({
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="姓名 *"
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm outline-none transition focus:border-sapphire-500"
                   />
                   <input
                     type="tel"
@@ -400,7 +400,7 @@ export default function CheckoutModal({
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="電話 *"
-                    className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-pink-500"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm outline-none transition focus:border-sapphire-500"
                   />
                   {/* 匯款提醒 */}
                   <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
@@ -411,7 +411,7 @@ export default function CheckoutModal({
                   </div>
 
                   <div className="relative">
-                    <CreditCard className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                    <CreditCard className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-taupe-400" />
                     <input
                       type="text"
                       required
@@ -422,10 +422,10 @@ export default function CheckoutModal({
                         setPaymentLast5(e.target.value.replace(/\D/g, ""))
                       }
                       placeholder="轉帳末五碼 *"
-                      className="w-full rounded-xl border border-stone-200 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-pink-500"
+                      className="w-full rounded-xl border border-taupe-200 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-sapphire-500"
                     />
                   </div>
-                  <p className="text-xs text-stone-400">
+                  <p className="text-xs text-taupe-400">
                     請輸入轉帳帳號末五碼，方便我們核對款項
                   </p>
 
@@ -436,7 +436,7 @@ export default function CheckoutModal({
                     disabled={submitting || cartItems.length === 0 || (shippingMethod === "convenience_711" && !selectedStore)}
                     className={cn(
                       "w-full rounded-full py-3 text-sm font-medium text-white transition",
-                      "bg-stone-900 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      "bg-taupe-900 hover:bg-taupe-700 disabled:cursor-not-allowed disabled:opacity-50"
                     )}
                   >
                     {submitting ? "送出中…" : `確認送出訂單（NT$${total.toLocaleString()}）`}
@@ -458,7 +458,7 @@ export default function CheckoutModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.18 }}
-            className="rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white shadow-lg"
+            className="rounded-full bg-taupe-900 px-4 py-2 text-sm font-medium text-white shadow-lg"
           >
             已複製帳號！
           </motion.div>
