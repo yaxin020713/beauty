@@ -1,6 +1,7 @@
 import type { Product } from "@/lib/types";
 import { fetchProducts } from "@/lib/products";
 import Header from "@/components/Header";
+import PromoBanner from "@/components/PromoBanner";
 import CartDrawer from "@/components/CartDrawer";
 import StorefrontContent from "@/components/StorefrontContent";
 
@@ -24,6 +25,7 @@ export default async function StorefrontPage() {
   return (
     <div className="min-h-screen bg-taupe-100 text-ink">
       <Header />
+      <PromoBanner freeShippingThreshold={3000} ctaHref="#shop" />
       <StorefrontContent products={products} />
       <CartDrawer />
     </div>

@@ -83,7 +83,7 @@ export default function StorefrontContent({
   const hasActiveFilters = selectedBrands.size > 0 || selectedCategories.size > 0 || searchTerm.trim() !== "";
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
+    <main id="shop" className="mx-auto w-full max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
       {/* 頁首文案 */}
       <section className="mb-10 sm:mb-14">
         <p className="font-serif text-xs font-medium uppercase tracking-[0.15em] text-sapphire-600">
