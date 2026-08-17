@@ -19,22 +19,22 @@ export default function Header() {
       <header className="sticky top-0 z-40 border-b border-taupe-200/70 bg-taupe-100/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
           {/* 左側：手機版過濾按鈕 + 品牌 Logo */}
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             {/* 手機版過濾按鈕 */}
             <button
               onClick={openMobileFilter}
-              className="md:hidden flex items-center justify-center h-9 w-9 rounded-full hover:bg-taupe-100 transition"
+              className="md:hidden flex items-center justify-center h-9 w-9 rounded-full hover:bg-taupe-100 transition flex-shrink-0"
               aria-label="開啟篩選"
               title="篩選"
             >
               <Menu className="h-5 w-5 text-taupe-600" />
             </button>
 
-            <a href="#" className="flex items-center gap-2.5" aria-label="Vesper's Beauty Cabinet">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sapphire-600/10 ring-1 ring-sapphire-600/20">
+            <a href="#" className="flex min-w-0 items-center gap-2.5" aria-label="Vesper's Beauty Cabinet">
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-sapphire-600/10 ring-1 ring-sapphire-600/20">
                 <Sparkles className="h-4 w-4 text-sapphire-600" />
               </span>
-              <span className="font-serif text-lg font-semibold uppercase tracking-[0.15em] text-ink">
+              <span className="truncate font-serif text-sm font-semibold uppercase tracking-[0.06em] text-ink sm:text-lg sm:tracking-[0.15em]">
                 Vesper&apos;s Beauty Cabinet
               </span>
             </a>
