@@ -179,23 +179,37 @@ export default function Footer() {
       <InfoModal
         open={openModal === "shipping"}
         onClose={() => setOpenModal(null)}
-        title="物流時間說明"
+        title="預購模式與配送時程"
       >
         <div>
-          <p className="font-medium text-ink">預購制說明</p>
           <p className="mt-1">
-            本站貨品採預購制。每次收單後，我們將統一向國外廠商叫貨，貨到台灣的時間依據該次收單數量而定。
+            本站商品皆採預購制，於收單後統一向國外原廠/正規通路採購。整體配送流程如下：
           </p>
         </div>
         <div>
-          <p className="font-medium text-ink">配送時程</p>
-          <ul className="mt-1 list-inside list-disc space-y-1">
-            <li>海外廠商備貨：依單量決定（單量少時約 1 個月左右）</li>
-            <li>貨品抵台後：約 1 週左右送達貨倉</li>
-            <li>出貨時間：確認到貨後 3 天內出貨</li>
+          <ul className="mt-2 list-inside list-disc space-y-2">
+            <li>
+              <span className="font-medium text-ink">海外廠商備貨</span>
+              <span className="text-taupe-600">：約需 3–4 週（若單量允許，廠商會提前安排出貨）</span>
+            </li>
+            <li>
+              <span className="font-medium text-ink">國際運輸與抵台</span>
+              <span className="text-taupe-600">：商品抵台並完成品檢約需 5–7 個工作天</span>
+            </li>
+            <li>
+              <span className="font-medium text-ink">本地出貨</span>
+              <span className="text-taupe-600">：確認商品無誤後，將於 3 天內安排寄出</span>
+            </li>
           </ul>
-          <p className="mt-2">
-            我們會在可控範圍內盡快為您出貨。惟海外物流時間較不可控，還請多多見諒。
+        </div>
+        <div className="mt-3 rounded-lg bg-taupe-50 p-3">
+          <p className="text-sm font-medium text-ink">
+            ⏱ 預估等待總時間：下單後約需 3-6 週 送達（急單請斟酌下單）
+          </p>
+        </div>
+        <div className="mt-3">
+          <p className="text-sm text-taupe-600">
+            海外跨境物流易受海關清關及航班調度影響，我們會在品質控管範圍內盡快為您出貨，感謝您的耐心等待與體諒！
           </p>
         </div>
       </InfoModal>
