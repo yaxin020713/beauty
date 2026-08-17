@@ -10,9 +10,8 @@ import {
   SHIPPING_COSTS,
 } from "@/lib/shipping";
 
-// TODO: 換成品牌實際的 LINE 官方帳號連結
-const LINE_OA_URL = "https://line.me/R/ti/p/@vespersvanity";
-const SUPPORT_EMAIL = "support@vespersvanity.com";
+const LINE_OA_URL = "https://line.me/ti/p/pYYPGYQMAm";
+const SUPPORT_EMAIL = "yaxinzhu2002@gmail.com";
 
 type ModalKey = "guide" | "refund" | null;
 
