@@ -20,11 +20,11 @@ export async function PATCH(
     const updateProps: any = {};
 
     if (body.status) {
-      updateProps.Status = { select: { name: body.status } };
+      updateProps["訂單狀態"] = { select: { name: body.status } };
     }
 
     if (body.paymentStatus) {
-      updateProps.Payment_Status = { select: { name: body.paymentStatus } };
+      updateProps["付款狀態"] = { select: { name: body.paymentStatus } };
     }
 
     if (body.faceToFace !== undefined) {

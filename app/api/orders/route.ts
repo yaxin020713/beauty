@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       Items_Detail: { rich_text: [{ text: { content: detailWithShipping } }] },
       Total_Price: { number: totalPrice },
       Total_Weight_kg: { number: totalWeightKg },
-      Status: { select: { name: "新訂單" } },
+      "訂單狀態": { select: { name: "新訂單" } },
     };
 
     // 7-11 取貨：寫入門市店號；面交：於面交否欄位標記「面交」

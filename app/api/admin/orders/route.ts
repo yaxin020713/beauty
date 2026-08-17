@@ -55,12 +55,12 @@ export async function GET(request: NextRequest) {
           ? props.Total_Weight_kg.number || 0
           : 0;
       const orderStatus =
-        props.Status?.type === "select" && props.Status.select
-          ? (props.Status.select as any).name || ""
+        props["訂單狀態"]?.type === "select" && props["訂單狀態"].select
+          ? (props["訂單狀態"].select as any).name || ""
           : "";
       const paymentStatus =
-        props.Payment_Status?.type === "select" && props.Payment_Status.select
-          ? (props.Payment_Status.select as any).name || ""
+        props["付款狀態"]?.type === "select" && props["付款狀態"].select
+          ? (props["付款狀態"].select as any).name || ""
           : "";
       const storeNumber =
         props["7-11取貨店號"]?.type === "rich_text" && Array.isArray(props["7-11取貨店號"].rich_text)

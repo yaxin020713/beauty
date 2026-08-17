@@ -289,6 +289,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
   const [statusFilter, setStatusFilter] = useState("全部");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState("");
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -305,6 +306,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     paymentStatus: string,
     faceToFace: string
   ) => {
+    setSaveError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
@@ -314,9 +316,13 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
       if (res.ok) {
         setEditingOrderId(null);
         window.location.reload();
+      } else {
+        const data = await res.json().catch(() => null);
+        setSaveError(data?.error ?? "更新失敗，請稍後再試");
       }
     } catch (error) {
       console.error("更新訂單失敗:", error);
+      setSaveError("網路連線異常，請再試一次");
     }
   };
 
@@ -476,6 +482,9 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
 
                   {editingOrderId === order.id ? (
                     <div className="mt-3 space-y-2">
+                      {saveError && (
+                        <p className="text-red-600 bg-red-50 rounded px-2 py-1.5">{saveError}</p>
+                      )}
                       <select
                         defaultValue={order.status}
                         id={`status-${order.id}`}
@@ -534,7 +543,10 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                     </div>
                   ) : (
                     <button
-                      onClick={() => setEditingOrderId(order.id)}
+                      onClick={() => {
+                        setSaveError("");
+                        setEditingOrderId(order.id);
+                      }}
                       className="mt-3 w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
                     >
                       <Edit2 className="h-3 w-3" />
