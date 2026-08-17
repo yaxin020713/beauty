@@ -4,7 +4,21 @@ export const SHIPPING_COSTS = {
   FACE_TO_FACE: 0, // 面交無運費
 } as const;
 
+// 免運門檻（商品小計，不含運費）：滿此金額全館免運
+export const FREE_SHIPPING_THRESHOLD = 3000;
+
 export type ShippingMethod = "convenience_711" | "face_to_face";
+
+// 依商品小計與收貨方式計算運費，滿免運門檻則一律免運
+export function calculateShippingFee(
+  subtotal: number,
+  shippingMethod: ShippingMethod
+): number {
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+  return shippingMethod === "convenience_711"
+    ? SHIPPING_COSTS.CONVENIENCE_711
+    : SHIPPING_COSTS.FACE_TO_FACE;
+}
 
 // 7-11 超商門市資料型別
 export type Store = {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
-import { SHIPPING_COSTS, type ShippingMethod } from "@/lib/shipping";
+import { calculateShippingFee, type ShippingMethod } from "@/lib/shipping";
 
 // 前台購物車單一項目的型別
 type CartItem = {
@@ -75,14 +75,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "購物車資料不完整" }, { status: 400 });
   }
 
-  // 自動計算運費（後端重新計算，不信任前端值）
-  const shippingFee = shippingMethod === "convenience_711" ? SHIPPING_COSTS.CONVENIENCE_711 : SHIPPING_COSTS.FACE_TO_FACE;
-
-  // 自動計算總金額與總重量（kg）
+  // 自動計算商品小計
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  // 自動計算運費（後端重新計算，不信任前端值；滿 FREE_SHIPPING_THRESHOLD 免運）
+  const shippingFee = calculateShippingFee(subtotal, shippingMethod);
+
+  // 自動計算總金額與總重量（kg）
   const totalPrice = subtotal + shippingFee;
   const totalWeightKg = Number(
     items

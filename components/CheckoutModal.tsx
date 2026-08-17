@@ -15,7 +15,12 @@ import {
 import { useCart } from "./CartContext";
 import { cn } from "@/lib/utils";
 import { BANK_INFO } from "@/lib/bank";
-import { SHIPPING_COSTS, type ShippingMethod } from "@/lib/shipping";
+import {
+  SHIPPING_COSTS,
+  FREE_SHIPPING_THRESHOLD,
+  calculateShippingFee,
+  type ShippingMethod,
+} from "@/lib/shipping";
 
 type OrderResult = {
   orderId: string;
@@ -57,8 +62,9 @@ export default function CheckoutModal({
   // 計算小計（不含運費）
   const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // 計算運費
-  const shippingFee = shippingMethod === "convenience_711" ? SHIPPING_COSTS.CONVENIENCE_711 : SHIPPING_COSTS.FACE_TO_FACE;
+  // 計算運費（滿 FREE_SHIPPING_THRESHOLD 免運）
+  const shippingFee = calculateShippingFee(subtotal, shippingMethod);
+  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
 
   // 計算總額（含運費）
   const total = subtotal + shippingFee;
@@ -229,6 +235,11 @@ export default function CheckoutModal({
                         {shippingFee > 0 ? `NT$${shippingFee}` : "免運"}
                       </span>
                     </div>
+                    {!qualifiesForFreeShipping && (
+                      <p className="text-xs text-sapphire-600">
+                        再加購 NT${(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()} 即享全館免運！
+                      </p>
+                    )}
                     <div className="border-t border-taupe-200 pt-1 mt-1 flex justify-between">
                       <span className="font-medium text-ink">訂單總額</span>
                       <span className="font-medium text-ink">
@@ -266,7 +277,9 @@ export default function CheckoutModal({
                           <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-sapphire-600" />
                             <span className="font-medium text-ink">7-11 超商取貨</span>
-                            <span className="text-xs text-sapphire-600 font-medium">+NT$60</span>
+                            <span className="text-xs font-medium text-sapphire-600">
+                              {qualifiesForFreeShipping ? "免運" : `+NT$${SHIPPING_COSTS.CONVENIENCE_711}`}
+                            </span>
                           </div>
                           <p className="text-xs text-taupe-500 mt-1">
                             請填寫證件姓名，否則無法取貨
