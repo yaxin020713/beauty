@@ -25,7 +25,11 @@ export default async function StorefrontPage() {
   return (
     <div className="min-h-screen bg-taupe-100 text-ink">
       <Header />
-      <PromoBanner freeShippingThreshold={3000} ctaHref="#shop" />
+      <PromoBanner
+        freeShippingThreshold={3000}
+        ctaHref="#shop"
+        imageSrc="/images/banner.jpg"
+      />
       <StorefrontContent products={products} />
       <CartDrawer />
     </div>
