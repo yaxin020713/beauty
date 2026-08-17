@@ -34,6 +34,7 @@ export default function CheckoutModal({
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [paymentLast5, setPaymentLast5] = useState("");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
   const [selectedStore, setSelectedStore] = useState<string>("");
@@ -82,6 +83,7 @@ export default function CheckoutModal({
         body: JSON.stringify({
           customerName,
           customerPhone,
+          customerEmail,
           paymentLast5,
           shippingMethod,
           selectedStore: shippingMethod === "convenience_711" ? selectedStore : null,
@@ -400,6 +402,15 @@ export default function CheckoutModal({
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="電話 *"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm outline-none transition focus:border-sapphire-500"
+                  />
+                  <input
+                    type="email"
+                    required
+                    maxLength={100}
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="聯繫用 Email *"
                     className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm outline-none transition focus:border-sapphire-500"
                   />
                   {/* 匯款提醒 */}

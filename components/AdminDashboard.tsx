@@ -24,6 +24,7 @@ type OrderItem = {
   orderId: string;
   customerName: string;
   customerPhone: string;
+  customerEmail: string;
   paymentLast5: string;
   itemsDetail: string;
   totalPrice: number;
@@ -295,7 +296,8 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     const matchesSearch =
       order.orderId.includes(searchTerm) ||
       order.customerName.includes(searchTerm) ||
-      order.customerPhone.includes(searchTerm);
+      order.customerPhone.includes(searchTerm) ||
+      order.customerEmail.includes(searchTerm);
     const matchesStatus = statusFilter === "全部" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -334,6 +336,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
       "訂單編號": order.orderId,
       "客戶名稱": order.customerName,
       "客戶電話": order.customerPhone,
+      "客戶Email": order.customerEmail || "",
       "商品明細": order.itemsDetail,
       "訂單總金額": order.totalPrice,
       "總重量(kg)": order.totalWeightKg,
@@ -372,6 +375,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
       { wch: 16 },
       { wch: 10 },
       { wch: 12 },
+      { wch: 24 },
       { wch: 30 },
       { wch: 10 },
       { wch: 10 },
@@ -419,7 +423,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
           <Search className="h-4 w-4 text-taupe-400" />
           <input
             type="text"
-            placeholder="搜尋訂單ID、客戶名稱或電話..."
+            placeholder="搜尋訂單ID、客戶名稱、電話或Email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-transparent text-sm outline-none text-ink placeholder:text-taupe-400"
@@ -482,6 +486,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                   className="mt-4 border-t border-taupe-200 pt-4 space-y-2 text-xs text-taupe-600"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  <p><span className="font-medium text-ink">Email:</span> {order.customerEmail || "未提供"}</p>
                   <p><span className="font-medium text-ink">商品:</span> {order.itemsDetail}</p>
                   <p><span className="font-medium text-ink">重量:</span> {order.totalWeightKg} kg</p>
                   <p><span className="font-medium text-ink">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>

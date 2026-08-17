@@ -36,6 +36,10 @@ export async function GET(request: NextRequest) {
         props.Customer_Phone?.type === "rich_text" && Array.isArray(props.Customer_Phone.rich_text)
           ? props.Customer_Phone.rich_text[0]?.plain_text || ""
           : "";
+      const customerEmail =
+        props["聯繫用Email"]?.type === "rich_text" && Array.isArray(props["聯繫用Email"].rich_text)
+          ? props["聯繫用Email"].rich_text[0]?.plain_text || ""
+          : "";
       const paymentLast5Number =
         props["帳號末5碼"]?.type === "number" ? props["帳號末5碼"].number : null;
       const paymentLast5 =
@@ -77,6 +81,7 @@ export async function GET(request: NextRequest) {
         orderId,
         customerName,
         customerPhone,
+        customerEmail,
         paymentLast5,
         itemsDetail,
         totalPrice,

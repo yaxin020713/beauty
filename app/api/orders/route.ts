@@ -14,11 +14,14 @@ type CartItem = {
 type OrderRequestBody = {
   customerName?: string;
   customerPhone?: string;
+  customerEmail?: string;
   paymentLast5?: string;
   shippingMethod?: string;
   selectedStore?: string;
   items?: CartItem[];
 };
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +36,7 @@ export async function POST(request: NextRequest) {
 
   const customerName = (body.customerName ?? "").trim();
   const customerPhone = (body.customerPhone ?? "").trim();
+  const customerEmail = (body.customerEmail ?? "").trim();
   // 匯款末五碼：只保留數字並限 5 碼
   const paymentLast5 = String(body.paymentLast5 ?? "")
     .replace(/\D/g, "")
@@ -41,8 +45,12 @@ export async function POST(request: NextRequest) {
   const shippingMethod = (body.shippingMethod ?? "convenience_711") as ShippingMethod;
   const selectedStore = (body.selectedStore ?? "").trim();
 
-  if (!customerName || !customerPhone) {
-    return NextResponse.json({ error: "請填寫姓名與電話" }, { status: 400 });
+  if (!customerName || !customerPhone || !customerEmail) {
+    return NextResponse.json({ error: "請填寫姓名、電話與 Email" }, { status: 400 });
+  }
+
+  if (!EMAIL_PATTERN.test(customerEmail)) {
+    return NextResponse.json({ error: "請輸入有效的 Email 格式" }, { status: 400 });
   }
 
   if (rawItems.length === 0) {
@@ -103,6 +111,7 @@ export async function POST(request: NextRequest) {
       Order_ID: { title: [{ text: { content: orderId } }] },
       Customer_Name: { rich_text: [{ text: { content: customerName } }] },
       Customer_Phone: { rich_text: [{ text: { content: customerPhone } }] },
+      "聯繫用Email": { rich_text: [{ text: { content: customerEmail } }] },
       Items_Detail: { rich_text: [{ text: { content: detailWithShipping } }] },
       Total_Price: { number: totalPrice },
       Total_Weight_kg: { number: totalWeightKg },
