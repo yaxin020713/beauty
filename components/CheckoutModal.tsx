@@ -18,7 +18,10 @@ import { BANK_INFO } from "@/lib/bank";
 import {
   SHIPPING_COSTS,
   FREE_SHIPPING_THRESHOLD,
+  DISCOUNT_THRESHOLD,
+  DISCOUNT_AMOUNT,
   calculateShippingFee,
+  calculateDiscount,
   type ShippingMethod,
 } from "@/lib/shipping";
 
@@ -66,8 +69,12 @@ export default function CheckoutModal({
   const shippingFee = calculateShippingFee(subtotal, shippingMethod);
   const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
 
-  // 計算總額（含運費）
-  const total = subtotal + shippingFee;
+  // 計算滿額現折（滿 DISCOUNT_THRESHOLD 現折 DISCOUNT_AMOUNT）
+  const discount = calculateDiscount(subtotal);
+  const qualifiesForDiscount = subtotal >= DISCOUNT_THRESHOLD;
+
+  // 計算總額（含運費、扣除折扣）
+  const total = subtotal + shippingFee - discount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,9 +242,23 @@ export default function CheckoutModal({
                         {shippingFee > 0 ? `NT$${shippingFee}` : "免運"}
                       </span>
                     </div>
-                    {!qualifiesForFreeShipping && (
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sapphire-600">
+                        <span>滿額現折</span>
+                        <span className="font-medium">-NT${discount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {!qualifiesForFreeShipping ? (
                       <p className="text-xs text-sapphire-600">
                         再加購 NT${(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()} 即享全館免運！
+                      </p>
+                    ) : !qualifiesForDiscount ? (
+                      <p className="text-xs text-sapphire-600">
+                        已享免運！再加購 NT${(DISCOUNT_THRESHOLD - subtotal).toLocaleString()} 即現折 NT${DISCOUNT_AMOUNT}！
+                      </p>
+                    ) : (
+                      <p className="text-xs text-sapphire-600">
+                        🎉 已享全館免運＋現折 NT${DISCOUNT_AMOUNT}！
                       </p>
                     )}
                     <div className="border-t border-taupe-200 pt-1 mt-1 flex justify-between">

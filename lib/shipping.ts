@@ -7,6 +7,10 @@ export const SHIPPING_COSTS = {
 // 免運門檻（商品小計，不含運費）：滿此金額全館免運
 export const FREE_SHIPPING_THRESHOLD = 3000;
 
+// 現折門檻與金額：滿此金額（商品小計）現折 DISCOUNT_AMOUNT（此門檻高於免運門檻，故同時享免運）
+export const DISCOUNT_THRESHOLD = 6000;
+export const DISCOUNT_AMOUNT = 150;
+
 export type ShippingMethod = "convenience_711" | "face_to_face";
 
 // 依商品小計與收貨方式計算運費，滿免運門檻則一律免運
@@ -18,6 +22,11 @@ export function calculateShippingFee(
   return shippingMethod === "convenience_711"
     ? SHIPPING_COSTS.CONVENIENCE_711
     : SHIPPING_COSTS.FACE_TO_FACE;
+}
+
+// 依商品小計計算滿額現折金額
+export function calculateDiscount(subtotal: number): number {
+  return subtotal >= DISCOUNT_THRESHOLD ? DISCOUNT_AMOUNT : 0;
 }
 
 // 7-11 超商門市資料型別

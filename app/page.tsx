@@ -1,6 +1,6 @@
 import type { Product } from "@/lib/types";
 import { fetchProducts } from "@/lib/products";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/shipping";
+import { FREE_SHIPPING_THRESHOLD, DISCOUNT_THRESHOLD, DISCOUNT_AMOUNT } from "@/lib/shipping";
 import Header from "@/components/Header";
 import PromoBanner from "@/components/PromoBanner";
 import CartDrawer from "@/components/CartDrawer";
@@ -28,6 +28,8 @@ export default async function StorefrontPage() {
       <Header />
       <PromoBanner
         freeShippingThreshold={FREE_SHIPPING_THRESHOLD}
+        discountThreshold={DISCOUNT_THRESHOLD}
+        discountAmount={DISCOUNT_AMOUNT}
         ctaHref="#shop"
         imageSrc="/images/banner.jpg"
       />
