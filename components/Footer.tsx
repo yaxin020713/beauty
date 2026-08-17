@@ -10,7 +10,7 @@ import {
   SHIPPING_COSTS,
 } from "@/lib/shipping";
 
-const LINE_OA_URL = "https://line.me/ti/p/pYYPGYQMAm";
+const LINE_OA_URL = "https://lin.ee/8klCvGm";
 const SUPPORT_EMAIL = "yaxinzhu2002@gmail.com";
 
 type ModalKey = "guide" | "refund" | null;

@@ -407,7 +407,7 @@ export default function CheckoutModal({
                         <p>
                           如未與小幫手聯繫交貨細節請勿下單面交選項。{" "}
                           <a
-                            href="https://line.me/ti/p/pYYPGYQMAm"
+                            href="https://lin.ee/8klCvGm"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="font-medium underline hover:text-amber-900"
