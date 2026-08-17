@@ -171,7 +171,7 @@ export default function CheckoutModal({
             <div className="w-full max-h-[90dvh] sm:max-h-[95dvh] rounded-t-3xl bg-white shadow-2xl sm:max-w-sm sm:rounded-3xl flex flex-col overflow-hidden">
               {/* 標題列 */}
               <div className="flex items-center justify-between border-b border-taupe-100 px-5 py-4 flex-shrink-0">
-                <h2 className="text-base font-semibold text-taupe-900">結帳</h2>
+                <h2 className="text-base font-semibold text-ink">結帳</h2>
                 <button
                   type="button"
                   onClick={onClose}
@@ -189,7 +189,7 @@ export default function CheckoutModal({
                     className="h-12 w-12 text-emerald-500"
                     strokeWidth={1.5}
                   />
-                  <p className="text-base font-semibold text-taupe-900">
+                  <p className="text-base font-semibold text-ink">
                     🎉 訂單已送出！
                   </p>
                   <p className="text-sm leading-relaxed text-taupe-600">
@@ -217,25 +217,25 @@ export default function CheckoutModal({
                   <div className="space-y-1 rounded-xl bg-taupe-50 px-4 py-3 text-sm">
                     <div className="flex justify-between text-taupe-500">
                       <span>商品小計</span>
-                      <span className="font-medium text-taupe-900">
+                      <span className="font-medium text-ink">
                         NT${subtotal.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-taupe-500">
                       <span>運費</span>
-                      <span className="font-medium text-taupe-900">
+                      <span className="font-medium text-ink">
                         {shippingFee > 0 ? `NT$${shippingFee}` : "免運"}
                       </span>
                     </div>
                     <div className="border-t border-taupe-200 pt-1 mt-1 flex justify-between">
-                      <span className="font-medium text-taupe-900">訂單總額</span>
-                      <span className="font-medium text-taupe-900">
+                      <span className="font-medium text-ink">訂單總額</span>
+                      <span className="font-medium text-ink">
                         NT${total.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-taupe-500 text-xs">
                       <span>品項數量</span>
-                      <span className="font-medium text-taupe-900">
+                      <span className="font-medium text-ink">
                         {cartItems.reduce((sum, i) => sum + i.quantity, 0)} 件
                       </span>
                     </div>
@@ -243,7 +243,7 @@ export default function CheckoutModal({
 
                   {/* 收貨方式選擇 */}
                   <div className="space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-wider text-taupe-900">
+                    <p className="text-xs font-bold uppercase tracking-wider text-ink">
                       收貨方式
                     </p>
                     <div className="space-y-2">
@@ -263,7 +263,7 @@ export default function CheckoutModal({
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-sapphire-600" />
-                            <span className="font-medium text-taupe-900">7-11 超商取貨</span>
+                            <span className="font-medium text-ink">7-11 超商取貨</span>
                             <span className="text-xs text-sapphire-600 font-medium">+NT$60</span>
                           </div>
                           <p className="text-xs text-taupe-500 mt-1">
@@ -285,7 +285,7 @@ export default function CheckoutModal({
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <Truck className="h-4 w-4 text-emerald-600" />
-                            <span className="font-medium text-taupe-900">面交</span>
+                            <span className="font-medium text-ink">面交</span>
                             <span className="text-xs text-emerald-600 font-medium">免運</span>
                           </div>
                           <p className="text-xs text-taupe-500 mt-1">
@@ -311,7 +311,7 @@ export default function CheckoutModal({
                           <button
                             type="button"
                             onClick={handleCopyAccount}
-                            className="ml-3 flex items-center gap-1 bg-white text-black px-3 py-1.5 rounded text-xs font-bold hover:bg-gray-200 transition"
+                            className="ml-3 flex items-center gap-1 bg-white text-ink px-3 py-1.5 rounded text-xs font-bold hover:bg-gray-200 transition"
                           >
                             {copied ? (
                               <>
@@ -333,7 +333,7 @@ export default function CheckoutModal({
                   {/* 7-11 門市選擇 */}
                   {shippingMethod === "convenience_711" && (
                     <div className="space-y-2">
-                      <label htmlFor="store-input" className="text-xs font-bold uppercase tracking-wider text-taupe-900 block">
+                      <label htmlFor="store-input" className="text-xs font-bold uppercase tracking-wider text-ink block">
                         7-11 門市店號 *
                       </label>
                       <input

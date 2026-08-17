@@ -34,7 +34,7 @@ export default function Header() {
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sapphire-600/10 ring-1 ring-sapphire-600/20">
                 <Sparkles className="h-4 w-4 text-sapphire-600" />
               </span>
-              <span className="font-serif text-lg font-semibold tracking-wide text-taupe-900">
+              <span className="font-serif text-lg font-semibold uppercase tracking-[0.15em] text-ink">
                 Vesper&apos;s Beauty Cabinet
               </span>
             </a>
@@ -101,7 +101,7 @@ export default function Header() {
               type="button"
               onClick={openCart}
               aria-label="開啟購物車"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-taupe-700 transition hover:bg-taupe-900/5 hover:text-taupe-900"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-taupe-700 transition hover:bg-taupe-900/5 hover:text-ink"
             >
               <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
               <AnimatePresence>

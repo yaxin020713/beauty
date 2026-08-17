@@ -82,7 +82,7 @@ export default function LoginModal() {
               <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sapphire-600/10 text-sapphire-600 ring-1 ring-sapphire-600/20">
                 <Mail className="h-5 w-5" />
               </span>
-              <h2 className="font-serif text-2xl font-semibold text-taupe-900">
+              <h2 className="font-serif text-2xl font-normal text-ink">
                 登入
               </h2>
               <p className="mt-1 text-sm text-taupe-500">

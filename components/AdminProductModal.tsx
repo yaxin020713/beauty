@@ -180,7 +180,7 @@ export default function AdminProductModal({
             </button>
 
             <div className="mb-6 text-center">
-              <h2 className="font-serif text-2xl font-semibold text-taupe-900">
+              <h2 className="font-serif text-2xl font-normal text-ink">
                 上架新商品
               </h2>
               <p className="mt-1 text-sm text-taupe-500">
@@ -208,7 +208,7 @@ export default function AdminProductModal({
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="例如: 小黑瓶精華液"
-                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                   />
                 </div>
 
@@ -222,7 +222,7 @@ export default function AdminProductModal({
                     value={formData.brand}
                     onChange={handleChange}
                     placeholder="例如: Estée Lauder"
-                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                   />
                 </div>
 
@@ -234,7 +234,7 @@ export default function AdminProductModal({
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                   >
                     <option value="護膚">護膚</option>
                     <option value="彩妝">彩妝</option>
@@ -261,7 +261,7 @@ export default function AdminProductModal({
                       placeholder="0"
                       min="0"
                       step="1"
-                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
 
@@ -277,7 +277,7 @@ export default function AdminProductModal({
                       placeholder="0"
                       min="0"
                       step="1"
-                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
                 </div>
@@ -295,7 +295,7 @@ export default function AdminProductModal({
                       placeholder="0"
                       min="0"
                       step="0.01"
-                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
 
@@ -311,7 +311,7 @@ export default function AdminProductModal({
                       placeholder="0"
                       min="0"
                       step="0.01"
-                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20"
                     />
                   </div>
                 </div>
@@ -363,7 +363,7 @@ export default function AdminProductModal({
                     onChange={handleChange}
                     placeholder="商品特色、使用方式等..."
                     rows={3}
-                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-taupe-900 placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20 resize-none"
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20 resize-none"
                   />
                 </div>
 

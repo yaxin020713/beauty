@@ -134,7 +134,7 @@ export default function AdminDashboard({
             </button>
 
             <div className="mb-6">
-              <h2 className="font-serif text-2xl font-semibold text-taupe-900">
+              <h2 className="font-serif text-2xl font-normal text-ink">
                 管理員面板
               </h2>
               <p className="mt-1 text-sm text-taupe-500">
@@ -148,7 +148,7 @@ export default function AdminDashboard({
                 className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "statistics"
                     ? "border-b-2 border-sapphire-600 text-sapphire-600"
-                    : "text-taupe-600 hover:text-taupe-900"
+                    : "text-taupe-600 hover:text-ink"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function AdminDashboard({
                 className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "products"
                     ? "border-b-2 border-sapphire-600 text-sapphire-600"
-                    : "text-taupe-600 hover:text-taupe-900"
+                    : "text-taupe-600 hover:text-ink"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export default function AdminDashboard({
                 className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
                   tab === "orders"
                     ? "border-b-2 border-sapphire-600 text-sapphire-600"
-                    : "text-taupe-600 hover:text-taupe-900"
+                    : "text-taupe-600 hover:text-ink"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function AdminDashboard({
             <button
               onClick={fetchData}
               disabled={loading}
-              className="mt-6 w-full rounded-xl bg-taupe-100 py-2.5 text-sm font-medium text-taupe-900 transition hover:bg-taupe-200 disabled:opacity-50"
+              className="mt-6 w-full rounded-xl bg-taupe-100 py-2.5 text-sm font-medium text-ink transition hover:bg-taupe-200 disabled:opacity-50"
             >
               {loading ? "刷新中..." : "刷新數據"}
             </button>
@@ -264,16 +264,16 @@ function StatisticsTab({
       </div>
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
-        <p className="text-sm font-semibold text-taupe-900">商品排行</p>
+        <p className="text-sm font-semibold text-ink">商品排行</p>
         {products.map((product) => (
           <div key={product.id} className="rounded-lg bg-taupe-50 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-taupe-900">{product.name}</p>
+                <p className="text-sm font-medium text-ink">{product.name}</p>
                 <p className="text-xs text-taupe-500">{product.category}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-taupe-900">{product.totalSold}</p>
+                <p className="text-sm font-bold text-ink">{product.totalSold}</p>
                 <p className="text-xs text-taupe-500">NT${product.price}</p>
               </div>
             </div>
@@ -411,7 +411,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
             placeholder="搜尋訂單ID、客戶名稱或電話..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none text-taupe-900 placeholder:text-taupe-400"
+            className="w-full bg-transparent text-sm outline-none text-ink placeholder:text-taupe-400"
           />
         </div>
 
@@ -446,13 +446,13 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-taupe-900">{order.orderId}</p>
+                  <p className="text-sm font-semibold text-ink">{order.orderId}</p>
                   <p className="text-xs text-taupe-500 mt-1">
                     {order.customerName} ({order.customerPhone})
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-taupe-900">
+                  <p className="text-sm font-semibold text-ink">
                     NT${order.totalPrice.toLocaleString()}
                   </p>
                   <div className="mt-1 flex gap-1 justify-end">
@@ -471,14 +471,14 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                   className="mt-4 border-t border-taupe-200 pt-4 space-y-2 text-xs text-taupe-600"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <p><span className="font-medium text-taupe-900">商品:</span> {order.itemsDetail}</p>
-                  <p><span className="font-medium text-taupe-900">重量:</span> {order.totalWeightKg} kg</p>
-                  <p><span className="font-medium text-taupe-900">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>
+                  <p><span className="font-medium text-ink">商品:</span> {order.itemsDetail}</p>
+                  <p><span className="font-medium text-ink">重量:</span> {order.totalWeightKg} kg</p>
+                  <p><span className="font-medium text-ink">匯款末五碼:</span> {order.paymentLast5 || "未提供"}</p>
                   {order.storeNumber && (
-                    <p><span className="font-medium text-taupe-900">7-11 店號:</span> {order.storeNumber}</p>
+                    <p><span className="font-medium text-ink">7-11 店號:</span> {order.storeNumber}</p>
                   )}
-                  <p><span className="font-medium text-taupe-900">面交:</span> {order.faceToFace || "未提供"}</p>
-                  <p><span className="font-medium text-taupe-900">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
+                  <p><span className="font-medium text-ink">面交:</span> {order.faceToFace || "未提供"}</p>
+                  <p><span className="font-medium text-ink">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
 
                   {editingOrderId === order.id ? (
                     <div className="mt-3 space-y-2">
@@ -594,7 +594,7 @@ function ProductsTab({
             placeholder="搜尋商品名稱、品牌或分類..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none text-taupe-900 placeholder:text-taupe-400"
+            className="w-full bg-transparent text-sm outline-none text-ink placeholder:text-taupe-400"
           />
         </div>
 
@@ -628,7 +628,7 @@ function ProductsTab({
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-taupe-900 truncate">{product.name}</p>
+                  <p className="font-medium text-ink truncate">{product.name}</p>
                   {product.brand && (
                     <p className="text-xs text-taupe-500">{product.brand}</p>
                   )}

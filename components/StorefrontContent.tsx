@@ -86,10 +86,10 @@ export default function StorefrontContent({
     <main className="mx-auto w-full max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
       {/* 頁首文案 */}
       <section className="mb-10 sm:mb-14">
-        <p className="text-xs font-medium uppercase tracking-[0.3em] text-sapphire-600">
+        <p className="font-serif text-xs font-medium uppercase tracking-[0.15em] text-sapphire-600">
           VESPER&apos;S BEAUTY CABINET
         </p>
-        <h1 className="mt-3 font-serif text-3xl font-semibold tracking-wide text-taupe-900 sm:text-4xl">
+        <h1 className="mt-3 font-serif text-3xl font-light text-ink sm:text-4xl">
           私人梳妝台的精選清單
         </h1>
         <p className="mt-2 text-sm text-taupe-500 sm:text-base">
@@ -105,7 +105,7 @@ export default function StorefrontContent({
           placeholder="搜尋商品名稱、品牌或分類..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-transparent text-sm outline-none text-taupe-900 placeholder:text-taupe-400"
+          className="w-full bg-transparent text-sm outline-none text-ink placeholder:text-taupe-400"
         />
         {hasActiveFilters && (
           <button
@@ -123,7 +123,7 @@ export default function StorefrontContent({
           <div className="sticky top-20 space-y-8">
             {/* 分類過濾 */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-taupe-900 mb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-ink mb-3">
                 分類
               </h3>
               <div className="space-y-2">
@@ -153,7 +153,7 @@ export default function StorefrontContent({
 
             {/* 品牌過濾 */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-taupe-900 mb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-ink mb-3">
                 品牌
               </h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -243,7 +243,7 @@ export default function StorefrontContent({
               className="fixed left-0 top-0 z-50 h-full w-72 bg-white overflow-y-auto md:hidden"
             >
               <div className="sticky top-0 bg-white border-b border-taupe-200 px-4 py-4 flex items-center justify-between">
-                <h2 className="font-serif text-lg font-semibold text-taupe-900">
+                <h2 className="font-serif text-lg font-normal text-ink">
                   篩選
                 </h2>
                 <button
@@ -258,7 +258,7 @@ export default function StorefrontContent({
               <div className="space-y-6 px-4 py-6">
                 {/* 分類過濾 */}
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-taupe-900 mb-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-ink mb-3">
                     分類
                   </h3>
                   <div className="space-y-2">
@@ -288,7 +288,7 @@ export default function StorefrontContent({
 
                 {/* 品牌過濾 */}
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-taupe-900 mb-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-ink mb-3">
                     品牌
                   </h3>
                   <div className="space-y-2">

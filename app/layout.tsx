@@ -1,7 +1,22 @@
 import type { Metadata } from "next";
+import { Playfair_Display, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 import { AuthProvider, CartProvider } from "@/components/CartContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const notoSansTC = Noto_Sans_TC({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-noto-tc",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Vesper's Beauty Cabinet",
@@ -14,8 +29,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-Hant">
-      <body className="min-h-screen bg-taupe-100 text-taupe-900 antialiased">
+    <html lang="zh-Hant" className={`${playfairDisplay.variable} ${notoSansTC.variable}`}>
+      <body className="min-h-screen bg-taupe-100 text-ink antialiased">
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <AuthProvider>
             <CartProvider>{children}</CartProvider>

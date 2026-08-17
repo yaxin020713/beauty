@@ -58,11 +58,11 @@ export default function ProductCard({ product }: { product: Product }) {
 
       {/* 商品內容 */}
       <div className="flex flex-1 flex-col gap-2.5 p-4">
-        <h3 className="line-clamp-2 font-medium leading-snug text-taupe-900">
+        <h3 className="line-clamp-2 font-medium leading-snug text-ink">
           {product.name}
         </h3>
 
-        <div className="text-xl font-semibold text-taupe-900">
+        <div className="text-xl font-semibold text-ink">
           <span className="mr-0.5 align-top text-xs font-normal text-taupe-400">
             NT$
           </span>

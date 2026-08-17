@@ -22,7 +22,7 @@ export default async function StorefrontPage() {
   const products = await loadProducts();
 
   return (
-    <div className="min-h-screen bg-taupe-100 text-taupe-900">
+    <div className="min-h-screen bg-taupe-100 text-ink">
       <Header />
       <StorefrontContent products={products} />
       <CartDrawer />

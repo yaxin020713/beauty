@@ -7,7 +7,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        serif: ["var(--font-playfair)", "Cormorant Garamond", "var(--font-noto-tc)", "serif"],
+        sans: ["var(--font-noto-tc)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       colors: {
+        ink: "#1A1A1A",
         navy: {
           50: "#F7F8FD",
           100: "#E3E9F9",

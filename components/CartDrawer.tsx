@@ -62,7 +62,7 @@ export default function CartDrawer() {
             >
               {/* 標題列 */}
               <div className="flex items-center justify-between border-b border-taupe-100 px-5 py-4">
-                <h2 className="flex items-center gap-2 text-lg font-semibold text-taupe-900">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
                   <ShoppingBag className="h-5 w-5 text-sapphire-600" />
                   購物車（{totalQuantity} 件）
                 </h2>
@@ -116,7 +116,7 @@ export default function CartDrawer() {
 
                         <div className="flex flex-1 flex-col">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="font-medium leading-snug text-taupe-900">
+                            <p className="font-medium leading-snug text-ink">
                               {item.name}
                             </p>
                             <button
@@ -148,7 +148,7 @@ export default function CartDrawer() {
                               >
                                 <Minus className="h-3.5 w-3.5" />
                               </button>
-                              <span className="w-8 text-center text-sm font-medium text-taupe-900">
+                              <span className="w-8 text-center text-sm font-medium text-ink">
                                 {item.quantity}
                               </span>
                               <button
@@ -163,7 +163,7 @@ export default function CartDrawer() {
                           </div>
                         </div>
 
-                        <p className="flex-shrink-0 text-sm font-semibold text-taupe-900">
+                        <p className="flex-shrink-0 text-sm font-semibold text-ink">
                           NT${(item.price * item.quantity).toLocaleString()}
                         </p>
                       </li>
@@ -174,7 +174,7 @@ export default function CartDrawer() {
                   <div className="space-y-2 border-t border-taupe-100 bg-taupe-50/60 px-5 py-4">
                     <div className="flex items-baseline justify-between">
                       <span className="text-sm text-taupe-600">訂單總金額</span>
-                      <span className="text-2xl font-semibold text-taupe-900">
+                      <span className="text-2xl font-semibold text-ink">
                         <span className="mr-0.5 align-top text-sm font-normal text-taupe-400">
                           NT$
                         </span>
