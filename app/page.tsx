@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import PromoBanner from "@/components/PromoBanner";
 import CartDrawer from "@/components/CartDrawer";
 import StorefrontContent from "@/components/StorefrontContent";
+import Footer from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export default async function StorefrontPage() {
         imageSrc="/images/banner.jpg"
       />
       <StorefrontContent products={products} />
+      <Footer />
       <CartDrawer />
     </div>
   );

@@ -19,7 +19,7 @@ const notoSansTC = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  title: "Vesper's Beauty Cabinet",
+  title: "Vesper's Vanity",
   description: "私人梳妝台的精選清單・精緻保養與彩妝選品｜官方正貨保證｜快速出貨",
 };
 

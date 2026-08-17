@@ -87,7 +87,7 @@ export default function StorefrontContent({
       {/* 頁首文案 */}
       <section className="mb-10 sm:mb-14">
         <p className="font-serif text-xs font-medium uppercase tracking-[0.15em] text-sapphire-600">
-          VESPER&apos;S BEAUTY CABINET
+          VESPER&apos;S VANITY
         </p>
         <h1 className="mt-3 font-serif text-3xl font-light text-ink sm:text-4xl">
           私人梳妝台的精選清單

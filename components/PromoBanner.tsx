@@ -53,7 +53,7 @@ export default function PromoBanner({
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
           <div className="max-w-[80%] sm:max-w-md">
             <p className="font-serif text-xs font-medium uppercase tracking-[0.15em] text-sapphire-600">
-              Vesper&apos;s Beauty Cabinet
+              Vesper&apos;s Vanity
             </p>
             <h2 className="mt-2 font-serif text-xl font-light leading-snug text-ink sm:text-3xl lg:text-4xl">
               {titleParts.length === 2 ? (

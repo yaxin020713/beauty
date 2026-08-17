@@ -30,12 +30,12 @@ export default function Header() {
               <Menu className="h-5 w-5 text-taupe-600" />
             </button>
 
-            <a href="#" className="flex min-w-0 items-center gap-2.5" aria-label="Vesper's Beauty Cabinet">
+            <a href="#" className="flex min-w-0 items-center gap-2.5" aria-label="Vesper's Vanity">
               <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-sapphire-600/10 ring-1 ring-sapphire-600/20">
                 <Sparkles className="h-4 w-4 text-sapphire-600" />
               </span>
               <span className="truncate font-serif text-sm font-semibold uppercase tracking-[0.06em] text-ink sm:text-lg sm:tracking-[0.15em]">
-                Vesper&apos;s Beauty Cabinet
+                Vesper&apos;s Vanity
               </span>
             </a>
           </div>
