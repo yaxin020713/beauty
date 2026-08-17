@@ -12,7 +12,7 @@ import {
   Truck,
   Package,
 } from "lucide-react";
-import { useCart } from "./CartContext";
+import { useCart, useAuth } from "./CartContext";
 import { cn } from "@/lib/utils";
 import { BANK_INFO } from "@/lib/bank";
 import {
@@ -39,6 +39,7 @@ export default function CheckoutModal({
   onClose: () => void;
 }) {
   const { cartItems, clearCart } = useCart();
+  const { user } = useAuth();
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -52,15 +53,18 @@ export default function CheckoutModal({
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 每次開啟時重置狀態
+  // 每次開啟時重置狀態，並自動填入 Google 登入的 email
   useEffect(() => {
     if (open) {
       setError("");
       setOrderResult(null);
       setSubmitting(false);
       setSelectedStore("");
+      if (user?.email) {
+        setCustomerEmail(user.email);
+      }
     }
-  }, [open]);
+  }, [open, user?.email]);
 
   // 計算小計（不含運費）
   const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
