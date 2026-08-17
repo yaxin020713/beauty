@@ -329,34 +329,34 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
   const exportToExcel = () => {
     const workbook = XLSX.utils.book_new();
 
-    // Sheet 1: 客戶購買明細
-    const customerData: any[] = [];
+    // Sheet 1: 訂單明細（每筆訂單一列）
+    const orderData = orders.map((order) => ({
+      "訂單編號": order.orderId,
+      "客戶名稱": order.customerName,
+      "客戶電話": order.customerPhone,
+      "商品明細": order.itemsDetail,
+      "訂單總金額": order.totalPrice,
+      "總重量(kg)": order.totalWeightKg,
+      "7-11 取貨店號": order.storeNumber || "",
+      "面交": order.faceToFace || "",
+      "匯款末五碼": order.paymentLast5 || "未提供",
+      "訂單狀態": order.status,
+      "付款狀態": order.paymentStatus,
+      "訂單時間": new Date(order.createdTime).toLocaleString(),
+    }));
+
+    const orderSheet = XLSX.utils.json_to_sheet(orderData);
+    XLSX.utils.book_append_sheet(workbook, orderSheet, "訂單明細");
+
+    // Sheet 2: 商品銷售統計（從商品明細文字解析品名與數量）
     const productSales: { [key: string]: number } = {};
 
     orders.forEach((order) => {
-      const items = parseItems(order.itemsDetail);
-      items.forEach((item: any) => {
-        customerData.push({
-          "訂單編號": order.orderId,
-          "客戶名稱": order.customerName,
-          "客戶電話": order.customerPhone,
-          "商品名稱": item.name,
-          "購買數量": item.quantity,
-          "單價": item.price,
-          "小計": item.quantity * item.price,
-          "訂單狀態": order.status,
-          "付款狀態": order.paymentStatus,
-          "訂單時間": new Date(order.createdTime).toLocaleString(),
-        });
-
-        productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
+      parseItemSummaries(order.itemsDetail).forEach(({ name, quantity }) => {
+        productSales[name] = (productSales[name] || 0) + quantity;
       });
     });
 
-    const customerSheet = XLSX.utils.json_to_sheet(customerData);
-    XLSX.utils.book_append_sheet(workbook, customerSheet, "客戶購買明細");
-
-    // Sheet 2: 商品銷售統計
     const productData = Object.entries(productSales)
       .map(([name, quantity]) => ({
         "商品名稱": name,
@@ -368,13 +368,15 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     XLSX.utils.book_append_sheet(workbook, productSheet, "商品銷售統計");
 
     // 設定列寬
-    customerSheet["!cols"] = [
-      { wch: 12 },
+    orderSheet["!cols"] = [
+      { wch: 16 },
       { wch: 10 },
       { wch: 12 },
-      { wch: 15 },
-      { wch: 8 },
-      { wch: 8 },
+      { wch: 30 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 14 },
+      { wch: 14 },
       { wch: 10 },
       { wch: 10 },
       { wch: 10 },
@@ -385,12 +387,21 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     XLSX.writeFile(workbook, `訂單報表_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
-  const parseItems = (itemsDetail: string): any[] => {
-    try {
-      return JSON.parse(itemsDetail);
-    } catch {
-      return [];
-    }
+  // 從商品明細文字（例："小黑瓶 x2（200g）, 白繃帶 x1（50g）\n運費: ..."）解析出品名與數量
+  const parseItemSummaries = (
+    itemsDetail: string
+  ): { name: string; quantity: number }[] => {
+    const firstLine = itemsDetail.split("\n")[0] ?? "";
+    return firstLine
+      .split(",")
+      .map((segment) => segment.trim())
+      .filter(Boolean)
+      .map((segment) => {
+        const match = segment.match(/^(.+?)\s*x(\d+)/);
+        if (!match) return null;
+        return { name: match[1].trim(), quantity: Number(match[2]) };
+      })
+      .filter((item): item is { name: string; quantity: number } => item !== null);
   };
 
   return (
