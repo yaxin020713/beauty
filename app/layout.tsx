@@ -4,8 +4,8 @@ import { AuthProvider, CartProvider } from "@/components/CartContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export const metadata: Metadata = {
-  title: "美妝選物店",
-  description: "精選商品展示與購物車結帳",
+  title: "Vesper's Beauty Cabinet",
+  description: "私人梳妝台的精選清單・精緻保養與彩妝選品｜官方正貨保證｜快速出貨",
 };
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";

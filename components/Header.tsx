@@ -30,12 +30,12 @@ export default function Header() {
               <Menu className="h-5 w-5 text-taupe-600" />
             </button>
 
-            <a href="#" className="flex items-center gap-2.5" aria-label="美妝選物店">
+            <a href="#" className="flex items-center gap-2.5" aria-label="Vesper's Beauty Cabinet">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sapphire-600/10 ring-1 ring-sapphire-600/20">
                 <Sparkles className="h-4 w-4 text-sapphire-600" />
               </span>
               <span className="font-serif text-lg font-semibold tracking-wide text-taupe-900">
-                美妝選物店
+                Vesper&apos;s Beauty Cabinet
               </span>
             </a>
           </div>

@@ -87,13 +87,13 @@ export default function StorefrontContent({
       {/* 頁首文案 */}
       <section className="mb-10 sm:mb-14">
         <p className="text-xs font-medium uppercase tracking-[0.3em] text-sapphire-600">
-          Curated Selection
+          VESPER&apos;S BEAUTY CABINET
         </p>
         <h1 className="mt-3 font-serif text-3xl font-semibold tracking-wide text-taupe-900 sm:text-4xl">
-          為你選好的每一件
+          私人梳妝台的精選清單
         </h1>
         <p className="mt-2 text-sm text-taupe-500 sm:text-base">
-          精選美妝・下單後出貨
+          精緻保養與彩妝選品 ｜ 官方正貨保證 ｜ 快速出貨
         </p>
       </section>
 
