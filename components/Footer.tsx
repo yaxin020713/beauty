@@ -13,7 +13,7 @@ import {
 const LINE_OA_URL = "https://lin.ee/8klCvGm";
 const SUPPORT_EMAIL = "yaxinzhu2002@gmail.com";
 
-type ModalKey = "guide" | "refund" | null;
+type ModalKey = "guide" | "refund" | "shipping" | null;
 
 export default function Footer() {
   const [openModal, setOpenModal] = useState<ModalKey>(null);
@@ -56,6 +56,15 @@ export default function Footer() {
                     className="text-left underline-offset-4 transition hover:text-champagne-200 hover:underline"
                   >
                     付款與運費說明
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setOpenModal("shipping")}
+                    className="text-left underline-offset-4 transition hover:text-champagne-200 hover:underline"
+                  >
+                    物流時間說明
                   </button>
                 </li>
               </ul>
@@ -162,6 +171,31 @@ export default function Footer() {
               {SUPPORT_EMAIL}
             </a>
             ）聯繫退款事宜。
+          </p>
+        </div>
+      </InfoModal>
+
+      {/* 物流時間說明 Modal */}
+      <InfoModal
+        open={openModal === "shipping"}
+        onClose={() => setOpenModal(null)}
+        title="物流時間說明"
+      >
+        <div>
+          <p className="font-medium text-ink">預購制說明</p>
+          <p className="mt-1">
+            本站貨品採預購制。每次收單後，我們將統一向國外廠商叫貨，貨到台灣的時間依據該次收單數量而定。
+          </p>
+        </div>
+        <div>
+          <p className="font-medium text-ink">配送時程</p>
+          <ul className="mt-1 list-inside list-disc space-y-1">
+            <li>海外廠商備貨：依單量決定（單量少時約 1 個月左右）</li>
+            <li>貨品抵台後：約 1 週左右送達貨倉</li>
+            <li>出貨時間：確認到貨後 3 天內出貨</li>
+          </ul>
+          <p className="mt-2">
+            我們會在可控範圍內盡快為您出貨。惟海外物流時間較不可控，還請多多見諒。
           </p>
         </div>
       </InfoModal>
