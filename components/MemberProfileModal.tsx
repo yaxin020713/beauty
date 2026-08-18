@@ -30,8 +30,8 @@ export default function MemberProfileModal({
     e.preventDefault();
     setError("");
 
-    if (!birthday || !address) {
-      setError("請填寫所有必填欄位");
+    if (!birthday) {
+      setError("請填寫生日");
       return;
     }
 
@@ -49,10 +49,10 @@ export default function MemberProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-medium text-ink">完成會員檔案</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-medium text-ink">完成會員檔案</h2>
           <button
             onClick={onClose}
             disabled={loading}
@@ -62,7 +62,7 @@ export default function MemberProfileModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-taupe-700 mb-1">
               Email
@@ -91,21 +91,6 @@ export default function MemberProfileModal({
 
           <div>
             <label className="block text-sm font-medium text-taupe-700 mb-1">
-              地址 <span className="text-rose-600">*</span>
-            </label>
-            <textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="請輸入完整地址"
-              rows={3}
-              className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-taupe-700 mb-1">
               預設 7-11 超商取貨店號
             </label>
             <input
@@ -118,13 +103,27 @@ export default function MemberProfileModal({
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-taupe-700 mb-1">
+              預設收件地址
+            </label>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              disabled={loading}
+              placeholder="請輸入完整地址 (非必填，下訂時可修改)"
+              rows={2}
+              className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+            />
+          </div>
+
           {error && (
-            <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">
+            <div className="rounded-lg bg-rose-50 p-2 text-xs text-rose-600">
               {error}
             </div>
           )}
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
