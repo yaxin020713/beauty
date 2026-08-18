@@ -6,9 +6,19 @@ import { X, Mail, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "./CartContext";
+import MemberProfileModal from "./MemberProfileModal";
 
 export default function LoginModal() {
-  const { user, login, isLoginModalOpen, closeLoginModal } = useAuth();
+  const {
+    user,
+    login,
+    isLoginModalOpen,
+    closeLoginModal,
+    openMemberProfileModal,
+    closeMemberProfileModal,
+    showMemberProfileModal,
+    pendingMemberEmail,
+  } = useAuth();
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -19,7 +29,7 @@ export default function LoginModal() {
     }
   }, [isLoginModalOpen]);
 
-  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     try {
       const decoded = jwtDecode<{ email: string }>(credentialResponse.credential!);
       const email = decoded.email;
@@ -33,6 +43,25 @@ export default function LoginModal() {
       if (!ok) {
         setError("Google 登入失敗，請重試");
         return;
+      }
+
+      // 檢查會員資料是否完整
+      try {
+        const response = await fetch(`/api/members/profile?email=${encodeURIComponent(email)}`);
+        const data = await response.json();
+
+        if (!data.profileComplete) {
+          // 資料不完整，顯示填寫表單
+          setSuccessMsg(`✓ 登入成功！\n(${email})`);
+          setTimeout(() => {
+            closeLoginModal();
+            openMemberProfileModal(email);
+          }, 1000);
+          return;
+        }
+      } catch (err) {
+        console.warn("檢查會員資料失敗:", err);
+        // 繼續執行，不中斷登入
       }
 
       setSuccessMsg(`✓ 登入成功！\n(${email})`);
@@ -50,10 +79,39 @@ export default function LoginModal() {
     setError("Google 登入失敗，請重試");
   };
 
+  const handleMemberProfileSubmit = async (data: {
+    birthday: string;
+    address: string;
+  }) => {
+    if (!pendingMemberEmail) return;
+
+    try {
+      const response = await fetch("/api/members/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: pendingMemberEmail,
+          birthday: data.birthday,
+          address: data.address,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "保存失敗");
+      }
+
+      closeMemberProfileModal();
+    } catch (err) {
+      throw err;
+    }
+  };
+
   return (
-    <AnimatePresence>
-      {isLoginModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <>
+      <AnimatePresence>
+        {isLoginModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -122,6 +180,16 @@ export default function LoginModal() {
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+
+      {pendingMemberEmail && (
+        <MemberProfileModal
+          email={pendingMemberEmail}
+          isOpen={showMemberProfileModal}
+          onClose={closeMemberProfileModal}
+          onSubmit={handleMemberProfileSubmit}
+        />
+      )}
+    </>
   );
 }

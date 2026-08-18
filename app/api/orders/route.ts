@@ -110,9 +110,9 @@ export async function POST(request: NextRequest) {
   const orderId = `訂單-${Date.now()}`;
 
   try {
-    // 0. 處理推薦碼：查詢推薦人信箱，並計算返利
+    // 0. 處理推薦碼：查詢推薦人信箱，並計算分潤
     let referrerEmail = "";
-    let totalReferralReward = 0;
+    let totalReferralCommission = 0;
 
     if (referralCode) {
       try {
@@ -139,18 +139,18 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // 計算返利：遍歷訂單品項，查詢每個產品的返利字段
+          // 計算分潤：遍歷訂單品項，查詢每個產品的分潤字段
           for (const item of items) {
             try {
               const productPage = await notion.pages.retrieve({ page_id: item.productId });
               if ("properties" in productPage) {
-                const rewardProp = productPage.properties.返利;
+                const rewardProp = productPage.properties.分潤;
                 if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
-                  totalReferralReward += (rewardProp.number || 0) * item.quantity;
+                  totalReferralCommission += (rewardProp.number || 0) * item.quantity;
                 }
               }
             } catch (err) {
-              console.warn(`[api/orders] 無法查詢商品 ${item.productId} 的返利:`, err);
+              console.warn(`[api/orders] 無法查詢商品 ${item.productId} 的分潤:`, err);
             }
           }
         }
@@ -181,8 +181,8 @@ export async function POST(request: NextRequest) {
     if (referrerEmail) {
       properties.推薦人信箱 = { rich_text: [{ text: { content: referrerEmail } }] };
     }
-    if (totalReferralReward > 0) {
-      properties.返利 = { rich_text: [{ text: { content: String(totalReferralReward) } }] };
+    if (totalReferralCommission > 0) {
+      properties.分潤 = { number: totalReferralCommission };
     }
 
     // 7-11 取貨：寫入門市店號；面交：於面交否欄位標記「面交」
@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. 如果有推薦人，更新推薦人的累積返利
+    // 3. 如果有推薦人，更新推薦人的累積分潤
     if (referrerEmail && totalReferralReward > 0) {
       try {
         // 查詢推薦人
@@ -245,20 +245,20 @@ export async function POST(request: NextRequest) {
           const referrerPage = referrerQuery.results[0];
           const referrerId = referrerPage.id;
 
-          // 獲取推薦人目前的累積返利
+          // 獲取推薦人目前的累積分潤
           let currentReward = 0;
           if ("properties" in referrerPage) {
-            const rewardProp = referrerPage.properties.累積返利;
+            const rewardProp = referrerPage.properties.累積分潤;
             if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
               currentReward = rewardProp.number || 0;
             }
           }
 
-          // 更新推薦人的累積返利
+          // 更新推薦人的累積分潤
           await notion.pages.update({
             page_id: referrerId,
             properties: {
-              累積返利: { number: currentReward + totalReferralReward },
+              累積分潤: { number: currentReward + totalReferralReward },
             },
           });
         }
@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
         itemsDetail,
         ...(referralCode && { referralCode }),
         ...(referrerEmail && { referrerEmail }),
-        ...(totalReferralReward > 0 && { referralReward: totalReferralReward }),
+        ...(totalReferralCommission > 0 && { referralCommission: totalReferralCommission }),
       },
       { status: 201 }
     );

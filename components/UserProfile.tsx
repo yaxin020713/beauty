@@ -8,7 +8,7 @@ type UserData = {
   email: string;
   referralCode: string;
   referralLink: string;
-  totalReward: number;
+  totalCommission: number;
 };
 
 export default function UserProfile() {
@@ -42,7 +42,7 @@ export default function UserProfile() {
           email: user.email,
           referralCode: data.referralCode,
           referralLink: data.referralLink,
-          totalReward: data.totalReward || 0,
+          totalCommission: data.totalCommission || 0,
         });
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -188,26 +188,26 @@ export default function UserProfile() {
         </div>
       </div>
 
-      {/* 推薦成果 */}
+      {/* 分潤成果 */}
       <div className="rounded-lg border border-taupe-200 bg-white p-6 text-center">
-        <p className="text-sm text-taupe-600">累計獲得返利</p>
+        <p className="text-sm text-taupe-600">累計獲得分潤</p>
         <p className="mt-4 font-serif text-4xl font-normal text-emerald-600">
-          NT${userData.totalReward}
+          NT${userData.totalCommission}
         </p>
         <p className="mt-2 text-xs text-taupe-500">
-          每成功推薦一位新會員，獲得 NT$50 返利
+          朋友每次購買都能獲得分潤
         </p>
       </div>
 
       {/* 說明 */}
       <div className="rounded-lg bg-taupe-50 p-4 text-sm text-taupe-700">
-        <p className="font-medium">💡 如何獲得返利</p>
+        <p className="font-medium">💡 如何獲得分潤</p>
         <ul className="mt-2 space-y-1 text-taupe-600">
           <li>✓ 分享您的推薦鏈接給朋友 (或分享推薦碼)</li>
           <li>✓ 朋友點擊鏈接或輸入推薦碼購買商品</li>
-          <li>✓ <strong>每次購買</strong>都能獲得該商品的返利金額</li>
+          <li>✓ <strong>每次購買</strong>都能獲得該商品的分潤金額</li>
           <li>✓ 無購買次數限制，完全可以當團購主！</li>
-          <li>✓ 返利累積顯示在上方「累計獲得返利」</li>
+          <li>✓ 分潤累積顯示在上方「累計獲得分潤」</li>
         </ul>
       </div>
     </div>

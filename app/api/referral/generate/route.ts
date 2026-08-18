@@ -106,24 +106,24 @@ export async function POST(request: NextRequest) {
       console.log("[api/referral/generate] 新會員記錄已建立, ID:", memberId);
     }
 
-    // 獲取累積返利
+    // 獲取累積分潤
     let totalReward = 0;
     const memberResponse = await notion.pages.retrieve({ page_id: memberId! });
     if ("properties" in memberResponse) {
-      const rewardProp = memberResponse.properties.累積返利;
+      const rewardProp = memberResponse.properties.累積分潤;
       if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
         totalReward = rewardProp.number;
       }
     }
 
-    console.log("[api/referral/generate] 返利金額:", totalReward);
+    console.log("[api/referral/generate] 分潤金額:", totalReward);
 
     return NextResponse.json(
       {
         success: true,
         email,
         referralCode,
-        totalReward,
+        totalCommission: totalReward,
         referralLink: `${process.env.NEXT_PUBLIC_SITE_URL || "https://beauty.site"}?ref=${referralCode}`,
       },
       { status: 200 }

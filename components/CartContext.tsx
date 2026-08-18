@@ -26,6 +26,10 @@ type AuthContextType = {
   closeLoginModal: () => void;
   isAdmin: boolean;
   isCustomer: boolean;
+  showMemberProfileModal: boolean;
+  openMemberProfileModal: (email: string) => void;
+  closeMemberProfileModal: () => void;
+  pendingMemberEmail: string | null;
 };
 
 type CartContextType = {
@@ -68,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [showMemberProfileModal, setShowMemberProfileModal] = useState(false);
+  const [pendingMemberEmail, setPendingMemberEmail] = useState<string | null>(null);
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "yaxinzhu2002@gmail.com";
 
@@ -128,6 +134,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoginModalOpen(false);
   }, []);
 
+  const openMemberProfileModal = useCallback((email: string) => {
+    setPendingMemberEmail(email);
+    setShowMemberProfileModal(true);
+  }, []);
+
+  const closeMemberProfileModal = useCallback(() => {
+    setShowMemberProfileModal(false);
+    setPendingMemberEmail(null);
+  }, []);
+
   const isAdmin = user?.role === UserRole.Admin;
   const isCustomer = user?.role === UserRole.Customer;
 
@@ -143,6 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         closeLoginModal,
         isAdmin,
         isCustomer,
+        showMemberProfileModal,
+        openMemberProfileModal,
+        closeMemberProfileModal,
+        pendingMemberEmail,
       }}
     >
       {children}
