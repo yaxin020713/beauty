@@ -91,7 +91,7 @@ export default function MemberProfileModal({
 
           <div>
             <label className="block text-sm font-medium text-taupe-700 mb-1">
-              預設 7-11 超商取貨店號
+              預設 7-11 超商取貨店號（結帳時可修改）
             </label>
             <input
               type="text"
@@ -111,7 +111,7 @@ export default function MemberProfileModal({
               >
                 連結
               </a>
-              {" "}查詢門市店號（非必填，下訂時可修改）
+              {" "}查詢 7-11 門市店號
             </p>
           </div>
 
