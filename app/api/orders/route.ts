@@ -128,9 +128,14 @@ export async function POST(request: NextRequest) {
         if (referrerQuery.results.length > 0) {
           const referrerPage = referrerQuery.results[0];
           if ("properties" in referrerPage) {
-            const emailProp = referrerPage.properties.email;
-            if (emailProp && "email" in emailProp && typeof emailProp.email === "string") {
-              referrerEmail = emailProp.email;
+            const emailProp = referrerPage.properties.Email;
+            if (
+              emailProp &&
+              "rich_text" in emailProp &&
+              Array.isArray(emailProp.rich_text) &&
+              emailProp.rich_text.length > 0
+            ) {
+              referrerEmail = emailProp.rich_text[0].plain_text;
             }
           }
 
@@ -231,8 +236,8 @@ export async function POST(request: NextRequest) {
         const referrerQuery = await notion.databases.query({
           database_id: MEMBERS_DB_ID,
           filter: {
-            property: "email",
-            email: { equals: referrerEmail },
+            property: "Email",
+            rich_text: { equals: referrerEmail },
           },
         });
 

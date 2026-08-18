@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     const queryResponse = await notion.databases.query({
       database_id: MEMBERS_DB_ID,
       filter: {
-        property: "email",
-        email: {
+        property: "Email",
+        rich_text: {
           equals: email,
         },
       },
@@ -76,8 +76,14 @@ export async function POST(request: NextRequest) {
       const newMemberPage = await notion.pages.create({
         parent: { database_id: MEMBERS_DB_ID },
         properties: {
-          email: {
-            email: email,
+          Email: {
+            rich_text: [
+              {
+                text: {
+                  content: email,
+                },
+              },
+            ],
           },
           推薦碼: {
             rich_text: [
@@ -88,7 +94,7 @@ export async function POST(request: NextRequest) {
               },
             ],
           },
-          會員創建日期: {
+          會員建立日期: {
             date: {
               start: new Date().toISOString().split("T")[0],
             },
