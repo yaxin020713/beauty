@@ -413,18 +413,75 @@ export default function UserProfile() {
             </div>
           </form>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex justify-between">
               <span className="text-sm text-taupe-600">Email:</span>
               <span className="text-sm font-medium text-ink">{userData.email}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-taupe-600">會員等級:</span>
-              <span className="text-sm font-medium text-emerald-600">{userData.membershipLevel}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-taupe-600">一年內消費金額:</span>
-              <span className="text-sm font-medium text-ink">NT${userData.totalSpending}</span>
+
+            {/* 會員等級與進度 */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-taupe-600">會員等級:</span>
+                <button
+                  onClick={() => setShowLevelModal(true)}
+                  className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition"
+                >
+                  {userData.membershipLevel}
+                  <Info className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* 消費金額 */}
+              <div className="flex justify-between mb-2 text-xs text-taupe-600">
+                <span>本年消費金額</span>
+                <span className="font-medium text-ink">NT${userData.totalSpending}</span>
+              </div>
+
+              {/* 進度條 */}
+              <div className="h-2 overflow-hidden rounded-full bg-taupe-100 mb-2">
+                {(() => {
+                  const tiers = [
+                    { name: "銅級", threshold: 0 },
+                    { name: "銀級", threshold: 3000 },
+                    { name: "金級", threshold: 5000 },
+                    { name: "白金級", threshold: 10000 },
+                  ];
+                  const currentTierIdx = tiers.findIndex((t) => t.name === userData.membershipLevel);
+                  const nextTier = currentTierIdx < tiers.length - 1 ? tiers[currentTierIdx + 1] : null;
+                  const maxThreshold = nextTier?.threshold || 10000;
+                  const percentage = Math.min(100, (userData.totalSpending / maxThreshold) * 100);
+                  return (
+                    <div
+                      className="h-full bg-emerald-600 transition-all"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  );
+                })()}
+              </div>
+
+              {/* 升級說明 */}
+              {(() => {
+                const tiers = [
+                  { name: "銅級", threshold: 0 },
+                  { name: "銀級", threshold: 3000 },
+                  { name: "金級", threshold: 5000 },
+                  { name: "白金級", threshold: 10000 },
+                ];
+                const currentTierIdx = tiers.findIndex((t) => t.name === userData.membershipLevel);
+                const nextTier = currentTierIdx < tiers.length - 1 ? tiers[currentTierIdx + 1] : null;
+                const remaining = nextTier ? Math.max(0, nextTier.threshold - userData.totalSpending) : 0;
+
+                return (
+                  <p className="text-xs text-taupe-600">
+                    {nextTier ? (
+                      <>再消費 <span className="font-medium text-sapphire-600">NT${remaining}</span> 即可升級至 <span className="font-medium">{nextTier.name}</span></>
+                    ) : (
+                      <span className="text-emerald-600 font-medium">已達最高等級 🎉</span>
+                    )}
+                  </p>
+                );
+              })()}
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-taupe-600">生日:</span>
