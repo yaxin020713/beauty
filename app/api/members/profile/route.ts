@@ -62,14 +62,38 @@ export async function GET(request: NextRequest) {
         props.銀行帳號;
 
       memberData.profileComplete = !!hasAllFields;
-      memberData.birthday = props.生日?.date?.start || null;
-      memberData.address = props.地址?.rich_text?.[0]?.plain_text || null;
-      memberData.bankCode = props.銀行代碼?.rich_text?.[0]?.plain_text || null;
-      memberData.bankAccount = props.銀行帳號?.rich_text?.[0]?.plain_text || null;
-      memberData.membershipLevel = props.會員等級?.select?.name || "銅級";
-      memberData.totalSpending = props.一年內累計消費金額?.number || 0;
-      memberData.totalCommission = props.累積分潤?.number || 0;
-      memberData.pendingCommission = props.待提現分潤?.number || 0;
+
+      if (props.生日 && "date" in props.生日) {
+        memberData.birthday = (props.生日 as any).date?.start || null;
+      }
+
+      if (props.地址 && "rich_text" in props.地址) {
+        memberData.address = (props.地址 as any).rich_text?.[0]?.plain_text || null;
+      }
+
+      if (props.銀行代碼 && "rich_text" in props.銀行代碼) {
+        memberData.bankCode = (props.銀行代碼 as any).rich_text?.[0]?.plain_text || null;
+      }
+
+      if (props.銀行帳號 && "rich_text" in props.銀行帳號) {
+        memberData.bankAccount = (props.銀行帳號 as any).rich_text?.[0]?.plain_text || null;
+      }
+
+      if (props.會員等級 && "select" in props.會員等級) {
+        memberData.membershipLevel = (props.會員等級 as any).select?.name || "銅級";
+      }
+
+      if (props.一年內累計消費金額 && "number" in props.一年內累計消費金額) {
+        memberData.totalSpending = (props.一年內累計消費金額 as any).number || 0;
+      }
+
+      if (props.累積分潤 && "number" in props.累積分潤) {
+        memberData.totalCommission = (props.累積分潤 as any).number || 0;
+      }
+
+      if (props.待提現分潤 && "number" in props.待提現分潤) {
+        memberData.pendingCommission = (props.待提現分潤 as any).number || 0;
+      }
     }
 
     return NextResponse.json(memberData, { status: 200 });
