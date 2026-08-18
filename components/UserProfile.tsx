@@ -389,9 +389,21 @@ export default function UserProfile() {
                 value={editStore711Code}
                 onChange={(e) => setEditStore711Code(e.target.value)}
                 disabled={editLoading}
-                placeholder="如 1234 (非必填)"
+                placeholder="如 110817"
                 className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
               />
+              <p className="text-xs text-taupe-500 mt-2">
+                💡 點擊{" "}
+                <a
+                  href="https://www.ibon.com.tw/mobile/retail_inquiry.aspx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sapphire-600 underline hover:text-sapphire-700 font-medium"
+                >
+                  連結
+                </a>
+                {" "}查詢 7-11 門市店號（非必填）
+              </p>
             </div>
 
             <div className="flex gap-3 pt-4">

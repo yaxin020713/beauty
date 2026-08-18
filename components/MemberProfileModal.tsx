@@ -98,9 +98,21 @@ export default function MemberProfileModal({
               value={store711Code}
               onChange={(e) => setStore711Code(e.target.value)}
               disabled={loading}
-              placeholder="如 1234 (非必填，下訂時可修改)"
+              placeholder="如 110817"
               className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
             />
+            <p className="text-xs text-taupe-500 mt-2">
+              💡 點擊{" "}
+              <a
+                href="https://www.ibon.com.tw/mobile/retail_inquiry.aspx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sapphire-600 underline hover:text-sapphire-700 font-medium"
+              >
+                連結
+              </a>
+              {" "}查詢門市店號（非必填，下訂時可修改）
+            </p>
           </div>
 
           <div>
