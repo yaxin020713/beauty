@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Share2, Check, ChevronDown } from "lucide-react";
+import { Copy, Share2, Check, ChevronDown, Info } from "lucide-react";
 import { useAuth } from "./CartContext";
+import MembershipLevelModal from "./MembershipLevelModal";
 
 type UserData = {
   email: string;
@@ -14,6 +15,7 @@ type UserData = {
   address?: string;
   bankCode?: string;
   bankAccount?: string;
+  store711Code?: string;
   membershipLevel: string;
   totalSpending: number;
 };
@@ -37,7 +39,9 @@ export default function UserProfile() {
   const [editAddress, setEditAddress] = useState("");
   const [editBankCode, setEditBankCode] = useState("");
   const [editBankAccount, setEditBankAccount] = useState("");
+  const [editStore711Code, setEditStore711Code] = useState("");
   const [editLoading, setEditLoading] = useState(false);
+  const [showLevelModal, setShowLevelModal] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawMsg, setWithdrawMsg] = useState("");
   const [commissionRecords, setCommissionRecords] = useState<CommissionRecord[]>([]);
@@ -75,12 +79,14 @@ export default function UserProfile() {
           bankAccount: data.bankAccount,
           membershipLevel: data.membershipLevel || "銅級",
           totalSpending: data.totalSpending || 0,
+          store711Code: data.store711Code,
         });
         // 初始化編輯表單
         setEditBirthday(data.birthday || "");
         setEditAddress(data.address || "");
         setEditBankCode(data.bankCode || "");
         setEditBankAccount(data.bankAccount || "");
+        setEditStore711Code(data.store711Code || "");
 
         // 載入分潤明細
         await fetchCommissionHistory(user.email);
@@ -172,6 +178,7 @@ export default function UserProfile() {
           address: editAddress,
           bankCode: editBankCode,
           bankAccount: editBankAccount,
+          store711Code: editStore711Code,
         }),
       });
 
@@ -184,6 +191,7 @@ export default function UserProfile() {
                 address: editAddress,
                 bankCode: editBankCode,
                 bankAccount: editBankAccount,
+                store711Code: editStore711Code,
               }
             : null
         );
@@ -316,9 +324,15 @@ export default function UserProfile() {
                 <label className="block text-sm font-medium text-taupe-700 mb-1">
                   會員等級
                 </label>
-                <div className="rounded-lg border border-taupe-200 bg-taupe-50 px-3 py-2 text-sm font-medium text-ink">
-                  {userData.membershipLevel}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLevelModal(true)}
+                  disabled={editLoading}
+                  className="w-full rounded-lg border border-taupe-200 bg-taupe-50 px-3 py-2 text-sm font-medium text-ink transition hover:bg-taupe-100 disabled:opacity-50 flex items-center justify-between"
+                >
+                  <span>{userData.membershipLevel}</span>
+                  <Info className="h-4 w-4 text-sapphire-600" />
+                </button>
               </div>
             </div>
 
@@ -364,6 +378,20 @@ export default function UserProfile() {
                   className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-taupe-700 mb-1">
+                預設 7-11 超商取貨店號
+              </label>
+              <input
+                type="text"
+                value={editStore711Code}
+                onChange={(e) => setEditStore711Code(e.target.value)}
+                disabled={editLoading}
+                placeholder="如 1234 (非必填)"
+                className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+              />
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -421,6 +449,17 @@ export default function UserProfile() {
           </div>
         )}
       </div>
+
+      {/* 會員等級詳情彈窗 */}
+      {userData && (
+        <MembershipLevelModal
+          isOpen={showLevelModal}
+          onClose={() => setShowLevelModal(false)}
+          currentLevel={userData.membershipLevel}
+          currentSpending={userData.totalSpending}
+          currentYear={new Date().getFullYear()}
+        />
+      )}
 
       {/* 推薦鏈接區塊 */}
       <div className="rounded-lg border border-sapphire-200 bg-sapphire-50/50 p-6">

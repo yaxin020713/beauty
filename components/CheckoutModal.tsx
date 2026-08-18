@@ -54,7 +54,7 @@ export default function CheckoutModal({
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 每次開啟時重置狀態，並自動填入 Google 登入的 email
+  // 每次開啟時重置狀態，並自動填入 Google 登入的 email 及會員預設店號
   useEffect(() => {
     if (open) {
       setError("");
@@ -63,6 +63,8 @@ export default function CheckoutModal({
       setSelectedStore("");
       if (user?.email) {
         setCustomerEmail(user.email);
+        // 載入會員預設 7-11 超取店號
+        loadMemberStore711Code(user.email);
       }
       // 從 localStorage 讀取推薦碼
       const ref = localStorage.getItem("referralCode");
@@ -71,6 +73,20 @@ export default function CheckoutModal({
       }
     }
   }, [open, user?.email]);
+
+  const loadMemberStore711Code = async (email: string) => {
+    try {
+      const response = await fetch(`/api/members/profile?email=${encodeURIComponent(email)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.store711Code) {
+          setSelectedStore(data.store711Code);
+        }
+      }
+    } catch (err) {
+      console.warn("載入會員 7-11 店號失敗:", err);
+    }
+  };
 
   // 計算小計（不含運費）
   const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);

@@ -10,6 +10,7 @@ type MemberProfileModalProps = {
   onSubmit: (data: {
     birthday: string;
     address: string;
+    store711Code?: string;
   }) => Promise<void>;
 };
 
@@ -21,6 +22,7 @@ export default function MemberProfileModal({
 }: MemberProfileModalProps) {
   const [birthday, setBirthday] = useState("");
   const [address, setAddress] = useState("");
+  const [store711Code, setStore711Code] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,7 +37,7 @@ export default function MemberProfileModal({
 
     setLoading(true);
     try {
-      await onSubmit({ birthday, address });
+      await onSubmit({ birthday, address, store711Code });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失敗，請稍後再試");
@@ -98,6 +100,20 @@ export default function MemberProfileModal({
               disabled={loading}
               placeholder="請輸入完整地址"
               rows={3}
+              className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-taupe-700 mb-1">
+              預設 7-11 超商取貨店號
+            </label>
+            <input
+              type="text"
+              value={store711Code}
+              onChange={(e) => setStore711Code(e.target.value)}
+              disabled={loading}
+              placeholder="如 1234 (非必填，下訂時可修改)"
               className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
             />
           </div>

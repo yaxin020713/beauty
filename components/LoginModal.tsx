@@ -82,6 +82,7 @@ export default function LoginModal() {
   const handleMemberProfileSubmit = async (data: {
     birthday: string;
     address: string;
+    store711Code?: string;
   }) => {
     if (!pendingMemberEmail) return;
 
@@ -93,6 +94,7 @@ export default function LoginModal() {
           email: pendingMemberEmail,
           birthday: data.birthday,
           address: data.address,
+          store711Code: data.store711Code,
         }),
       });
 
