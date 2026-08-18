@@ -55,11 +55,11 @@ export async function POST(request: NextRequest) {
       const emailProperty = memberPage.properties.Email;
       if (
         emailProperty &&
-        "rich_text" in emailProperty &&
-        Array.isArray(emailProperty.rich_text) &&
-        emailProperty.rich_text.length > 0
+        "title" in emailProperty &&
+        Array.isArray(emailProperty.title) &&
+        emailProperty.title.length > 0
       ) {
-        email = emailProperty.rich_text[0].plain_text;
+        email = emailProperty.title[0].plain_text;
       }
     }
 

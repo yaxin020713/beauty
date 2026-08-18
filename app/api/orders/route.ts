@@ -131,11 +131,11 @@ export async function POST(request: NextRequest) {
             const emailProp = referrerPage.properties.Email;
             if (
               emailProp &&
-              "rich_text" in emailProp &&
-              Array.isArray(emailProp.rich_text) &&
-              emailProp.rich_text.length > 0
+              "title" in emailProp &&
+              Array.isArray(emailProp.title) &&
+              emailProp.title.length > 0
             ) {
-              referrerEmail = emailProp.rich_text[0].plain_text;
+              referrerEmail = emailProp.title[0].plain_text;
             }
           }
 
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
           database_id: MEMBERS_DB_ID,
           filter: {
             property: "Email",
-            rich_text: { equals: referrerEmail },
+            title: { equals: referrerEmail },
           },
         });
 

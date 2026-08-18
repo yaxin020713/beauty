@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       database_id: MEMBERS_DB_ID,
       filter: {
         property: "Email",
-        rich_text: {
+        title: {
           equals: email,
         },
       },
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
         parent: { database_id: MEMBERS_DB_ID },
         properties: {
           Email: {
-            rich_text: [
+            title: [
               {
                 text: {
                   content: email,
