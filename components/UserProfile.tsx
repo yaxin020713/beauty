@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Share2, Check } from "lucide-react";
+import { Copy, Share2, Check, ChevronDown } from "lucide-react";
 import { useAuth } from "./CartContext";
 
 type UserData = {
@@ -9,6 +9,21 @@ type UserData = {
   referralCode: string;
   referralLink: string;
   totalCommission: number;
+  pendingCommission: number;
+  birthday?: string;
+  address?: string;
+  bankCode?: string;
+  bankAccount?: string;
+  membershipLevel: string;
+  totalSpending: number;
+};
+
+type CommissionRecord = {
+  orderId: string;
+  date: string;
+  totalPrice: number;
+  commission: number;
+  itemsDetail: string;
 };
 
 export default function UserProfile() {
@@ -17,6 +32,16 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editBirthday, setEditBirthday] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editBankCode, setEditBankCode] = useState("");
+  const [editBankAccount, setEditBankAccount] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawMsg, setWithdrawMsg] = useState("");
+  const [commissionRecords, setCommissionRecords] = useState<CommissionRecord[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const generateCode = async () => {
     if (!user?.email) return;
@@ -43,7 +68,22 @@ export default function UserProfile() {
           referralCode: data.referralCode,
           referralLink: data.referralLink,
           totalCommission: data.totalCommission || 0,
+          pendingCommission: data.pendingCommission || 0,
+          birthday: data.birthday,
+          address: data.address,
+          bankCode: data.bankCode,
+          bankAccount: data.bankAccount,
+          membershipLevel: data.membershipLevel || "銅級",
+          totalSpending: data.totalSpending || 0,
         });
+        // 初始化編輯表單
+        setEditBirthday(data.birthday || "");
+        setEditAddress(data.address || "");
+        setEditBankCode(data.bankCode || "");
+        setEditBankAccount(data.bankAccount || "");
+
+        // 載入分潤明細
+        await fetchCommissionHistory(user.email);
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = errorData.error || `錯誤: ${response.status}`;
@@ -55,6 +95,107 @@ export default function UserProfile() {
       setError(err instanceof Error ? err.message : "無法連接到伺服器");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async (withdrawAmount: number) => {
+    if (!user?.email) return;
+
+    if (!userData?.bankCode || !userData?.bankAccount) {
+      setError("請先在會員檔案中填寫銀行帳號");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `確認提現 NT$${withdrawAmount} 到銀行帳號 ${userData.bankCode}-${userData.bankAccount}？\n(將於 1-3 個工作天內匯入)`
+    );
+
+    if (!confirmed) return;
+
+    setWithdrawing(true);
+    setWithdrawMsg("");
+
+    try {
+      const response = await fetch("/api/members/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          amount: withdrawAmount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "提現失敗");
+        return;
+      }
+
+      setWithdrawMsg(`✓ ${data.message}`);
+      // 重新載入分潤資料
+      setTimeout(() => {
+        generateCode();
+      }, 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "提現失敗");
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
+  const fetchCommissionHistory = async (email: string) => {
+    try {
+      const response = await fetch(
+        `/api/members/commission-history?email=${encodeURIComponent(email)}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setCommissionRecords(data.records || []);
+      }
+    } catch (err) {
+      console.error("載入分潤明細失敗:", err);
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!user?.email) return;
+
+    setEditLoading(true);
+    try {
+      const response = await fetch("/api/members/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          birthday: editBirthday,
+          address: editAddress,
+          bankCode: editBankCode,
+          bankAccount: editBankAccount,
+        }),
+      });
+
+      if (response.ok) {
+        setUserData((prev) =>
+          prev
+            ? {
+                ...prev,
+                birthday: editBirthday,
+                address: editAddress,
+                bankCode: editBankCode,
+                bankAccount: editBankAccount,
+              }
+            : null
+        );
+        setEditing(false);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.error || "保存失敗，請稍後再試");
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "保存失敗");
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -123,19 +264,169 @@ export default function UserProfile() {
 
   return (
     <div className="space-y-6">
-      {/* 用戶信息 */}
+      {/* 帳戶和會員信息 */}
       <div className="rounded-lg border border-taupe-200 bg-white p-6">
-        <h3 className="font-serif text-lg font-normal text-ink">帳戶信息</h3>
-        <p className="mt-4 text-sm text-taupe-600">
-          Email: <span className="font-medium text-ink">{userData.email}</span>
-        </p>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-serif text-lg font-normal text-ink">會員檔案</h3>
+          {!editing && (
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded-lg bg-sapphire-600 px-3 py-1 text-sm font-medium text-white transition hover:bg-sapphire-700"
+            >
+              編輯
+            </button>
+          )}
+        </div>
+
+        {editing ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveProfile();
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="block text-sm font-medium text-taupe-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={userData.email}
+                disabled
+                className="w-full rounded-lg border border-taupe-200 bg-taupe-50 px-3 py-2 text-sm text-taupe-600"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-taupe-700 mb-1">
+                  生日
+                </label>
+                <input
+                  type="date"
+                  value={editBirthday}
+                  onChange={(e) => setEditBirthday(e.target.value)}
+                  disabled={editLoading}
+                  className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-taupe-700 mb-1">
+                  會員等級
+                </label>
+                <div className="rounded-lg border border-taupe-200 bg-taupe-50 px-3 py-2 text-sm font-medium text-ink">
+                  {userData.membershipLevel}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-taupe-700 mb-1">
+                地址
+              </label>
+              <textarea
+                value={editAddress}
+                onChange={(e) => setEditAddress(e.target.value)}
+                disabled={editLoading}
+                placeholder="請輸入完整地址"
+                rows={2}
+                className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-taupe-700 mb-1">
+                  銀行代碼
+                </label>
+                <input
+                  type="text"
+                  value={editBankCode}
+                  onChange={(e) => setEditBankCode(e.target.value)}
+                  disabled={editLoading}
+                  placeholder="如 0012"
+                  className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-taupe-700 mb-1">
+                  銀行帳號
+                </label>
+                <input
+                  type="text"
+                  value={editBankAccount}
+                  onChange={(e) => setEditBankAccount(e.target.value)}
+                  disabled={editLoading}
+                  placeholder="不含空格"
+                  className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                disabled={editLoading}
+                className="flex-1 rounded-lg border border-taupe-200 py-2 text-sm font-medium text-taupe-700 transition hover:bg-taupe-50 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                disabled={editLoading}
+                className="flex-1 rounded-lg bg-sapphire-600 py-2 text-sm font-medium text-white transition hover:bg-sapphire-700 disabled:opacity-50"
+              >
+                {editLoading ? "保存中..." : "保存"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-sm text-taupe-600">Email:</span>
+              <span className="text-sm font-medium text-ink">{userData.email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-taupe-600">會員等級:</span>
+              <span className="text-sm font-medium text-emerald-600">{userData.membershipLevel}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-taupe-600">一年內消費金額:</span>
+              <span className="text-sm font-medium text-ink">NT${userData.totalSpending}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-taupe-600">生日:</span>
+              <span className="text-sm font-medium text-ink">
+                {userData.birthday || "未填寫"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-taupe-600">地址:</span>
+              <span className="text-sm font-medium text-ink">
+                {userData.address || "未填寫"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-taupe-600">銀行帳號:</span>
+              <span className="text-sm font-medium text-ink">
+                {userData.bankCode && userData.bankAccount
+                  ? `${userData.bankCode}-${userData.bankAccount}`
+                  : "未填寫"}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 推薦鏈接區塊 */}
       <div className="rounded-lg border border-sapphire-200 bg-sapphire-50/50 p-6">
         <h3 className="font-serif text-lg font-normal text-ink">專屬推薦鏈接</h3>
         <p className="mt-2 text-sm text-taupe-600">
-          分享您的專屬鏈接，朋友每次購買都能幫您賺取返利！無購買次數限制，就像開團購一樣 🎉
+          分享您的專屬鏈接，朋友每次購買都能幫您賺取分潤！無購買次數限制，就像開團購一樣 🎉
         </p>
 
         {/* 推薦鏈接展示 */}
@@ -189,15 +480,93 @@ export default function UserProfile() {
       </div>
 
       {/* 分潤成果 */}
-      <div className="rounded-lg border border-taupe-200 bg-white p-6 text-center">
-        <p className="text-sm text-taupe-600">累計獲得分潤</p>
-        <p className="mt-4 font-serif text-4xl font-normal text-emerald-600">
-          NT${userData.totalCommission}
-        </p>
-        <p className="mt-2 text-xs text-taupe-500">
-          朋友每次購買都能獲得分潤
-        </p>
+      <div className="rounded-lg border border-taupe-200 bg-white p-6">
+        <h3 className="font-serif text-lg font-normal text-ink mb-4">分潤成果</h3>
+
+        {withdrawMsg && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+            {withdrawMsg}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg bg-emerald-50 p-4">
+            <p className="text-xs text-emerald-600 mb-1">累計分潤</p>
+            <p className="text-2xl font-bold text-emerald-600">
+              NT${userData.totalCommission}
+            </p>
+          </div>
+          {userData.pendingCommission > 0 && (
+            <div className="rounded-lg bg-sapphire-50 p-4">
+              <p className="text-xs text-sapphire-600 mb-1">待提現</p>
+              <p className="text-2xl font-bold text-sapphire-600">
+                NT${userData.pendingCommission}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {userData.totalCommission >= 500 && (
+          <button
+            onClick={() => handleWithdraw(userData.totalCommission)}
+            disabled={withdrawing}
+            className="mt-6 w-full rounded-lg bg-emerald-600 px-4 py-3 font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {withdrawing ? "提現中..." : `提現 NT$${userData.totalCommission}`}
+          </button>
+        )}
+        {userData.totalCommission < 500 && (
+          <p className="mt-4 text-center text-sm text-taupe-500">
+            滿 NT$500 即可提現 (還需 NT${500 - userData.totalCommission})
+          </p>
+        )}
       </div>
+
+      {/* 分潤明細 */}
+      {commissionRecords.length > 0 && (
+        <div className="rounded-lg border border-taupe-200 bg-white p-6">
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="flex w-full items-center justify-between"
+          >
+            <h3 className="font-serif text-lg font-normal text-ink">
+              分潤明細
+            </h3>
+            <ChevronDown
+              className={`h-5 w-5 text-taupe-600 transition ${
+                showHistory ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {showHistory && (
+            <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
+              {commissionRecords.map((record) => (
+                <div
+                  key={record.orderId}
+                  className="flex items-center justify-between rounded-lg border border-taupe-100 bg-taupe-50 p-3"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-ink">
+                      {record.itemsDetail}
+                    </p>
+                    <p className="text-xs text-taupe-500 mt-1">
+                      {new Date(record.date).toLocaleDateString("zh-TW")} · 結帳
+                      NT$
+                      {record.totalPrice}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-emerald-600">
+                      +NT${record.commission}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 說明 */}
       <div className="rounded-lg bg-taupe-50 p-4 text-sm text-taupe-700">

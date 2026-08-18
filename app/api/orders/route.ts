@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID, MEMBERS_DB_ID, PRODUCTS_DB_ID } from "@/lib/notion";
 import { calculateShippingFee, calculateDiscount, type ShippingMethod } from "@/lib/shipping";
+import { calculateMembershipLevel } from "@/lib/membership";
 
 // 前台購物車單一項目的型別
 type CartItem = {
@@ -230,7 +231,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. 如果有推薦人，更新推薦人的累積分潤
-    if (referrerEmail && totalReferralReward > 0) {
+    if (referrerEmail && totalReferralCommission > 0) {
       try {
         // 查詢推薦人
         const referrerQuery = await notion.databases.query({
@@ -246,11 +247,11 @@ export async function POST(request: NextRequest) {
           const referrerId = referrerPage.id;
 
           // 獲取推薦人目前的累積分潤
-          let currentReward = 0;
+          let currentCommission = 0;
           if ("properties" in referrerPage) {
             const rewardProp = referrerPage.properties.累積分潤;
             if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
-              currentReward = rewardProp.number || 0;
+              currentCommission = rewardProp.number || 0;
             }
           }
 
@@ -258,12 +259,77 @@ export async function POST(request: NextRequest) {
           await notion.pages.update({
             page_id: referrerId,
             properties: {
-              累積分潤: { number: currentReward + totalReferralReward },
+              累積分潤: { number: currentCommission + totalReferralCommission },
             },
           });
         }
       } catch (error) {
-        console.warn("[api/orders] 無法更新推薦人的返利:", error instanceof Error ? error.message : error);
+        console.warn("[api/orders] 無法更新推薦人的分潤:", error instanceof Error ? error.message : error);
+      }
+    }
+
+    // 4. 更新購物者（客戶）的消費金額和會員等級
+    if (customerEmail) {
+      try {
+        const customerQuery = await notion.databases.query({
+          database_id: MEMBERS_DB_ID,
+          filter: {
+            property: "Email",
+            title: { equals: customerEmail.toLowerCase() },
+          },
+        });
+
+        if (customerQuery.results.length > 0) {
+          const customerPage = customerQuery.results[0];
+          const customerId = customerPage.id;
+
+          // 獲取客戶目前的一年內消費金額
+          let currentSpending = 0;
+          if ("properties" in customerPage) {
+            const spendingProp = customerPage.properties.一年內累計消費金額;
+            if (spendingProp && "number" in spendingProp && typeof spendingProp.number === "number") {
+              currentSpending = spendingProp.number || 0;
+            }
+          }
+
+          // 計算新的消費金額和會員等級
+          const newSpending = currentSpending + totalPrice;
+          const newLevel = calculateMembershipLevel(newSpending);
+
+          // 更新客戶的消費金額和會員等級
+          await notion.pages.update({
+            page_id: customerId,
+            properties: {
+              一年內累計消費金額: { number: newSpending },
+              會員等級: { select: { name: newLevel } },
+            },
+          });
+        } else {
+          // 如果客戶還不存在，建立新的會員記錄
+          const newLevel = calculateMembershipLevel(totalPrice);
+          await notion.pages.create({
+            parent: { database_id: MEMBERS_DB_ID },
+            properties: {
+              Email: {
+                title: [{ text: { content: customerEmail.toLowerCase() } }],
+              },
+              會員等級: {
+                select: { name: newLevel },
+              },
+              一年內累計消費金額: {
+                number: totalPrice,
+              },
+              累積分潤: {
+                number: 0,
+              },
+              待提現分潤: {
+                number: 0,
+              },
+            },
+          });
+        }
+      } catch (error) {
+        console.warn("[api/orders] 無法更新客戶的消費金額:", error instanceof Error ? error.message : error);
       }
     }
 
