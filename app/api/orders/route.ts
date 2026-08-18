@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notion, ORDERS_DB_ID } from "@/lib/notion";
+import { notion, ORDERS_DB_ID, MEMBERS_DB_ID, PRODUCTS_DB_ID } from "@/lib/notion";
 import { calculateShippingFee, calculateDiscount, type ShippingMethod } from "@/lib/shipping";
 
 // 前台購物車單一項目的型別
@@ -18,6 +18,7 @@ type OrderRequestBody = {
   paymentLast5?: string;
   shippingMethod?: string;
   selectedStore?: string;
+  referralCode?: string;
   items?: CartItem[];
 };
 
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
   const customerName = (body.customerName ?? "").trim();
   const customerPhone = (body.customerPhone ?? "").trim();
   const customerEmail = (body.customerEmail ?? "").trim();
+  const referralCode = (body.referralCode ?? "").trim().toUpperCase();
   // 匯款末五碼：只保留數字並限 5 碼
   const paymentLast5 = String(body.paymentLast5 ?? "")
     .replace(/\D/g, "")
@@ -108,6 +110,50 @@ export async function POST(request: NextRequest) {
   const orderId = `訂單-${Date.now()}`;
 
   try {
+    // 0. 處理推薦碼：查詢推薦人信箱，並計算返利
+    let referrerEmail = "";
+    let totalReferralReward = 0;
+
+    if (referralCode) {
+      try {
+        // 查詢推薦碼對應的推薦人
+        const referrerQuery = await notion.databases.query({
+          database_id: MEMBERS_DB_ID,
+          filter: {
+            property: "推薦碼",
+            rich_text: { equals: referralCode },
+          },
+        });
+
+        if (referrerQuery.results.length > 0) {
+          const referrerPage = referrerQuery.results[0];
+          if ("properties" in referrerPage) {
+            const emailProp = referrerPage.properties.email;
+            if (emailProp && "email" in emailProp && typeof emailProp.email === "string") {
+              referrerEmail = emailProp.email;
+            }
+          }
+
+          // 計算返利：遍歷訂單品項，查詢每個產品的返利字段
+          for (const item of items) {
+            try {
+              const productPage = await notion.pages.retrieve({ page_id: item.productId });
+              if ("properties" in productPage) {
+                const rewardProp = productPage.properties.返利;
+                if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
+                  totalReferralReward += (rewardProp.number || 0) * item.quantity;
+                }
+              }
+            } catch (err) {
+              console.warn(`[api/orders] 無法查詢商品 ${item.productId} 的返利:`, err);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[api/orders] 處理推薦碼失敗:", err);
+      }
+    }
+
     // 1. 建立訂單頁面
     // 在 Items_Detail 中附加運費、收貨方式與匯款末五碼資訊
     const detailWithShipping = `${itemsDetail}\n運費: ${shippingFee > 0 ? `NT$${shippingFee}` : "免運"} | 取貨: ${shippingInfo}${discount > 0 ? ` | 滿額現折: -NT$${discount}` : ""}\n匯款末五碼: ${paymentLast5}`;
@@ -122,6 +168,17 @@ export async function POST(request: NextRequest) {
       Total_Weight_kg: { number: totalWeightKg },
       "訂單狀態": { select: { name: "新訂單" } },
     };
+
+    // 推薦碼和推薦人信箱
+    if (referralCode) {
+      properties.推薦碼 = { rich_text: [{ text: { content: referralCode } }] };
+    }
+    if (referrerEmail) {
+      properties.推薦人信箱 = { rich_text: [{ text: { content: referrerEmail } }] };
+    }
+    if (totalReferralReward > 0) {
+      properties.返利 = { rich_text: [{ text: { content: String(totalReferralReward) } }] };
+    }
 
     // 7-11 取貨：寫入門市店號；面交：於面交否欄位標記「面交」
     if (shippingMethod === "convenience_711") {
@@ -167,6 +224,44 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 3. 如果有推薦人，更新推薦人的累積返利
+    if (referrerEmail && totalReferralReward > 0) {
+      try {
+        // 查詢推薦人
+        const referrerQuery = await notion.databases.query({
+          database_id: MEMBERS_DB_ID,
+          filter: {
+            property: "email",
+            email: { equals: referrerEmail },
+          },
+        });
+
+        if (referrerQuery.results.length > 0) {
+          const referrerPage = referrerQuery.results[0];
+          const referrerId = referrerPage.id;
+
+          // 獲取推薦人目前的累積返利
+          let currentReward = 0;
+          if ("properties" in referrerPage) {
+            const rewardProp = referrerPage.properties.累積返利;
+            if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
+              currentReward = rewardProp.number || 0;
+            }
+          }
+
+          // 更新推薦人的累積返利
+          await notion.pages.update({
+            page_id: referrerId,
+            properties: {
+              累積返利: { number: currentReward + totalReferralReward },
+            },
+          });
+        }
+      } catch (error) {
+        console.warn("[api/orders] 無法更新推薦人的返利:", error instanceof Error ? error.message : error);
+      }
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -176,6 +271,9 @@ export async function POST(request: NextRequest) {
         shippingFee,
         discount,
         itemsDetail,
+        ...(referralCode && { referralCode }),
+        ...(referrerEmail && { referrerEmail }),
+        ...(totalReferralReward > 0 && { referralReward: totalReferralReward }),
       },
       { status: 201 }
     );

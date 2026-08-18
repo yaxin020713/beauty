@@ -6,6 +6,7 @@ import { Search, X } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useCart } from "./CartContext";
 import ProductCard from "./ProductCard";
+import ReferralTracker from "./ReferralTracker";
 
 export default function StorefrontContent({
   products,
@@ -83,7 +84,9 @@ export default function StorefrontContent({
   const hasActiveFilters = selectedBrands.size > 0 || selectedCategories.size > 0 || searchTerm.trim() !== "";
 
   return (
-    <main id="shop" className="mx-auto w-full max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
+    <>
+      <ReferralTracker />
+      <main id="shop" className="mx-auto w-full max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
       {/* 頁首文案 */}
       <section className="mb-10 sm:mb-14">
         <p className="font-serif text-xs font-medium uppercase tracking-[0.15em] text-sapphire-600">
@@ -342,5 +345,6 @@ export default function StorefrontContent({
         )}
       </AnimatePresence>
     </main>
+    </>
   );
 }

@@ -65,8 +65,9 @@ export default function Header() {
                   </>
                 )}
 
-                <div
-                  className="flex items-center gap-1.5 rounded-full bg-taupe-100 text-taupe-700 px-3 py-1.5 text-xs font-medium"
+                <a
+                  href="/account"
+                  className="flex items-center gap-1.5 rounded-full bg-taupe-100 text-taupe-700 px-3 py-1.5 text-xs font-medium hover:bg-taupe-200 transition"
                   title={user.email}
                 >
                   <User className="h-3.5 w-3.5" />
@@ -74,7 +75,7 @@ export default function Header() {
                     {user.email}
                   </span>
                   <span className="sm:hidden">已登入</span>
-                </div>
+                </a>
 
                 <button
                   type="button"

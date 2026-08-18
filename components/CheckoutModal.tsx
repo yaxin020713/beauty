@@ -51,6 +51,7 @@ export default function CheckoutModal({
   const [error, setError] = useState("");
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 每次開啟時重置狀態，並自動填入 Google 登入的 email
@@ -62,6 +63,11 @@ export default function CheckoutModal({
       setSelectedStore("");
       if (user?.email) {
         setCustomerEmail(user.email);
+      }
+      // 從 localStorage 讀取推薦碼
+      const ref = localStorage.getItem("referralCode");
+      if (ref) {
+        setReferralCode(ref);
       }
     }
   }, [open, user?.email]);
@@ -105,6 +111,7 @@ export default function CheckoutModal({
           shippingMethod,
           selectedStore: shippingMethod === "convenience_711" ? selectedStore : null,
           shippingFee,
+          referralCode: referralCode || undefined,
           items: cartItems.map(
             ({ id, name, price, weight_g, quantity }) => ({
               productId: id,
@@ -130,6 +137,11 @@ export default function CheckoutModal({
         totalItemCount: cartItems.reduce((sum, i) => sum + i.quantity, 0),
       });
       clearCart();
+
+      // 成功後清除推薦碼（推薦追踪已在訂單 API 中完成）
+      if (referralCode) {
+        localStorage.removeItem("referralCode");
+      }
     } catch {
       setError("網路連線異常，請再試一次");
     } finally {
