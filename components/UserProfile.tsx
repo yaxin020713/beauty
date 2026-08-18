@@ -23,11 +23,17 @@ export default function UserProfile() {
     const generateCode = async () => {
       setLoading(true);
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+
         const response = await fetch("/api/referral/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: user.email }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = await response.json();
@@ -37,9 +43,25 @@ export default function UserProfile() {
             referralLink: data.referralLink,
             totalReward: data.totalReward || 0,
           });
+        } else {
+          console.error("API 返回錯誤:", response.status, response.statusText);
+          // 即使失敗也要顯示基本信息
+          setUserData({
+            email: user.email,
+            referralCode: "載入失敗",
+            referralLink: "",
+            totalReward: 0,
+          });
         }
       } catch (error) {
         console.error("生成推薦碼失敗:", error);
+        // 失敗時顯示錯誤狀態而不是無限轉圈
+        setUserData({
+          email: user.email,
+          referralCode: "錯誤",
+          referralLink: "",
+          totalReward: 0,
+        });
       } finally {
         setLoading(false);
       }

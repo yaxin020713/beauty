@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    console.log("[api/referral/generate] 開始處理 email:", email);
+    console.log("[api/referral/generate] MEMBERS_DB_ID:", MEMBERS_DB_ID);
+
     // 查詢會員是否已存在
     const queryResponse = await notion.databases.query({
       database_id: MEMBERS_DB_ID,
@@ -43,6 +46,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log("[api/referral/generate] 查詢結果:", queryResponse.results.length, "個記錄");
+
     let memberId: string | null = null;
     let referralCode: string | null = null;
 
@@ -50,6 +55,7 @@ export async function POST(request: NextRequest) {
       // 會員已存在，取得推薦碼
       const memberPage = queryResponse.results[0];
       memberId = memberPage.id;
+      console.log("[api/referral/generate] 會員已存在, ID:", memberId);
 
       if ("properties" in memberPage) {
         const codeProperty = memberPage.properties.推薦碼;
@@ -65,6 +71,7 @@ export async function POST(request: NextRequest) {
     } else {
       // 新會員：生成推薦碼並建立頁面
       referralCode = generateReferralCode(email);
+      console.log("[api/referral/generate] 新會員，生成推薦碼:", referralCode);
 
       const newMemberPage = await notion.pages.create({
         parent: { database_id: MEMBERS_DB_ID },
@@ -90,6 +97,7 @@ export async function POST(request: NextRequest) {
       });
 
       memberId = newMemberPage.id;
+      console.log("[api/referral/generate] 新會員記錄已建立, ID:", memberId);
     }
 
     // 獲取累積返利
@@ -102,6 +110,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log("[api/referral/generate] 返利金額:", totalReward);
+
     return NextResponse.json(
       {
         success: true,
@@ -113,7 +123,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("[api/referral/generate]:", error);
+    console.error("[api/referral/generate] 錯誤:", error);
     return NextResponse.json(
       { error: "生成推薦碼失敗，請稍後再試" },
       { status: 500 }
