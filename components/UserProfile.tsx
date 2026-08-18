@@ -16,57 +16,49 @@ export default function UserProfile() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const generateCode = async () => {
     if (!user?.email) return;
 
-    const generateCode = async () => {
-      setLoading(true);
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+    setLoading(true);
+    setError(null);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        const response = await fetch("/api/referral/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email }),
-          signal: controller.signal,
-        });
+      const response = await fetch("/api/referral/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+        signal: controller.signal,
+      });
 
-        clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-        if (response.ok) {
-          const data = await response.json();
-          setUserData({
-            email: user.email,
-            referralCode: data.referralCode,
-            referralLink: data.referralLink,
-            totalReward: data.totalReward || 0,
-          });
-        } else {
-          console.error("API 返回錯誤:", response.status, response.statusText);
-          // 即使失敗也要顯示基本信息
-          setUserData({
-            email: user.email,
-            referralCode: "載入失敗",
-            referralLink: "",
-            totalReward: 0,
-          });
-        }
-      } catch (error) {
-        console.error("生成推薦碼失敗:", error);
-        // 失敗時顯示錯誤狀態而不是無限轉圈
+      if (response.ok) {
+        const data = await response.json();
         setUserData({
           email: user.email,
-          referralCode: "錯誤",
-          referralLink: "",
-          totalReward: 0,
+          referralCode: data.referralCode,
+          referralLink: data.referralLink,
+          totalReward: data.totalReward || 0,
         });
-      } finally {
-        setLoading(false);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `錯誤: ${response.status}`;
+        console.error("API 返回錯誤:", errorMsg);
+        setError(errorMsg);
       }
-    };
+    } catch (err) {
+      console.error("生成推薦碼失敗:", err);
+      setError(err instanceof Error ? err.message : "無法連接到伺服器");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     generateCode();
   }, [user?.email]);
 
@@ -78,11 +70,35 @@ export default function UserProfile() {
     );
   }
 
-  if (loading || !userData) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 rounded-lg bg-taupe-50 p-8">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-sapphire-600 border-t-transparent" />
         <span className="text-taupe-600">載入中...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-rose-200 bg-rose-50 p-6">
+        <h3 className="font-serif text-lg font-normal text-rose-900">載入失敗</h3>
+        <p className="mt-2 text-sm text-rose-700">{error}</p>
+        <button
+          onClick={generateCode}
+          className="mt-4 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
+        >
+          重新嘗試
+        </button>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className="flex items-center justify-center gap-2 rounded-lg bg-taupe-50 p-8">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-sapphire-600 border-t-transparent" />
+        <span className="text-taupe-600">準備中...</span>
       </div>
     );
   }
@@ -94,13 +110,13 @@ export default function UserProfile() {
   };
 
   const shareToWhatsApp = () => {
-    const text = `我用這個推薦碼，妳註冊可以獲得優惠！🎉\n\n推薦碼: ${userData.referralCode}\n點擊鏈接: ${userData.referralLink}`;
+    const text = `我開團購美妝產品，用我的推薦鏈接購買，我們都能獲得優惠！ 🎉\n${userData.referralLink}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, "_blank");
   };
 
   const shareLine = () => {
-    const text = `我用這個推薦碼，妳註冊可以獲得優惠！🎉\n推薦碼: ${userData.referralCode}`;
+    const text = `我開團購美妝產品，用我的推薦鏈接購買，我們都能獲得優惠！ 🎉\n${userData.referralLink}`;
     const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
     window.open(lineUrl, "_blank");
   };
@@ -115,39 +131,42 @@ export default function UserProfile() {
         </p>
       </div>
 
-      {/* 推薦碼區塊 */}
+      {/* 推薦鏈接區塊 */}
       <div className="rounded-lg border border-sapphire-200 bg-sapphire-50/50 p-6">
-        <h3 className="font-serif text-lg font-normal text-ink">我的推薦碼</h3>
+        <h3 className="font-serif text-lg font-normal text-ink">專屬推薦鏈接</h3>
         <p className="mt-2 text-sm text-taupe-600">
-          分享推薦碼給朋友，朋友首次下單時使用，你們都能獲得優惠！
+          分享您的專屬鏈接，朋友每次購買都能幫您賺取返利！無購買次數限制，就像開團購一樣 🎉
         </p>
 
-        {/* 推薦碼展示 */}
+        {/* 推薦鏈接展示 */}
         <div className="mt-4 flex items-center gap-2 rounded-lg bg-white p-4">
-          <code className="flex-1 font-mono text-lg font-bold text-sapphire-600">
-            {userData.referralCode}
-          </code>
+          <span className="flex-1 break-all text-sm text-sapphire-600 font-medium">
+            {userData.referralLink}
+          </span>
           <button
-            onClick={() => copyToClipboard(userData.referralCode)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-sapphire-100 text-sapphire-600 transition hover:bg-sapphire-200"
-            title="複製推薦碼"
+            onClick={() => copyToClipboard(userData.referralLink)}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-sapphire-100 text-sapphire-600 transition hover:bg-sapphire-200"
+            title="複製鏈接"
           >
             {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
           </button>
         </div>
 
-        {/* 推薦鏈接 */}
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-white p-3">
-          <span className="text-sm text-taupe-600">
-            {userData.referralLink.replace(/^https?:\/\//, "")}
-          </span>
-          <button
-            onClick={() => copyToClipboard(userData.referralLink)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-sapphire-100 text-sapphire-600 transition hover:bg-sapphire-200"
-            title="複製鏈接"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          </button>
+        {/* 推薦碼 (備用) */}
+        <div className="mt-3 rounded-lg bg-white p-3">
+          <p className="text-xs text-taupe-600">推薦碼（如直接輸入）:</p>
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 font-mono text-base font-bold text-sapphire-600">
+              {userData.referralCode}
+            </code>
+            <button
+              onClick={() => copyToClipboard(userData.referralCode)}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-sapphire-100 text-sapphire-600 transition hover:bg-sapphire-200"
+              title="複製推薦碼"
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
 
         {/* 分享按鈕 */}
@@ -182,12 +201,13 @@ export default function UserProfile() {
 
       {/* 說明 */}
       <div className="rounded-lg bg-taupe-50 p-4 text-sm text-taupe-700">
-        <p className="font-medium">💡 獎勵規則</p>
+        <p className="font-medium">💡 如何獲得返利</p>
         <ul className="mt-2 space-y-1 text-taupe-600">
-          <li>✓ 分享推薦碼給朋友</li>
-          <li>✓ 朋友首次下單時使用推薦碼</li>
-          <li>✓ 朋友確認收貨後，你獲得 NT$50 獎勵</li>
-          <li>✓ 獎勵可用於下次購物</li>
+          <li>✓ 分享您的推薦鏈接給朋友 (或分享推薦碼)</li>
+          <li>✓ 朋友點擊鏈接或輸入推薦碼購買商品</li>
+          <li>✓ <strong>每次購買</strong>都能獲得該商品的返利金額</li>
+          <li>✓ 無購買次數限制，完全可以當團購主！</li>
+          <li>✓ 返利累積顯示在上方「累計獲得返利」</li>
         </ul>
       </div>
     </div>
