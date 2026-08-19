@@ -33,6 +33,7 @@ type OrderItem = {
   paymentStatus: string;
   storeNumber: string;
   faceToFace: string;
+  shippingDate: string;
   createdTime: string;
 };
 
@@ -328,6 +329,28 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     }
   };
 
+  // 標記已出貨：登錄當日日期到「出貨日期」，並自動將訂單狀態改為「已出貨」
+  const handleMarkShipped = async (orderId: string) => {
+    setSaveError("");
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "已出貨", shippingDate: today }),
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const data = await res.json().catch(() => null);
+        setSaveError(data?.error ?? "更新失敗，請稍後再試");
+      }
+    } catch (error) {
+      console.error("標記已出貨失敗:", error);
+      setSaveError("網路連線異常，請再試一次");
+    }
+  };
+
   const exportToExcel = () => {
     const workbook = XLSX.utils.book_new();
 
@@ -431,7 +454,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {["全部", "新訂單", "已出貨", "已取消"].map((status) => (
+          {["全部", "新訂單", "已出貨", "已完成", "異常中", "已取消"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -494,7 +517,18 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                     <p><span className="font-medium text-ink">7-11 店號:</span> {order.storeNumber}</p>
                   )}
                   <p><span className="font-medium text-ink">面交:</span> {order.faceToFace || "未提供"}</p>
+                  <p><span className="font-medium text-ink">出貨日期:</span> {order.shippingDate || "尚未出貨"}</p>
                   <p><span className="font-medium text-ink">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
+
+                  {order.status !== "已出貨" && order.status !== "已完成" && (
+                    <button
+                      onClick={() => handleMarkShipped(order.id)}
+                      className="mt-1 w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                      標記已出貨（登錄今日出貨日期）
+                    </button>
+                  )}
 
                   {editingOrderId === order.id ? (
                     <div className="mt-3 space-y-2">
@@ -508,6 +542,8 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                       >
                         <option value="新訂單">新訂單</option>
                         <option value="已出貨">已出貨</option>
+                        <option value="已完成">已完成</option>
+                        <option value="異常中">異常中</option>
                         <option value="已取消">已取消</option>
                       </select>
                       <select

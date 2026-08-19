@@ -230,43 +230,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. 如果有推薦人，更新推薦人的累積分潤
-    if (referrerEmail && totalReferralCommission > 0) {
-      try {
-        // 查詢推薦人
-        const referrerQuery = await notion.databases.query({
-          database_id: MEMBERS_DB_ID,
-          filter: {
-            property: "Email",
-            title: { equals: referrerEmail },
-          },
-        });
-
-        if (referrerQuery.results.length > 0) {
-          const referrerPage = referrerQuery.results[0];
-          const referrerId = referrerPage.id;
-
-          // 獲取推薦人目前的累積分潤
-          let currentCommission = 0;
-          if ("properties" in referrerPage) {
-            const rewardProp = referrerPage.properties.累積分潤;
-            if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
-              currentCommission = rewardProp.number || 0;
-            }
-          }
-
-          // 更新推薦人的累積分潤
-          await notion.pages.update({
-            page_id: referrerId,
-            properties: {
-              累積分潤: { number: currentCommission + totalReferralCommission },
-            },
-          });
-        }
-      } catch (error) {
-        console.warn("[api/orders] 無法更新推薦人的分潤:", error instanceof Error ? error.message : error);
-      }
-    }
+    // 3. 推薦人的累積分潤：不在下單當下發放，而是待訂單狀態轉為「已完成」時
+    //    才由管理面板手動操作或每日自動排程呼叫 applyReferralCommission() 入帳
+    //    （分潤金額與推薦人信箱已於上方寫入訂單頁面的 分潤 / 推薦人信箱 屬性）
 
     // 4. 更新購物者（客戶）的消費金額和會員等級
     if (customerEmail) {

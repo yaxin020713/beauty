@@ -74,6 +74,10 @@ export async function GET(request: NextRequest) {
         props["面交否"]?.type === "rich_text" && Array.isArray(props["面交否"].rich_text)
           ? props["面交否"].rich_text[0]?.plain_text || ""
           : "";
+      const shippingDate =
+        props["出貨日期"]?.type === "date" && props["出貨日期"].date
+          ? props["出貨日期"].date.start || ""
+          : "";
       const createdTime = (page as any).created_time || "";
 
       return {
@@ -90,6 +94,7 @@ export async function GET(request: NextRequest) {
         paymentStatus,
         storeNumber,
         faceToFace,
+        shippingDate,
         createdTime,
       };
     });
