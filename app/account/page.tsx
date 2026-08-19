@@ -38,7 +38,7 @@ export default function AccountPage() {
           {/* 頁面標題 */}
           <div className="mb-10">
             <h1 className="font-serif text-3xl font-normal text-ink">
-              個人中心
+              會員專區
             </h1>
             <p className="mt-2 text-taupe-600">
               管理你的帳戶和推薦碼
