@@ -59,6 +59,21 @@ export async function POST(request: NextRequest) {
     const referrerPage = referrerQueryResponse.results[0];
     const referrerId = referrerPage.id;
 
+    // 禁止自我推薦：推薦碼持有人與下單者是同一個 Email 時，不給予獎勵
+    if ("properties" in referrerPage) {
+      const emailProp = referrerPage.properties.Email;
+      const referrerEmail =
+        emailProp && "title" in emailProp && Array.isArray(emailProp.title) && emailProp.title.length > 0
+          ? emailProp.title[0].plain_text
+          : "";
+      if (referrerEmail && referrerEmail.trim().toLowerCase() === customerEmail) {
+        return NextResponse.json(
+          { error: "不可使用自己的推薦碼" },
+          { status: 400 }
+        );
+      }
+    }
+
     // 獲取推薦人目前的統計
     let currentReferralCount = 0;
     let currentTotalReward = 0;

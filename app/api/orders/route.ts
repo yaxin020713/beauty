@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
     // 0. 處理推薦碼：查詢推薦人信箱，並計算分潤
     let referrerEmail = "";
     let totalReferralCommission = 0;
+    let referralApplies = false;
 
     if (referralCode) {
       try {
@@ -140,18 +141,32 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // 計算分潤：遍歷訂單品項，查詢每個產品的分潤字段
-          for (const item of items) {
-            try {
-              const productPage = await notion.pages.retrieve({ page_id: item.productId });
-              if ("properties" in productPage) {
-                const rewardProp = productPage.properties.分潤;
-                if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
-                  totalReferralCommission += (rewardProp.number || 0) * item.quantity;
+          // 禁止自我推薦：下單者與推薦碼持有人是同一個 Email 時，不套用推薦碼也不計算分潤
+          const isSelfReferral =
+            !!referrerEmail &&
+            referrerEmail.trim().toLowerCase() === customerEmail.trim().toLowerCase();
+
+          if (isSelfReferral) {
+            console.warn(
+              `[api/orders] 偵測到自我推薦，忽略推薦碼與分潤: ${customerEmail}`
+            );
+            referrerEmail = "";
+          } else if (referrerEmail) {
+            referralApplies = true;
+
+            // 計算分潤：遍歷訂單品項，查詢每個產品的分潤字段
+            for (const item of items) {
+              try {
+                const productPage = await notion.pages.retrieve({ page_id: item.productId });
+                if ("properties" in productPage) {
+                  const rewardProp = productPage.properties.分潤;
+                  if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
+                    totalReferralCommission += (rewardProp.number || 0) * item.quantity;
+                  }
                 }
+              } catch (err) {
+                console.warn(`[api/orders] 無法查詢商品 ${item.productId} 的分潤:`, err);
               }
-            } catch (err) {
-              console.warn(`[api/orders] 無法查詢商品 ${item.productId} 的分潤:`, err);
             }
           }
         }
@@ -175,8 +190,8 @@ export async function POST(request: NextRequest) {
       "訂單狀態": { select: { name: "新訂單" } },
     };
 
-    // 推薦碼和推薦人信箱
-    if (referralCode) {
+    // 推薦碼和推薦人信箱（自我推薦不寫入，避免留下可被誤判為有效推薦的紀錄）
+    if (referralApplies) {
       properties.推薦碼 = { rich_text: [{ text: { content: referralCode } }] };
     }
     if (referrerEmail) {
@@ -308,7 +323,7 @@ export async function POST(request: NextRequest) {
         shippingFee,
         discount,
         itemsDetail,
-        ...(referralCode && { referralCode }),
+        ...(referralApplies && { referralCode }),
         ...(referrerEmail && { referrerEmail }),
         ...(totalReferralCommission > 0 && { referralCommission: totalReferralCommission }),
       },
