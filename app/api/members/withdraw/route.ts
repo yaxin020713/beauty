@@ -5,6 +5,9 @@ export const dynamic = "force-dynamic";
 
 const WITHDRAW_COOLDOWN_DAYS = 30;
 const MIN_WITHDRAW_AMOUNT = 500;
+// 非永豐銀行（807）帳戶每次提現收取的手續費
+const NON_SINOPAC_WITHDRAW_FEE = 15;
+const SINOPAC_BANK_CODE = "807";
 
 export async function POST(request: NextRequest) {
   let body: { email?: string };
@@ -52,11 +55,13 @@ export async function POST(request: NextRequest) {
     let currentAvailable = 0;
     let currentPendingWithdraw = 0;
     let lastWithdrawDate: string | null = null;
+    let bankCode = "";
 
     if ("properties" in memberPage) {
       const availableProp = memberPage.properties.尚未提現分潤;
       const pendingProp = memberPage.properties.處理中分潤;
       const lastWithdrawProp = memberPage.properties.最近提現日期;
+      const bankCodeProp = memberPage.properties.銀行代碼;
 
       if (
         availableProp &&
@@ -76,6 +81,15 @@ export async function POST(request: NextRequest) {
 
       if (lastWithdrawProp && "date" in lastWithdrawProp && lastWithdrawProp.date) {
         lastWithdrawDate = lastWithdrawProp.date.start;
+      }
+
+      if (
+        bankCodeProp &&
+        "rich_text" in bankCodeProp &&
+        Array.isArray(bankCodeProp.rich_text) &&
+        bankCodeProp.rich_text.length > 0
+      ) {
+        bankCode = bankCodeProp.rich_text[0].plain_text.trim();
       }
     }
 
@@ -104,14 +118,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 更新會員資料：清空尚未提現分潤，增加處理中分潤（撥款處理中），並記錄本次提現日期；
-    // 累積分潤是終身總額，不受提現影響
+    // 非永豐銀行（807）帳戶每次提現收取手續費，實際撥款金額需扣除手續費
+    const fee = bankCode === SINOPAC_BANK_CODE ? 0 : NON_SINOPAC_WITHDRAW_FEE;
+    const payoutAmount = amount - fee;
+
+    // 更新會員資料：清空尚未提現分潤（全額），增加處理中分潤（實際撥款金額，已扣手續費），
+    // 並記錄本次提現日期；累積分潤是終身總額，不受提現影響
     const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
     await notion.pages.update({
       page_id: memberPage.id,
       properties: {
         尚未提現分潤: { number: currentAvailable - amount },
-        處理中分潤: { number: currentPendingWithdraw + amount },
+        處理中分潤: { number: currentPendingWithdraw + payoutAmount },
         最近提現日期: { date: { start: today } },
       },
     });
@@ -121,7 +139,12 @@ export async function POST(request: NextRequest) {
         success: true,
         email,
         amount,
-        message: `成功提現 NT$${amount}，將於 1-3 個工作天內匯入您的帳戶`,
+        fee,
+        payoutAmount,
+        message:
+          fee > 0
+            ? `成功提現 NT$${amount}，非永豐銀行帳戶收取 NT$${fee} 手續費，實際將匯入 NT$${payoutAmount}（1-3 個工作天內）`
+            : `成功提現 NT$${amount}，將於 1-3 個工作天內匯入您的帳戶`,
       },
       { status: 200 }
     );
