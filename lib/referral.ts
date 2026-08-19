@@ -1,7 +1,8 @@
 import { notion, MEMBERS_DB_ID } from "./notion";
 
-// 讀取訂單頁面上已試算好的分潤資訊（推薦人信箱、分潤金額），
-// 將金額累加進推薦人的「累積分潤」。
+// 讀取訂單頁面上已試算好的分潤資訊（推薦人信箱、分潤金額），入帳給推薦人：
+// - 累積分潤：終身總額，只增不減，純粹作為歷史紀錄
+// - 尚未提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
 // 呼叫時機：訂單狀態轉為「已完成」時（管理員手動操作或每日自動排程），
 // 而非下單當下，因此呼叫端須自行確保不會對同一筆訂單重複呼叫。
 export async function applyReferralCommission(orderPage: unknown): Promise<void> {
@@ -30,18 +31,25 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   if (referrerQuery.results.length === 0) return;
 
   const referrerPage = referrerQuery.results[0];
-  let currentCommission = 0;
+  let currentTotalCommission = 0;
+  let currentAvailableCommission = 0;
   if ("properties" in referrerPage) {
-    const rewardProp = referrerPage.properties.累積分潤;
-    if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
-      currentCommission = rewardProp.number || 0;
+    const totalProp = referrerPage.properties.累積分潤;
+    if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
+      currentTotalCommission = totalProp.number || 0;
+    }
+
+    const availableProp = referrerPage.properties.尚未提現分潤;
+    if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
+      currentAvailableCommission = availableProp.number || 0;
     }
   }
 
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      累積分潤: { number: currentCommission + commission },
+      累積分潤: { number: currentTotalCommission + commission },
+      尚未提現分潤: { number: currentAvailableCommission + commission },
     },
   });
 }

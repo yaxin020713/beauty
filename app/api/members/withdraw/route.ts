@@ -54,19 +54,19 @@ export async function POST(request: NextRequest) {
     }
 
     const memberPage = queryResponse.results[0];
-    let currentCommission = 0;
+    let currentAvailable = 0;
     let currentPendingWithdraw = 0;
 
     if ("properties" in memberPage) {
-      const commissionProp = memberPage.properties.累積分潤;
+      const availableProp = memberPage.properties.尚未提現分潤;
       const pendingProp = memberPage.properties.待提現分潤;
 
       if (
-        commissionProp &&
-        "number" in commissionProp &&
-        typeof commissionProp.number === "number"
+        availableProp &&
+        "number" in availableProp &&
+        typeof availableProp.number === "number"
       ) {
-        currentCommission = commissionProp.number || 0;
+        currentAvailable = availableProp.number || 0;
       }
 
       if (
@@ -79,18 +79,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 檢查是否有足夠的分潤可提現
-    if (currentCommission < amount) {
+    if (currentAvailable < amount) {
       return NextResponse.json(
-        { error: `分潤不足。目前有 NT$${currentCommission} 可提現` },
+        { error: `分潤不足。目前有 NT$${currentAvailable} 可提現` },
         { status: 400 }
       );
     }
 
-    // 更新會員資料：減少累積分潤，增加待提現分潤
+    // 更新會員資料：減少尚未提現分潤，增加待提現分潤（撥款處理中）；累積分潤是終身總額，不受提現影響
     await notion.pages.update({
       page_id: memberPage.id,
       properties: {
-        累積分潤: { number: currentCommission - amount },
+        尚未提現分潤: { number: currentAvailable - amount },
         待提現分潤: { number: currentPendingWithdraw + amount },
       },
     });

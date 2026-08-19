@@ -99,6 +99,21 @@ export async function POST(request: NextRequest) {
               start: new Date().toISOString().split("T")[0],
             },
           },
+          會員等級: {
+            select: { name: "銅級" },
+          },
+          一年內累計消費金額: {
+            number: 0,
+          },
+          累積分潤: {
+            number: 0,
+          },
+          尚未提現分潤: {
+            number: 0,
+          },
+          待提現分潤: {
+            number: 0,
+          },
         },
       });
 
@@ -106,17 +121,55 @@ export async function POST(request: NextRequest) {
       console.log("[api/referral/generate] 新會員記錄已建立, ID:", memberId);
     }
 
-    // 獲取累積分潤
-    let totalReward = 0;
+    // 獲取完整會員資料（分潤成果、會員等級、銀行資訊等），供 /account 頁面一次顯示
+    let totalCommission = 0;
+    let availableCommission = 0;
+    let pendingCommission = 0;
+    let membershipLevel = "銅級";
+    let totalSpending = 0;
+    let birthday: string | null = null;
+    let address: string | null = null;
+    let bankCode: string | null = null;
+    let bankAccount: string | null = null;
+    let store711Code: string | null = null;
+
     const memberResponse = await notion.pages.retrieve({ page_id: memberId! });
     if ("properties" in memberResponse) {
-      const rewardProp = memberResponse.properties.累積分潤;
-      if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
-        totalReward = rewardProp.number;
+      const props = memberResponse.properties;
+
+      if (props.累積分潤 && "number" in props.累積分潤) {
+        totalCommission = (props.累積分潤 as any).number || 0;
+      }
+      if (props.尚未提現分潤 && "number" in props.尚未提現分潤) {
+        availableCommission = (props.尚未提現分潤 as any).number || 0;
+      }
+      if (props.待提現分潤 && "number" in props.待提現分潤) {
+        pendingCommission = (props.待提現分潤 as any).number || 0;
+      }
+      if (props.會員等級 && "select" in props.會員等級) {
+        membershipLevel = (props.會員等級 as any).select?.name || "銅級";
+      }
+      if (props.一年內累計消費金額 && "number" in props.一年內累計消費金額) {
+        totalSpending = (props.一年內累計消費金額 as any).number || 0;
+      }
+      if (props.生日 && "date" in props.生日) {
+        birthday = (props.生日 as any).date?.start || null;
+      }
+      if (props.地址 && "rich_text" in props.地址) {
+        address = (props.地址 as any).rich_text?.[0]?.plain_text || null;
+      }
+      if (props.銀行代碼 && "rich_text" in props.銀行代碼) {
+        bankCode = (props.銀行代碼 as any).rich_text?.[0]?.plain_text || null;
+      }
+      if (props.銀行帳號 && "rich_text" in props.銀行帳號) {
+        bankAccount = (props.銀行帳號 as any).rich_text?.[0]?.plain_text || null;
+      }
+      if (props.預設711超商店號 && "rich_text" in props.預設711超商店號) {
+        store711Code = (props.預設711超商店號 as any).rich_text?.[0]?.plain_text || null;
       }
     }
 
-    console.log("[api/referral/generate] 分潤金額:", totalReward);
+    console.log("[api/referral/generate] 分潤金額:", totalCommission);
 
     const siteUrl = getSiteUrlFromRequest(request);
 
@@ -125,7 +178,16 @@ export async function POST(request: NextRequest) {
         success: true,
         email,
         referralCode,
-        totalCommission: totalReward,
+        totalCommission,
+        availableCommission,
+        pendingCommission,
+        membershipLevel,
+        totalSpending,
+        birthday,
+        address,
+        bankCode,
+        bankAccount,
+        store711Code,
         referralLink: `${siteUrl}?ref=${referralCode}`,
       },
       { status: 200 }

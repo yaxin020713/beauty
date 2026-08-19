@@ -92,6 +92,10 @@ export async function GET(request: NextRequest) {
         memberData.totalCommission = (props.累積分潤 as any).number || 0;
       }
 
+      if (props.尚未提現分潤 && "number" in props.尚未提現分潤) {
+        memberData.availableCommission = (props.尚未提現分潤 as any).number || 0;
+      }
+
       if (props.待提現分潤 && "number" in props.待提現分潤) {
         memberData.pendingCommission = (props.待提現分潤 as any).number || 0;
       }
@@ -195,6 +199,9 @@ export async function POST(request: NextRequest) {
         number: 0,
       };
       properties.累積分潤 = {
+        number: 0,
+      };
+      properties.尚未提現分潤 = {
         number: 0,
       };
       properties.待提現分潤 = {

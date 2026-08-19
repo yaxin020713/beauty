@@ -10,6 +10,7 @@ type UserData = {
   referralCode: string;
   referralLink: string;
   totalCommission: number;
+  availableCommission: number;
   pendingCommission: number;
   birthday?: string;
   address?: string;
@@ -74,6 +75,7 @@ export default function UserProfile() {
           referralCode: data.referralCode,
           referralLink: data.referralLink,
           totalCommission: data.totalCommission || 0,
+          availableCommission: data.availableCommission || 0,
           pendingCommission: data.pendingCommission || 0,
           birthday: data.birthday,
           address: data.address,
@@ -603,7 +605,10 @@ export default function UserProfile() {
           <div className="rounded-lg bg-emerald-50 p-4">
             <p className="text-xs text-emerald-600 mb-1">待提現分潤</p>
             <p className="text-2xl font-bold text-emerald-600">
-              NT${userData.totalCommission}
+              NT${userData.availableCommission}
+            </p>
+            <p className="text-xs text-taupe-400 mt-1">
+              歷史累計 NT${userData.totalCommission}
             </p>
           </div>
           {userData.pendingCommission > 0 && (
@@ -616,18 +621,18 @@ export default function UserProfile() {
           )}
         </div>
 
-        {userData.totalCommission >= 500 && (
+        {userData.availableCommission >= 500 && (
           <button
-            onClick={() => handleWithdraw(userData.totalCommission)}
+            onClick={() => handleWithdraw(userData.availableCommission)}
             disabled={withdrawing}
             className="mt-6 w-full rounded-lg bg-emerald-600 px-4 py-3 font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
           >
-            {withdrawing ? "提現中..." : `提現 NT$${userData.totalCommission}`}
+            {withdrawing ? "提現中..." : `提現 NT$${userData.availableCommission}`}
           </button>
         )}
-        {userData.totalCommission < 500 && (
+        {userData.availableCommission < 500 && (
           <p className="mt-4 text-center text-sm text-taupe-500">
-            滿 NT$500 即可提現 (還需 NT${500 - userData.totalCommission})
+            滿 NT$500 即可提現 (還需 NT${500 - userData.availableCommission})
           </p>
         )}
       </div>
