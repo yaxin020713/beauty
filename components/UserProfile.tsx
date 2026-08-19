@@ -29,6 +29,7 @@ type CommissionRecord = {
   itemsDetail: string;
   status: string;
   credited: boolean;
+  note: string;
 };
 
 export default function UserProfile() {
@@ -670,6 +671,9 @@ export default function UserProfile() {
                       NT$
                       {record.totalPrice}
                     </p>
+                    {record.note && (
+                      <p className="text-xs text-amber-600 mt-1">{record.note}</p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-emerald-600">

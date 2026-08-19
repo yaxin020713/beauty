@@ -11,6 +11,7 @@ type CommissionRecord = {
   itemsDetail: string;
   status: string;
   credited: boolean;
+  note: string;
 };
 
 export async function GET(request: NextRequest) {
@@ -31,12 +32,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 查詢該用戶作為推薦人的所有訂單
+    const normalizedEmail = email.toLowerCase();
+
+    // 查詢該用戶作為推薦人的所有訂單（一筆訂單同時使用推薦連結與手動輸入推薦碼、
+    // 分屬不同人時，該用戶可能是第一或第二推薦人，見 推薦人信箱 / 推薦人信箱2）
     const queryResponse = await notion.databases.query({
       database_id: ORDERS_DB_ID,
       filter: {
-        property: "推薦人信箱",
-        rich_text: { equals: email.toLowerCase() },
+        or: [
+          { property: "推薦人信箱", rich_text: { equals: normalizedEmail } },
+          { property: "推薦人信箱2", rich_text: { equals: normalizedEmail } },
+        ],
       },
     });
 
@@ -77,8 +83,14 @@ export async function GET(request: NextRequest) {
         totalPrice = priceProp.number;
       }
 
-      // 提取分潤
-      const commissionProp = props.分潤;
+      // 判斷目前這位推薦人是訂單上的第一位還是第二位推薦人，取對應的分潤欄位
+      const referrer1Email =
+        props["推薦人信箱"]?.type === "rich_text" && Array.isArray(props["推薦人信箱"].rich_text)
+          ? props["推薦人信箱"].rich_text[0]?.plain_text || ""
+          : "";
+      const isSecondReferrer = referrer1Email.toLowerCase() !== normalizedEmail;
+
+      const commissionProp = isSecondReferrer ? props.分潤2 : props.分潤;
       let commission = 0;
       if (
         commissionProp &&
@@ -87,6 +99,13 @@ export async function GET(request: NextRequest) {
       ) {
         commission = commissionProp.number;
       }
+
+      // 若訂單同時使用了推薦連結與手動輸入推薦碼（分屬不同人），附上說明
+      const noteProp = props.分潤備註;
+      const note =
+        noteProp && "rich_text" in noteProp && Array.isArray(noteProp.rich_text) && noteProp.rich_text.length > 0
+          ? noteProp.rich_text[0].plain_text
+          : "";
 
       // 提取商品明細
       const itemsProp = props.Items_Detail;
@@ -109,6 +128,7 @@ export async function GET(request: NextRequest) {
           itemsDetail: itemsDetail.split("\n")[0], // 只取第一行（商品部分）
           status,
           credited: status === "已完成",
+          note,
         });
       }
     }

@@ -20,12 +20,58 @@ type OrderRequestBody = {
   shippingMethod?: string;
   selectedStore?: string;
   referralCode?: string;
+  linkReferralCode?: string;
   items?: CartItem[];
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const dynamic = "force-dynamic";
+
+// 查詢推薦碼對應的推薦人 Email；找不到、或推薦碼持有人與下單者是同一人（自我推薦）時回傳 null
+async function resolveReferrer(
+  code: string,
+  buyerEmail: string
+): Promise<{ code: string; email: string } | null> {
+  if (!code || !MEMBERS_DB_ID) return null;
+
+  try {
+    const referrerQuery = await notion.databases.query({
+      database_id: MEMBERS_DB_ID,
+      filter: {
+        property: "推薦碼",
+        rich_text: { equals: code },
+      },
+    });
+
+    if (referrerQuery.results.length === 0) return null;
+
+    const referrerPage = referrerQuery.results[0];
+    if (!("properties" in referrerPage)) return null;
+
+    const emailProp = referrerPage.properties.Email;
+    const email =
+      emailProp &&
+      "title" in emailProp &&
+      Array.isArray(emailProp.title) &&
+      emailProp.title.length > 0
+        ? emailProp.title[0].plain_text
+        : "";
+
+    if (!email) return null;
+
+    const isSelfReferral = email.trim().toLowerCase() === buyerEmail.trim().toLowerCase();
+    if (isSelfReferral) {
+      console.warn(`[api/orders] 偵測到自我推薦，忽略推薦碼 ${code}: ${buyerEmail}`);
+      return null;
+    }
+
+    return { code, email };
+  } catch (err) {
+    console.warn(`[api/orders] 查詢推薦碼 ${code} 失敗:`, err);
+    return null;
+  }
+}
 
 export async function POST(request: NextRequest) {
   let body: OrderRequestBody;
@@ -40,6 +86,7 @@ export async function POST(request: NextRequest) {
   const customerPhone = (body.customerPhone ?? "").trim();
   const customerEmail = (body.customerEmail ?? "").trim();
   const referralCode = (body.referralCode ?? "").trim().toUpperCase();
+  const linkReferralCode = (body.linkReferralCode ?? "").trim().toUpperCase();
   // 匯款末五碼：只保留數字並限 5 碼
   const paymentLast5 = String(body.paymentLast5 ?? "")
     .replace(/\D/g, "")
@@ -111,69 +158,53 @@ export async function POST(request: NextRequest) {
   const orderId = `訂單-${Date.now()}`;
 
   try {
-    // 0. 處理推薦碼：查詢推薦人信箱，並計算分潤
-    let referrerEmail = "";
+    // 0. 處理推薦碼：結帳表單填的推薦碼、與推薦連結帶入的推薦碼可能來自不同人
+    //    （例如用戶點了 A 的連結，卻手動改填 B 的推薦碼）。
+    //    兩者都有效且是不同人時，該筆訂單分潤由兩位推薦人各半；其餘情況維持單一推薦人全額分潤。
+    const formMatch = await resolveReferrer(referralCode, customerEmail);
+    const linkMatch =
+      linkReferralCode && linkReferralCode !== referralCode
+        ? await resolveReferrer(linkReferralCode, customerEmail)
+        : null;
+
+    const referrers: { code: string; email: string }[] = [];
+    if (formMatch) referrers.push(formMatch);
+    if (linkMatch && linkMatch.email.toLowerCase() !== formMatch?.email.toLowerCase()) {
+      referrers.push(linkMatch);
+    }
+
     let totalReferralCommission = 0;
-    let referralApplies = false;
-
-    if (referralCode) {
-      try {
-        // 查詢推薦碼對應的推薦人
-        const referrerQuery = await notion.databases.query({
-          database_id: MEMBERS_DB_ID,
-          filter: {
-            property: "推薦碼",
-            rich_text: { equals: referralCode },
-          },
-        });
-
-        if (referrerQuery.results.length > 0) {
-          const referrerPage = referrerQuery.results[0];
-          if ("properties" in referrerPage) {
-            const emailProp = referrerPage.properties.Email;
-            if (
-              emailProp &&
-              "title" in emailProp &&
-              Array.isArray(emailProp.title) &&
-              emailProp.title.length > 0
-            ) {
-              referrerEmail = emailProp.title[0].plain_text;
+    if (referrers.length > 0) {
+      // 計算分潤：遍歷訂單品項，查詢每個產品的分潤字段（與推薦人數量無關，只算一次）
+      for (const item of items) {
+        try {
+          const productPage = await notion.pages.retrieve({ page_id: item.productId });
+          if ("properties" in productPage) {
+            const rewardProp = productPage.properties.分潤;
+            if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
+              totalReferralCommission += (rewardProp.number || 0) * item.quantity;
             }
           }
-
-          // 禁止自我推薦：下單者與推薦碼持有人是同一個 Email 時，不套用推薦碼也不計算分潤
-          const isSelfReferral =
-            !!referrerEmail &&
-            referrerEmail.trim().toLowerCase() === customerEmail.trim().toLowerCase();
-
-          if (isSelfReferral) {
-            console.warn(
-              `[api/orders] 偵測到自我推薦，忽略推薦碼與分潤: ${customerEmail}`
-            );
-            referrerEmail = "";
-          } else if (referrerEmail) {
-            referralApplies = true;
-
-            // 計算分潤：遍歷訂單品項，查詢每個產品的分潤字段
-            for (const item of items) {
-              try {
-                const productPage = await notion.pages.retrieve({ page_id: item.productId });
-                if ("properties" in productPage) {
-                  const rewardProp = productPage.properties.分潤;
-                  if (rewardProp && "number" in rewardProp && typeof rewardProp.number === "number") {
-                    totalReferralCommission += (rewardProp.number || 0) * item.quantity;
-                  }
-                }
-              } catch (err) {
-                console.warn(`[api/orders] 無法查詢商品 ${item.productId} 的分潤:`, err);
-              }
-            }
-          }
+        } catch (err) {
+          console.warn(`[api/orders] 無法查詢商品 ${item.productId} 的分潤:`, err);
         }
-      } catch (err) {
-        console.warn("[api/orders] 處理推薦碼失敗:", err);
       }
     }
+
+    const referrer1 = referrers[0] ?? null;
+    const referrer2 = referrers[1] ?? null;
+    const referrer1Commission =
+      referrer2 && totalReferralCommission > 0
+        ? Math.ceil(totalReferralCommission / 2)
+        : totalReferralCommission;
+    const referrer2Commission =
+      referrer2 && totalReferralCommission > 0
+        ? Math.floor(totalReferralCommission / 2)
+        : 0;
+    const commissionNote =
+      referrer2
+        ? `此訂單同時使用推薦連結與手動輸入的推薦碼，分別來自不同推薦人（${referrer1!.code} / ${referrer2.code}），分潤各半`
+        : "";
 
     // 1. 建立訂單頁面
     // 在 Items_Detail 中附加運費、收貨方式與匯款末五碼資訊
@@ -191,14 +222,20 @@ export async function POST(request: NextRequest) {
     };
 
     // 推薦碼和推薦人信箱（自我推薦不寫入，避免留下可被誤判為有效推薦的紀錄）
-    if (referralApplies) {
-      properties.推薦碼 = { rich_text: [{ text: { content: referralCode } }] };
+    if (referrer1) {
+      properties.推薦碼 = { rich_text: [{ text: { content: referrer1.code } }] };
+      properties.推薦人信箱 = { rich_text: [{ text: { content: referrer1.email } }] };
+      if (referrer1Commission > 0) {
+        properties.分潤 = { number: referrer1Commission };
+      }
     }
-    if (referrerEmail) {
-      properties.推薦人信箱 = { rich_text: [{ text: { content: referrerEmail } }] };
-    }
-    if (totalReferralCommission > 0) {
-      properties.分潤 = { number: totalReferralCommission };
+    if (referrer2) {
+      properties.推薦碼2 = { rich_text: [{ text: { content: referrer2.code } }] };
+      properties.推薦人信箱2 = { rich_text: [{ text: { content: referrer2.email } }] };
+      if (referrer2Commission > 0) {
+        properties.分潤2 = { number: referrer2Commission };
+      }
+      properties.分潤備註 = { rich_text: [{ text: { content: commissionNote } }] };
     }
 
     // 7-11 取貨：寫入門市店號；面交：於面交否欄位標記「面交」
@@ -326,9 +363,9 @@ export async function POST(request: NextRequest) {
         shippingFee,
         discount,
         itemsDetail,
-        ...(referralApplies && { referralCode }),
-        ...(referrerEmail && { referrerEmail }),
+        ...(referrer1 && { referralCode: referrer1.code, referrerEmail: referrer1.email }),
         ...(totalReferralCommission > 0 && { referralCommission: totalReferralCommission }),
+        ...(referrer2 && { secondReferrerEmail: referrer2.email, commissionNote }),
       },
       { status: 201 }
     );

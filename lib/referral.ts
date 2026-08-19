@@ -1,30 +1,26 @@
 import { notion, MEMBERS_DB_ID } from "./notion";
 
-// 讀取訂單頁面上已試算好的分潤資訊（推薦人信箱、分潤金額），入帳給推薦人：
+function readRichText(prop: any): string {
+  return prop?.type === "rich_text" && Array.isArray(prop.rich_text)
+    ? prop.rich_text[0]?.plain_text || ""
+    : "";
+}
+
+function readNumber(prop: any): number {
+  return prop?.type === "number" ? prop.number || 0 : 0;
+}
+
+// 把分潤入帳給單一位推薦人：
 // - 累積分潤：終身總額，只增不減，純粹作為歷史紀錄
 // - 尚未提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
-// 呼叫時機：訂單狀態轉為「已完成」時（管理員手動操作或每日自動排程），
-// 而非下單當下，因此呼叫端須自行確保不會對同一筆訂單重複呼叫。
-export async function applyReferralCommission(orderPage: unknown): Promise<void> {
-  if (!orderPage || typeof orderPage !== "object" || !("properties" in orderPage)) return;
-  if (!MEMBERS_DB_ID) return;
-
-  const props = (orderPage as { properties: Record<string, any> }).properties;
-
-  const referrerEmail =
-    props["推薦人信箱"]?.type === "rich_text" && Array.isArray(props["推薦人信箱"].rich_text)
-      ? props["推薦人信箱"].rich_text[0]?.plain_text || ""
-      : "";
-  const commission =
-    props["分潤"]?.type === "number" ? props["分潤"].number || 0 : 0;
-
-  if (!referrerEmail || commission <= 0) return;
+async function creditMemberCommission(email: string, amount: number): Promise<void> {
+  if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 
   const referrerQuery = await notion.databases.query({
     database_id: MEMBERS_DB_ID,
     filter: {
       property: "Email",
-      title: { equals: referrerEmail },
+      title: { equals: email },
     },
   });
 
@@ -48,10 +44,24 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      累積分潤: { number: currentTotalCommission + commission },
-      尚未提現分潤: { number: currentAvailableCommission + commission },
+      累積分潤: { number: currentTotalCommission + amount },
+      尚未提現分潤: { number: currentAvailableCommission + amount },
     },
   });
+}
+
+// 讀取訂單頁面上已試算好的分潤資訊，入帳給推薦人。訂單使用推薦連結與手動輸入的推薦碼
+// 分屬不同人時，訂單上會同時存在第二位推薦人（推薦人信箱2 / 分潤2），兩者都要入帳。
+// 呼叫時機：訂單狀態轉為「已完成」時（管理員手動操作或每日自動排程），
+// 而非下單當下，因此呼叫端須自行確保不會對同一筆訂單重複呼叫。
+export async function applyReferralCommission(orderPage: unknown): Promise<void> {
+  if (!orderPage || typeof orderPage !== "object" || !("properties" in orderPage)) return;
+  if (!MEMBERS_DB_ID) return;
+
+  const props = (orderPage as { properties: Record<string, any> }).properties;
+
+  await creditMemberCommission(readRichText(props["推薦人信箱"]), readNumber(props["分潤"]));
+  await creditMemberCommission(readRichText(props["推薦人信箱2"]), readNumber(props["分潤2"]));
 }
 
 // 生成唯一的推荐码（8位字符，易于分享）

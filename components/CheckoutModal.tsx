@@ -51,7 +51,10 @@ export default function CheckoutModal({
   const [error, setError] = useState("");
   const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
   const [copied, setCopied] = useState(false);
-  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string>("");
+  // 透過推薦連結帶入的原始推薦碼，開啟結帳視窗後不再變動；
+  // 用來跟下方使用者可手動編輯的 referralCode 比對，偵測「連結」與「手動輸入」是否為不同推薦人
+  const [linkReferralCode, setLinkReferralCode] = useState<string>("");
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 每次開啟時重置狀態，並自動填入 Google 登入的 email 及會員預設店號
@@ -66,11 +69,10 @@ export default function CheckoutModal({
         // 載入會員預設 7-11 超取店號
         loadMemberStore711Code(user.email);
       }
-      // 從 localStorage 讀取推薦碼
-      const ref = localStorage.getItem("referralCode");
-      if (ref) {
-        setReferralCode(ref);
-      }
+      // 從 localStorage 讀取推薦連結帶入的推薦碼，預先填入欄位（使用者仍可自行修改）
+      const ref = localStorage.getItem("referralCode") || "";
+      setReferralCode(ref);
+      setLinkReferralCode(ref);
     }
   }, [open, user?.email]);
 
@@ -127,7 +129,8 @@ export default function CheckoutModal({
           shippingMethod,
           selectedStore: shippingMethod === "convenience_711" ? selectedStore : null,
           shippingFee,
-          referralCode: referralCode || undefined,
+          referralCode: referralCode.trim() || undefined,
+          linkReferralCode: linkReferralCode.trim() || undefined,
           items: cartItems.map(
             ({ id, name, price, weight_g, quantity }) => ({
               productId: id,
@@ -154,8 +157,8 @@ export default function CheckoutModal({
       });
       clearCart();
 
-      // 成功後清除推薦碼（推薦追踪已在訂單 API 中完成）
-      if (referralCode) {
+      // 成功後清除推薦連結帶入的推薦碼（推薦追踪已在訂單 API 中完成）
+      if (linkReferralCode) {
         localStorage.removeItem("referralCode");
       }
     } catch {
@@ -479,6 +482,21 @@ export default function CheckoutModal({
                     placeholder="聯繫用 Email *"
                     className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm outline-none transition focus:border-sapphire-500"
                   />
+                  <div>
+                    <input
+                      type="text"
+                      maxLength={8}
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                      placeholder="推薦碼（選填）"
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm uppercase outline-none transition focus:border-sapphire-500"
+                    />
+                    {linkReferralCode && referralCode.trim().toUpperCase() !== linkReferralCode.toUpperCase() && (
+                      <p className="mt-1 text-xs text-amber-600">
+                        您透過推薦連結進入，但輸入了不同的推薦碼——若兩者皆有效，本筆訂單分潤將由兩位推薦人各半。
+                      </p>
+                    )}
+                  </div>
                   {/* 匯款提醒 */}
                   <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
                     <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
