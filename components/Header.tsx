@@ -67,12 +67,12 @@ export default function Header() {
 
                 <a
                   href="/account"
-                  className="flex items-center gap-1.5 rounded-full bg-taupe-100 text-taupe-700 px-3 py-1.5 text-xs font-medium hover:bg-taupe-200 transition"
+                  className="flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-taupe-100 text-taupe-700 px-3 py-1.5 text-xs font-medium hover:bg-taupe-200 transition"
                   title={user.email}
                 >
-                  <User className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">會員專區</span>
-                  <span className="sm:hidden">會員</span>
+                  <User className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="hidden whitespace-nowrap sm:inline">會員專區</span>
+                  <span className="whitespace-nowrap sm:hidden">會員</span>
                 </a>
 
                 <button

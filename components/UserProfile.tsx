@@ -6,6 +6,8 @@ import { useAuth } from "./CartContext";
 import MembershipLevelModal from "./MembershipLevelModal";
 import CommissionInfoModal from "./CommissionInfoModal";
 
+const BIRTHDAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 type UserData = {
   email: string;
   referralCode: string;
@@ -217,6 +219,11 @@ export default function UserProfile() {
   const saveProfile = async () => {
     if (!user?.email) return;
 
+    if (editBirthday && !BIRTHDAY_PATTERN.test(editBirthday)) {
+      alert("生日格式錯誤，請輸入西元年-月-日，例如 1995-06-15");
+      return;
+    }
+
     setEditLoading(true);
     try {
       const response = await fetch("/api/members/profile", {
@@ -396,11 +403,13 @@ export default function UserProfile() {
                   生日
                 </label>
                 <input
-                  type="date"
+                  type="text"
+                  inputMode="numeric"
                   value={editBirthday}
                   onChange={(e) => setEditBirthday(e.target.value)}
                   disabled={editLoading}
-                  className="block h-10 w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm leading-tight focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+                  placeholder="西元年-月-日，例如 1995-06-15"
+                  className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
                 />
               </div>
 

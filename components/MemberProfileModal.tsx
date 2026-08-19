@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
+const BIRTHDAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 type MemberProfileModalProps = {
   email: string;
   isOpen: boolean;
@@ -36,6 +38,11 @@ export default function MemberProfileModal({
 
     if (!birthday) {
       setError("請填寫生日");
+      return;
+    }
+
+    if (!BIRTHDAY_PATTERN.test(birthday)) {
+      setError("生日格式錯誤，請輸入西元年-月-日，例如 1995-06-15");
       return;
     }
 
@@ -112,12 +119,14 @@ export default function MemberProfileModal({
               生日 <span className="text-rose-600">*</span>
             </label>
             <input
-              type="date"
+              type="text"
+              inputMode="numeric"
               value={birthday}
               onChange={(e) => setBirthday(e.target.value)}
               required
               disabled={loading}
-              className="block h-10 w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm leading-tight focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+              placeholder="西元年-月-日，例如 1995-06-15"
+              className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
             />
           </div>
 
