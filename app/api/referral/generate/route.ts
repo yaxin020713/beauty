@@ -194,8 +194,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("[api/referral/generate] 錯誤:", error);
+    const detail = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "生成推薦碼失敗，請稍後再試" },
+      { error: `生成推薦碼失敗，請稍後再試（${detail}）` },
       { status: 500 }
     );
   }

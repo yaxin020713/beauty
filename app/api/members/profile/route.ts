@@ -223,8 +223,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("[api/members/profile POST]:", error);
+    const detail = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "無法保存會員資料" },
+      { error: `無法保存會員資料（${detail}）` },
       { status: 500 }
     );
   }

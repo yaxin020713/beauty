@@ -71,10 +71,7 @@ export default function Header() {
                   title={user.email}
                 >
                   <User className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline max-w-[120px] truncate">
-                    {user.email}
-                  </span>
-                  <span className="sm:hidden">已登入</span>
+                  <span>會員專區</span>
                 </a>
 
                 <button
