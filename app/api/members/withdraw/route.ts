@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notion, MEMBERS_DB_ID } from "@/lib/notion";
+import { notion, MEMBERS_DB_ID, WITHDRAWALS_DB_ID } from "@/lib/notion";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!MEMBERS_DB_ID) {
+  if (!MEMBERS_DB_ID || !WITHDRAWALS_DB_ID) {
     return NextResponse.json(
       { error: "系統配置不完整" },
       { status: 500 }
@@ -56,12 +56,14 @@ export async function POST(request: NextRequest) {
     let currentPendingWithdraw = 0;
     let lastWithdrawDate: string | null = null;
     let bankCode = "";
+    let bankAccount = "";
 
     if ("properties" in memberPage) {
       const availableProp = memberPage.properties.尚未提現分潤;
       const pendingProp = memberPage.properties.處理中分潤;
       const lastWithdrawProp = memberPage.properties.最近提現日期;
       const bankCodeProp = memberPage.properties.銀行代碼;
+      const bankAccountProp = memberPage.properties.銀行帳號;
 
       if (
         availableProp &&
@@ -91,6 +93,22 @@ export async function POST(request: NextRequest) {
       ) {
         bankCode = bankCodeProp.rich_text[0].plain_text.trim();
       }
+
+      if (
+        bankAccountProp &&
+        "rich_text" in bankAccountProp &&
+        Array.isArray(bankAccountProp.rich_text) &&
+        bankAccountProp.rich_text.length > 0
+      ) {
+        bankAccount = bankAccountProp.rich_text[0].plain_text.trim();
+      }
+    }
+
+    if (!bankCode || !bankAccount) {
+      return NextResponse.json(
+        { error: "請先在會員檔案中填寫銀行帳號" },
+        { status: 400 }
+      );
     }
 
     // 30 天內只能申請一次提現
@@ -121,10 +139,26 @@ export async function POST(request: NextRequest) {
     // 非永豐銀行（807）帳戶每次提現收取手續費，實際撥款金額需扣除手續費
     const fee = bankCode === SINOPAC_BANK_CODE ? 0 : NON_SINOPAC_WITHDRAW_FEE;
     const payoutAmount = amount - fee;
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
+
+    // 先建立提現紀錄（狀態：處理中），供管理面板追蹤與撥款；
+    // 銀行資訊當下拍照存證，避免會員之後改了銀行帳號對不上這筆申請
+    await notion.pages.create({
+      parent: { database_id: WITHDRAWALS_DB_ID },
+      properties: {
+        會員Email: { title: [{ text: { content: email } }] },
+        申請日期: { date: { start: today } },
+        提現金額: { number: amount },
+        手續費: { number: fee },
+        實際撥款金額: { number: payoutAmount },
+        銀行代碼: { rich_text: [{ text: { content: bankCode } }] },
+        銀行帳號: { rich_text: [{ text: { content: bankAccount } }] },
+        狀態: { select: { name: "處理中" } },
+      },
+    });
 
     // 更新會員資料：清空尚未提現分潤（全額），增加處理中分潤（實際撥款金額，已扣手續費），
     // 並記錄本次提現日期；累積分潤是終身總額，不受提現影響
-    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
     await notion.pages.update({
       page_id: memberPage.id,
       properties: {

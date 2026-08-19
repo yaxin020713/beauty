@@ -13,6 +13,7 @@ import {
   Search,
   Edit2,
   CheckCircle2,
+  Wallet,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import type { Product } from "@/lib/types";
@@ -51,6 +52,20 @@ type Statistics = {
   totalRevenue: number;
 };
 
+type WithdrawalItem = {
+  id: string;
+  email: string;
+  requestDate: string;
+  amount: number;
+  fee: number;
+  payoutAmount: number;
+  bankCode: string;
+  bankAccount: string;
+  status: string;
+  note: string;
+  resolvedDate: string;
+};
+
 export default function AdminDashboard({
   open,
   onClose,
@@ -59,11 +74,12 @@ export default function AdminDashboard({
   onClose: () => void;
 }) {
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState<"orders" | "statistics" | "products">("statistics");
+  const [tab, setTab] = useState<"orders" | "statistics" | "products" | "withdrawals">("statistics");
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [products, setProducts] = useState<ProductStats[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -80,10 +96,11 @@ export default function AdminDashboard({
     setError("");
 
     try {
-      const [ordersRes, statsRes, productsRes] = await Promise.all([
+      const [ordersRes, statsRes, productsRes, withdrawalsRes] = await Promise.all([
         fetch("/api/admin/orders"),
         fetch("/api/admin/statistics"),
         fetch("/api/products"),
+        fetch("/api/admin/withdrawals"),
       ]);
 
       if (!ordersRes.ok) throw new Error("獲取訂單失敗");
@@ -93,11 +110,13 @@ export default function AdminDashboard({
       const ordersData = await ordersRes.json();
       const statsData = await statsRes.json();
       const productsData = await productsRes.json();
+      const withdrawalsData = withdrawalsRes.ok ? await withdrawalsRes.json() : null;
 
       if (ordersData.orders) setOrders(ordersData.orders);
       if (statsData.summary) setStatistics(statsData.summary);
       if (statsData.products) setProducts(statsData.products);
       if (productsData.products) setAllProducts(productsData.products);
+      if (withdrawalsData?.withdrawals) setWithdrawals(withdrawalsData.withdrawals);
     } catch (err) {
       setError(err instanceof Error ? err.message : "載入數據失敗");
     } finally {
@@ -184,6 +203,19 @@ export default function AdminDashboard({
                   訂單管理 ({orders.length})
                 </span>
               </button>
+              <button
+                onClick={() => setTab("withdrawals")}
+                className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
+                  tab === "withdrawals"
+                    ? "border-b-2 border-sapphire-600 text-sapphire-600"
+                    : "text-taupe-600 hover:text-ink"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4" />
+                  提現管理 ({withdrawals.filter((w) => w.status === "處理中").length})
+                </span>
+              </button>
             </div>
 
             {error && (
@@ -207,8 +239,10 @@ export default function AdminDashboard({
                   setShowEditModal(true);
                 }}
               />
-            ) : (
+            ) : tab === "orders" ? (
               <OrdersTab orders={orders} />
+            ) : (
+              <WithdrawalsTab withdrawals={withdrawals} onUpdated={fetchData} />
             )}
 
             <button
@@ -604,6 +638,169 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                       <Edit2 className="h-3 w-3" />
                       編輯狀態
                     </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function WithdrawalsTab({
+  withdrawals,
+  onUpdated,
+}: {
+  withdrawals: WithdrawalItem[];
+  onUpdated: () => void;
+}) {
+  const [statusFilter, setStatusFilter] = useState("處理中");
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [noteDraftId, setNoteDraftId] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [actionError, setActionError] = useState("");
+
+  const filteredWithdrawals = withdrawals.filter(
+    (w) => statusFilter === "全部" || w.status === statusFilter
+  );
+
+  const handleUpdate = async (id: string, status: "已完成" | "異常", note?: string) => {
+    setActionError("");
+    setProcessingId(id);
+    try {
+      const res = await fetch(`/api/admin/withdrawals/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, note }),
+      });
+      if (res.ok) {
+        setNoteDraftId(null);
+        setNoteDraft("");
+        onUpdated();
+      } else {
+        const data = await res.json().catch(() => null);
+        setActionError(data?.error ?? "更新失敗，請稍後再試");
+      }
+    } catch (error) {
+      console.error("更新提現紀錄失敗:", error);
+      setActionError("網路連線異常，請再試一次");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const statusColor: Record<string, string> = {
+    處理中: "bg-yellow-100 text-yellow-800",
+    已完成: "bg-emerald-100 text-emerald-800",
+    異常: "bg-red-100 text-red-800",
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 flex-wrap">
+        {["全部", "處理中", "已完成", "異常"].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full transition ${
+              statusFilter === status
+                ? "bg-taupe-900 text-white"
+                : "bg-taupe-100 text-taupe-700 hover:bg-taupe-200"
+            }`}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
+      {actionError && (
+        <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{actionError}</p>
+      )}
+
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {filteredWithdrawals.length === 0 ? (
+          <p className="text-center text-sm text-taupe-500 py-8">
+            {withdrawals.length === 0 ? "暫無提現申請" : "沒有符合篩選條件的提現申請"}
+          </p>
+        ) : (
+          filteredWithdrawals.map((w) => (
+            <div key={w.id} className="rounded-xl bg-taupe-50 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-ink">{w.email}</p>
+                  <p className="text-xs text-taupe-500 mt-1">申請日期：{w.requestDate}</p>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${statusColor[w.status] || "bg-taupe-200 text-taupe-700"}`}>
+                  {w.status}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-taupe-600">
+                <p>提現金額：NT${w.amount}</p>
+                <p>手續費：NT${w.fee}</p>
+                <p>實際撥款：NT${w.payoutAmount}</p>
+                <p>銀行：{w.bankCode} - {w.bankAccount}</p>
+              </div>
+
+              {w.status !== "處理中" && (
+                <p className="mt-2 text-xs text-taupe-500">處理日期：{w.resolvedDate || "-"}</p>
+              )}
+              {w.note && (
+                <p className="mt-2 text-xs text-red-600 bg-red-50 rounded px-2 py-1.5">{w.note}</p>
+              )}
+
+              {w.status === "處理中" && (
+                <div className="mt-3 space-y-2">
+                  {noteDraftId === w.id ? (
+                    <>
+                      <textarea
+                        value={noteDraft}
+                        onChange={(e) => setNoteDraft(e.target.value)}
+                        placeholder="異常原因（例：帳號有誤，已發信至您的 Email 聯繫）"
+                        rows={2}
+                        className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleUpdate(w.id, "異常", noteDraft)}
+                          disabled={processingId === w.id}
+                          className="flex-1 px-2 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 disabled:opacity-50"
+                        >
+                          {processingId === w.id ? "處理中..." : "確認標記異常"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setNoteDraftId(null);
+                            setNoteDraft("");
+                          }}
+                          className="flex-1 px-2 py-1.5 bg-taupe-200 text-taupe-700 rounded text-xs font-medium hover:bg-taupe-300"
+                        >
+                          取消
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleUpdate(w.id, "已完成")}
+                        disabled={processingId === w.id}
+                        className="flex-1 px-2 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {processingId === w.id ? "處理中..." : "標記已完成"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setNoteDraftId(w.id);
+                          setNoteDraft("帳號有誤，已發信至您的 Email 聯繫，請確認後回覆");
+                        }}
+                        disabled={processingId === w.id}
+                        className="flex-1 px-2 py-1.5 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 disabled:opacity-50"
+                      >
+                        標記異常
+                      </button>
+                    </div>
                   )}
                 </div>
               )}

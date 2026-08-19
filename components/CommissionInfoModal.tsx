@@ -70,6 +70,9 @@ export default function CommissionInfoModal({ isOpen, onClose }: CommissionInfoM
               <li>每次提現會一次領出當下全部的待提現分潤</li>
               <li>每 30 天只能申請一次提現</li>
               <li>銀行帳號非永豐銀行（807）者，每次提現收取 NT$15 手續費</li>
+              <li>
+                若撥款時發現銀行帳號有誤，該筆提現會標記為「異常」，金額會退回待提現分潤，並以 Email 與您聯繫，請確認帳號後重新申請
+              </li>
             </ul>
           </section>
 

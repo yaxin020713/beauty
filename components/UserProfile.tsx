@@ -33,6 +33,13 @@ type CommissionRecord = {
   note: string;
 };
 
+type WithdrawalRecord = {
+  requestDate: string;
+  payoutAmount: number;
+  status: string;
+  note: string;
+};
+
 export default function UserProfile() {
   const { user } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -52,6 +59,8 @@ export default function UserProfile() {
   const [withdrawMsg, setWithdrawMsg] = useState("");
   const [commissionRecords, setCommissionRecords] = useState<CommissionRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [withdrawalRecords, setWithdrawalRecords] = useState<WithdrawalRecord[]>([]);
+  const [showWithdrawalHistory, setShowWithdrawalHistory] = useState(false);
 
   const generateCode = async () => {
     if (!user?.email) return;
@@ -95,8 +104,11 @@ export default function UserProfile() {
         setEditBankAccount(data.bankAccount || "");
         setEditStore711Code(data.store711Code || "");
 
-        // 載入分潤明細
-        await fetchCommissionHistory(user.email);
+        // 載入分潤明細與提現紀錄
+        await Promise.all([
+          fetchCommissionHistory(user.email),
+          fetchWithdrawalHistory(user.email),
+        ]);
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = errorData.error || `錯誤: ${response.status}`;
@@ -165,6 +177,20 @@ export default function UserProfile() {
       }
     } catch (err) {
       console.error("載入分潤明細失敗:", err);
+    }
+  };
+
+  const fetchWithdrawalHistory = async (email: string) => {
+    try {
+      const response = await fetch(
+        `/api/members/withdrawal-history?email=${encodeURIComponent(email)}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setWithdrawalRecords(data.records || []);
+      }
+    } catch (err) {
+      console.error("載入提現紀錄失敗:", err);
     }
   };
 
@@ -698,6 +724,65 @@ export default function UserProfile() {
                       }`}
                     >
                       {record.credited ? "已入帳" : "訂單完成後入帳"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 提現紀錄 */}
+      {withdrawalRecords.length > 0 && (
+        <div className="rounded-lg border border-taupe-200 bg-white p-6">
+          <button
+            onClick={() => setShowWithdrawalHistory(!showWithdrawalHistory)}
+            className="flex w-full items-center justify-between"
+          >
+            <h3 className="font-serif text-lg font-normal text-ink">
+              提現紀錄
+            </h3>
+            <ChevronDown
+              className={`h-5 w-5 text-taupe-600 transition ${
+                showWithdrawalHistory ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {showWithdrawalHistory && (
+            <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
+              {withdrawalRecords.map((record, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between rounded-lg border border-taupe-100 bg-taupe-50 p-3"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-ink">
+                      申請日期：{record.requestDate}
+                    </p>
+                    {record.note && (
+                      <p className="text-xs text-red-600 mt-1">{record.note}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-ink">
+                      NT${record.payoutAmount}
+                    </p>
+                    <p
+                      className={`text-xs mt-1 ${
+                        record.status === "已完成"
+                          ? "text-emerald-600"
+                          : record.status === "異常"
+                          ? "text-red-600"
+                          : "text-sapphire-600"
+                      }`}
+                    >
+                      {record.status === "已完成"
+                        ? "已提現"
+                        : record.status === "異常"
+                        ? "異常"
+                        : "處理中"}
                     </p>
                   </div>
                 </div>

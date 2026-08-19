@@ -4,6 +4,7 @@ const apiKey = process.env.NOTION_API_KEY;
 const productsDbId = process.env.NOTION_PRODUCTS_DB_ID;
 const ordersDbId = process.env.NOTION_ORDERS_DB_ID;
 const membersDbId = process.env.NOTION_MEMBERS_DB_ID;
+const withdrawalsDbId = process.env.NOTION_WITHDRAWALS_DB_ID;
 
 if (!apiKey || !productsDbId || !ordersDbId) {
   throw new Error(
@@ -17,9 +18,16 @@ if (!membersDbId) {
   );
 }
 
+if (!withdrawalsDbId) {
+  console.warn(
+    "未設置 NOTION_WITHDRAWALS_DB_ID，提現管理功能將不可用。請在 .env.local 中添加 NOTION_WITHDRAWALS_DB_ID"
+  );
+}
+
 // 全域共用單一 Notion client
 export const notion = new Client({ auth: apiKey });
 
 export const PRODUCTS_DB_ID = productsDbId;
 export const ORDERS_DB_ID = ordersDbId;
 export const MEMBERS_DB_ID = membersDbId || "";
+export const WITHDRAWALS_DB_ID = withdrawalsDbId || "";
