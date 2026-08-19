@@ -147,8 +147,9 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("[api/members/commission-history]:", error);
+    const detail = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "無法查詢分潤明細" },
+      { error: `無法查詢分潤明細（${detail}）` },
       { status: 500 }
     );
   }

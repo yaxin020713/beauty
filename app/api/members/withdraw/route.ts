@@ -150,8 +150,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("[api/members/withdraw]:", error);
+    const detail = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "提現失敗，請稍後再試" },
+      { error: `提現失敗，請稍後再試（${detail}）` },
       { status: 500 }
     );
   }
