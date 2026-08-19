@@ -400,7 +400,7 @@ export default function UserProfile() {
                   value={editBirthday}
                   onChange={(e) => setEditBirthday(e.target.value)}
                   disabled={editLoading}
-                  className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+                  className="box-border w-full max-w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
                 />
               </div>
 
