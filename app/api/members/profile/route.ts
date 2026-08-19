@@ -10,6 +10,8 @@ type MemberData = {
   bankCode?: string;
   bankAccount?: string;
   store711Code?: string;
+  recipientName?: string;
+  contactPhone?: string;
 };
 
 export async function GET(request: NextRequest) {
@@ -103,6 +105,14 @@ export async function GET(request: NextRequest) {
       if (props.預設711超商店號 && "rich_text" in props.預設711超商店號) {
         memberData.store711Code = (props.預設711超商店號 as any).rich_text?.[0]?.plain_text || null;
       }
+
+      if (props.收件姓名 && "rich_text" in props.收件姓名) {
+        memberData.recipientName = (props.收件姓名 as any).rich_text?.[0]?.plain_text || null;
+      }
+
+      if (props.聯絡電話 && "rich_text" in props.聯絡電話) {
+        memberData.contactPhone = (props.聯絡電話 as any).rich_text?.[0]?.plain_text || null;
+      }
     }
 
     return NextResponse.json(memberData, { status: 200 });
@@ -177,6 +187,18 @@ export async function POST(request: NextRequest) {
     if (body.store711Code) {
       properties.預設711超商店號 = {
         rich_text: [{ text: { content: body.store711Code } }],
+      };
+    }
+
+    if (body.recipientName) {
+      properties.收件姓名 = {
+        rich_text: [{ text: { content: body.recipientName } }],
+      };
+    }
+
+    if (body.contactPhone) {
+      properties.聯絡電話 = {
+        rich_text: [{ text: { content: body.contactPhone } }],
       };
     }
 

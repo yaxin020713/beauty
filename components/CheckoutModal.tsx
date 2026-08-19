@@ -66,8 +66,8 @@ export default function CheckoutModal({
       setSelectedStore("");
       if (user?.email) {
         setCustomerEmail(user.email);
-        // 載入會員預設 7-11 超取店號
-        loadMemberStore711Code(user.email);
+        // 載入會員預設姓名、電話與 7-11 超取店號
+        loadMemberDefaults(user.email);
       }
       // 從 localStorage 讀取推薦連結帶入的推薦碼，預先填入欄位（使用者仍可自行修改）
       const ref = localStorage.getItem("referralCode") || "";
@@ -76,7 +76,7 @@ export default function CheckoutModal({
     }
   }, [open, user?.email]);
 
-  const loadMemberStore711Code = async (email: string) => {
+  const loadMemberDefaults = async (email: string) => {
     try {
       const response = await fetch(`/api/members/profile?email=${encodeURIComponent(email)}`);
       if (response.ok) {
@@ -84,9 +84,15 @@ export default function CheckoutModal({
         if (data.store711Code) {
           setSelectedStore(data.store711Code);
         }
+        if (data.recipientName) {
+          setCustomerName(data.recipientName);
+        }
+        if (data.contactPhone) {
+          setCustomerPhone(data.contactPhone);
+        }
       }
     } catch (err) {
-      console.warn("載入會員 7-11 店號失敗:", err);
+      console.warn("載入會員預設資料失敗:", err);
     }
   };
 

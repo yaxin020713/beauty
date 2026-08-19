@@ -132,6 +132,8 @@ export async function POST(request: NextRequest) {
     let bankCode: string | null = null;
     let bankAccount: string | null = null;
     let store711Code: string | null = null;
+    let recipientName: string | null = null;
+    let contactPhone: string | null = null;
 
     const memberResponse = await notion.pages.retrieve({ page_id: memberId! });
     if ("properties" in memberResponse) {
@@ -167,6 +169,12 @@ export async function POST(request: NextRequest) {
       if (props.預設711超商店號 && "rich_text" in props.預設711超商店號) {
         store711Code = (props.預設711超商店號 as any).rich_text?.[0]?.plain_text || null;
       }
+      if (props.收件姓名 && "rich_text" in props.收件姓名) {
+        recipientName = (props.收件姓名 as any).rich_text?.[0]?.plain_text || null;
+      }
+      if (props.聯絡電話 && "rich_text" in props.聯絡電話) {
+        contactPhone = (props.聯絡電話 as any).rich_text?.[0]?.plain_text || null;
+      }
     }
 
     console.log("[api/referral/generate] 分潤金額:", totalCommission);
@@ -188,6 +196,8 @@ export async function POST(request: NextRequest) {
         bankCode,
         bankAccount,
         store711Code,
+        recipientName,
+        contactPhone,
         referralLink: `${siteUrl}?ref=${referralCode}`,
       },
       { status: 200 }

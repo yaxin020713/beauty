@@ -18,6 +18,8 @@ type UserData = {
   bankCode?: string;
   bankAccount?: string;
   store711Code?: string;
+  recipientName?: string;
+  contactPhone?: string;
   membershipLevel: string;
   totalSpending: number;
 };
@@ -52,6 +54,8 @@ export default function UserProfile() {
   const [editBankCode, setEditBankCode] = useState("");
   const [editBankAccount, setEditBankAccount] = useState("");
   const [editStore711Code, setEditStore711Code] = useState("");
+  const [editRecipientName, setEditRecipientName] = useState("");
+  const [editContactPhone, setEditContactPhone] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showCommissionInfo, setShowCommissionInfo] = useState(false);
@@ -59,8 +63,10 @@ export default function UserProfile() {
   const [withdrawMsg, setWithdrawMsg] = useState("");
   const [commissionRecords, setCommissionRecords] = useState<CommissionRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [commissionHistoryError, setCommissionHistoryError] = useState("");
   const [withdrawalRecords, setWithdrawalRecords] = useState<WithdrawalRecord[]>([]);
   const [showWithdrawalHistory, setShowWithdrawalHistory] = useState(false);
+  const [withdrawalHistoryError, setWithdrawalHistoryError] = useState("");
 
   const generateCode = async () => {
     if (!user?.email) return;
@@ -96,6 +102,8 @@ export default function UserProfile() {
           membershipLevel: data.membershipLevel || "銅級",
           totalSpending: data.totalSpending || 0,
           store711Code: data.store711Code,
+          recipientName: data.recipientName,
+          contactPhone: data.contactPhone,
         });
         // 初始化編輯表單
         setEditBirthday(data.birthday || "");
@@ -103,6 +111,8 @@ export default function UserProfile() {
         setEditBankCode(data.bankCode || "");
         setEditBankAccount(data.bankAccount || "");
         setEditStore711Code(data.store711Code || "");
+        setEditRecipientName(data.recipientName || "");
+        setEditContactPhone(data.contactPhone || "");
 
         // 載入分潤明細與提現紀錄
         await Promise.all([
@@ -167,30 +177,40 @@ export default function UserProfile() {
   };
 
   const fetchCommissionHistory = async (email: string) => {
+    setCommissionHistoryError("");
     try {
       const response = await fetch(
         `/api/members/commission-history?email=${encodeURIComponent(email)}`
       );
+      const data = await response.json().catch(() => null);
       if (response.ok) {
-        const data = await response.json();
-        setCommissionRecords(data.records || []);
+        setCommissionRecords(data?.records || []);
+      } else {
+        console.error("載入分潤明細失敗:", data?.error);
+        setCommissionHistoryError(data?.error || "載入分潤明細失敗");
       }
     } catch (err) {
       console.error("載入分潤明細失敗:", err);
+      setCommissionHistoryError(err instanceof Error ? err.message : "載入分潤明細失敗");
     }
   };
 
   const fetchWithdrawalHistory = async (email: string) => {
+    setWithdrawalHistoryError("");
     try {
       const response = await fetch(
         `/api/members/withdrawal-history?email=${encodeURIComponent(email)}`
       );
+      const data = await response.json().catch(() => null);
       if (response.ok) {
-        const data = await response.json();
-        setWithdrawalRecords(data.records || []);
+        setWithdrawalRecords(data?.records || []);
+      } else {
+        console.error("載入提現紀錄失敗:", data?.error);
+        setWithdrawalHistoryError(data?.error || "載入提現紀錄失敗");
       }
     } catch (err) {
       console.error("載入提現紀錄失敗:", err);
+      setWithdrawalHistoryError(err instanceof Error ? err.message : "載入提現紀錄失敗");
     }
   };
 
@@ -209,6 +229,8 @@ export default function UserProfile() {
           bankCode: editBankCode,
           bankAccount: editBankAccount,
           store711Code: editStore711Code,
+          recipientName: editRecipientName,
+          contactPhone: editContactPhone,
         }),
       });
 
@@ -222,6 +244,8 @@ export default function UserProfile() {
                 bankCode: editBankCode,
                 bankAccount: editBankAccount,
                 store711Code: editStore711Code,
+                recipientName: editRecipientName,
+                contactPhone: editContactPhone,
               }
             : null
         );
@@ -334,6 +358,36 @@ export default function UserProfile() {
                 disabled
                 className="w-full rounded-lg border border-taupe-200 bg-taupe-50 px-3 py-2 text-sm text-taupe-600"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-taupe-700 mb-1">
+                  預設收件姓名（結帳時可修改）
+                </label>
+                <input
+                  type="text"
+                  value={editRecipientName}
+                  onChange={(e) => setEditRecipientName(e.target.value)}
+                  disabled={editLoading}
+                  placeholder="請輸入姓名"
+                  className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-taupe-700 mb-1">
+                  預設聯絡電話（結帳時可修改）
+                </label>
+                <input
+                  type="tel"
+                  value={editContactPhone}
+                  onChange={(e) => setEditContactPhone(e.target.value)}
+                  disabled={editLoading}
+                  placeholder="請輸入電話"
+                  className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -678,6 +732,11 @@ export default function UserProfile() {
       </div>
 
       {/* 分潤明細 */}
+      {commissionHistoryError && (
+        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+          分潤明細載入失敗：{commissionHistoryError}
+        </div>
+      )}
       {commissionRecords.length > 0 && (
         <div className="rounded-lg border border-taupe-200 bg-white p-6">
           <button
@@ -734,6 +793,11 @@ export default function UserProfile() {
       )}
 
       {/* 提現紀錄 */}
+      {withdrawalHistoryError && (
+        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+          提現紀錄載入失敗：{withdrawalHistoryError}
+        </div>
+      )}
       {withdrawalRecords.length > 0 && (
         <div className="rounded-lg border border-taupe-200 bg-white p-6">
           <button
