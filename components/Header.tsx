@@ -71,7 +71,8 @@ export default function Header() {
                   title={user.email}
                 >
                   <User className="h-3.5 w-3.5" />
-                  <span>會員專區</span>
+                  <span className="hidden sm:inline">會員專區</span>
+                  <span className="sm:hidden">會員</span>
                 </a>
 
                 <button
