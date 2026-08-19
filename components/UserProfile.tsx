@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Copy, Share2, Check, ChevronDown, Info } from "lucide-react";
 import { useAuth } from "./CartContext";
 import MembershipLevelModal from "./MembershipLevelModal";
+import CommissionInfoModal from "./CommissionInfoModal";
 
 type UserData = {
   email: string;
@@ -46,6 +47,7 @@ export default function UserProfile() {
   const [editStore711Code, setEditStore711Code] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [showLevelModal, setShowLevelModal] = useState(false);
+  const [showCommissionInfo, setShowCommissionInfo] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawMsg, setWithdrawMsg] = useState("");
   const [commissionRecords, setCommissionRecords] = useState<CommissionRecord[]>([]);
@@ -532,9 +534,23 @@ export default function UserProfile() {
         />
       )}
 
+      <CommissionInfoModal
+        isOpen={showCommissionInfo}
+        onClose={() => setShowCommissionInfo(false)}
+      />
+
       {/* 推薦鏈接區塊 */}
       <div className="rounded-lg border border-sapphire-200 bg-sapphire-50/50 p-6">
-        <h3 className="font-serif text-lg font-normal text-ink">專屬推薦鏈接</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-serif text-lg font-normal text-ink">專屬推薦鏈接</h3>
+          <button
+            onClick={() => setShowCommissionInfo(true)}
+            className="flex items-center gap-1 text-xs font-medium text-sapphire-600 transition hover:text-sapphire-700"
+          >
+            <Info className="h-4 w-4" />
+            分潤機制說明
+          </button>
+        </div>
         <p className="mt-2 text-sm text-taupe-600">
           分享您的專屬鏈接，朋友每次購買都能幫您賺取分潤！無購買次數限制，就像開團購一樣 🎉
         </p>
