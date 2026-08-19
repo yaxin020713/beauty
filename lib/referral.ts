@@ -13,11 +13,25 @@ export function generateReferralCode(email: string): string {
   return (emailHash + random + timestamp).slice(-8).toUpperCase();
 }
 
+// 从请求推导目前实际访问的网域，避免使用未设定或错误的 NEXT_PUBLIC_SITE_URL 占位网址
+export function getSiteUrlFromRequest(request: Request): string {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  // "https://beauty.site" 是文件中示例用的占位网域，实际并不存在，视为未设定
+  if (envUrl && envUrl !== "https://beauty.site") {
+    return envUrl;
+  }
+
+  const host = request.headers.get("host");
+  if (host) {
+    const protocol = host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https";
+    return `${protocol}://${host}`;
+  }
+
+  return envUrl || "https://beauty.site";
+}
+
 // 生成推荐链接
-export function generateReferralLink(
-  referralCode: string,
-  baseUrl: string = process.env.NEXT_PUBLIC_SITE_URL || "https://beauty.site"
-): string {
+export function generateReferralLink(referralCode: string, baseUrl: string): string {
   return `${baseUrl}?ref=${referralCode}`;
 }
 

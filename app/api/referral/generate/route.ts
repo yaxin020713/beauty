@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, MEMBERS_DB_ID } from "@/lib/notion";
-import { generateReferralCode } from "@/lib/referral";
+import { generateReferralCode, getSiteUrlFromRequest } from "@/lib/referral";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -118,13 +118,15 @@ export async function POST(request: NextRequest) {
 
     console.log("[api/referral/generate] 分潤金額:", totalReward);
 
+    const siteUrl = getSiteUrlFromRequest(request);
+
     return NextResponse.json(
       {
         success: true,
         email,
         referralCode,
         totalCommission: totalReward,
-        referralLink: `${process.env.NEXT_PUBLIC_SITE_URL || "https://beauty.site"}?ref=${referralCode}`,
+        referralLink: `${siteUrl}?ref=${referralCode}`,
       },
       { status: 200 }
     );
