@@ -391,17 +391,19 @@ export default function UserProfile() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <label className="block text-sm font-medium text-taupe-700 mb-1">
                   生日
                 </label>
-                <input
-                  type="date"
-                  value={editBirthday}
-                  onChange={(e) => setEditBirthday(e.target.value)}
-                  disabled={editLoading}
-                  className="box-border w-full max-w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
-                />
+                <div className="w-full overflow-hidden rounded-lg border border-taupe-200 focus-within:border-sapphire-500 focus-within:ring-1 focus-within:ring-sapphire-500">
+                  <input
+                    type="date"
+                    value={editBirthday}
+                    onChange={(e) => setEditBirthday(e.target.value)}
+                    disabled={editLoading}
+                    className="block w-full min-w-0 border-0 px-3 py-2 text-sm outline-none"
+                  />
+                </div>
               </div>
 
               <div>
