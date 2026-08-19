@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if ("properties" in memberPage) {
       const availableProp = memberPage.properties.尚未提現分潤;
-      const pendingProp = memberPage.properties.待提現分潤;
+      const pendingProp = memberPage.properties.處理中分潤;
 
       if (
         availableProp &&
@@ -86,12 +86,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 更新會員資料：減少尚未提現分潤，增加待提現分潤（撥款處理中）；累積分潤是終身總額，不受提現影響
+    // 更新會員資料：減少尚未提現分潤，增加處理中分潤（撥款處理中）；累積分潤是終身總額，不受提現影響
     await notion.pages.update({
       page_id: memberPage.id,
       properties: {
         尚未提現分潤: { number: currentAvailable - amount },
-        待提現分潤: { number: currentPendingWithdraw + amount },
+        處理中分潤: { number: currentPendingWithdraw + amount },
       },
     });
 

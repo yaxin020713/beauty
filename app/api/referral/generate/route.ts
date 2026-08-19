@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
           尚未提現分潤: {
             number: 0,
           },
-          待提現分潤: {
+          處理中分潤: {
             number: 0,
           },
         },
@@ -143,8 +143,8 @@ export async function POST(request: NextRequest) {
       if (props.尚未提現分潤 && "number" in props.尚未提現分潤) {
         availableCommission = (props.尚未提現分潤 as any).number || 0;
       }
-      if (props.待提現分潤 && "number" in props.待提現分潤) {
-        pendingCommission = (props.待提現分潤 as any).number || 0;
+      if (props.處理中分潤 && "number" in props.處理中分潤) {
+        pendingCommission = (props.處理中分潤 as any).number || 0;
       }
       if (props.會員等級 && "select" in props.會員等級) {
         membershipLevel = (props.會員等級 as any).select?.name || "銅級";

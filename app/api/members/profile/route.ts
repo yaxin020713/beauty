@@ -96,8 +96,8 @@ export async function GET(request: NextRequest) {
         memberData.availableCommission = (props.尚未提現分潤 as any).number || 0;
       }
 
-      if (props.待提現分潤 && "number" in props.待提現分潤) {
-        memberData.pendingCommission = (props.待提現分潤 as any).number || 0;
+      if (props.處理中分潤 && "number" in props.處理中分潤) {
+        memberData.pendingCommission = (props.處理中分潤 as any).number || 0;
       }
 
       if (props.預設711超商店號 && "rich_text" in props.預設711超商店號) {
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
       properties.尚未提現分潤 = {
         number: 0,
       };
-      properties.待提現分潤 = {
+      properties.處理中分潤 = {
         number: 0,
       };
 

@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
               尚未提現分潤: {
                 number: 0,
               },
-              待提現分潤: {
+              處理中分潤: {
                 number: 0,
               },
             },
