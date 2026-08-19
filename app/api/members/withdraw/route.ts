@@ -3,8 +3,11 @@ import { notion, MEMBERS_DB_ID } from "@/lib/notion";
 
 export const dynamic = "force-dynamic";
 
+const WITHDRAW_COOLDOWN_DAYS = 30;
+const MIN_WITHDRAW_AMOUNT = 500;
+
 export async function POST(request: NextRequest) {
-  let body: { email?: string; amount?: number };
+  let body: { email?: string };
 
   try {
     body = await request.json();
@@ -13,18 +16,10 @@ export async function POST(request: NextRequest) {
   }
 
   const email = body.email?.toLowerCase().trim();
-  const amount = body.amount || 0;
 
   if (!email) {
     return NextResponse.json(
       { error: "需要提供 email" },
-      { status: 400 }
-    );
-  }
-
-  if (amount < 500) {
-    return NextResponse.json(
-      { error: "提現金額必須達 NT$500 以上" },
       { status: 400 }
     );
   }
@@ -56,10 +51,12 @@ export async function POST(request: NextRequest) {
     const memberPage = queryResponse.results[0];
     let currentAvailable = 0;
     let currentPendingWithdraw = 0;
+    let lastWithdrawDate: string | null = null;
 
     if ("properties" in memberPage) {
       const availableProp = memberPage.properties.尚未提現分潤;
       const pendingProp = memberPage.properties.處理中分潤;
+      const lastWithdrawProp = memberPage.properties.最近提現日期;
 
       if (
         availableProp &&
@@ -76,22 +73,46 @@ export async function POST(request: NextRequest) {
       ) {
         currentPendingWithdraw = pendingProp.number || 0;
       }
+
+      if (lastWithdrawProp && "date" in lastWithdrawProp && lastWithdrawProp.date) {
+        lastWithdrawDate = lastWithdrawProp.date.start;
+      }
     }
 
-    // 檢查是否有足夠的分潤可提現
-    if (currentAvailable < amount) {
+    // 30 天內只能申請一次提現
+    if (lastWithdrawDate) {
+      const nextEligibleDate = new Date(`${lastWithdrawDate}T00:00:00+08:00`);
+      nextEligibleDate.setDate(nextEligibleDate.getDate() + WITHDRAW_COOLDOWN_DAYS);
+
+      if (Date.now() < nextEligibleDate.getTime()) {
+        const nextEligibleStr = nextEligibleDate.toLocaleDateString("sv-SE", {
+          timeZone: "Asia/Taipei",
+        });
+        return NextResponse.json(
+          { error: `每 ${WITHDRAW_COOLDOWN_DAYS} 天只能申請一次提現，最快可於 ${nextEligibleStr} 再次申請` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 提現一律將目前全部「尚未提現分潤」一次提出，且需達最低門檻
+    const amount = currentAvailable;
+    if (amount < MIN_WITHDRAW_AMOUNT) {
       return NextResponse.json(
-        { error: `分潤不足。目前有 NT$${currentAvailable} 可提現` },
+        { error: `分潤不足。目前有 NT$${currentAvailable} 可提現，需達 NT$${MIN_WITHDRAW_AMOUNT} 以上` },
         { status: 400 }
       );
     }
 
-    // 更新會員資料：減少尚未提現分潤，增加處理中分潤（撥款處理中）；累積分潤是終身總額，不受提現影響
+    // 更新會員資料：清空尚未提現分潤，增加處理中分潤（撥款處理中），並記錄本次提現日期；
+    // 累積分潤是終身總額，不受提現影響
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
     await notion.pages.update({
       page_id: memberPage.id,
       properties: {
         尚未提現分潤: { number: currentAvailable - amount },
         處理中分潤: { number: currentPendingWithdraw + amount },
+        最近提現日期: { date: { start: today } },
       },
     });
 

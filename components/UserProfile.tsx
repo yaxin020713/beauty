@@ -130,10 +130,7 @@ export default function UserProfile() {
       const response = await fetch("/api/members/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: user.email,
-          amount: withdrawAmount,
-        }),
+        body: JSON.stringify({ email: user.email }),
       });
 
       const data = await response.json();
