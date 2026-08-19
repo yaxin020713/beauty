@@ -313,13 +313,13 @@ export default function UserProfile() {
   };
 
   const shareToWhatsApp = () => {
-    const text = `我開團購美妝產品，用我的推薦鏈接購買，我們都能獲得優惠！ 🎉\n${userData.referralLink}`;
+    const text = `這是我的專屬推薦連結 快來跟我一起團購吧！\n${userData.referralLink}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, "_blank");
   };
 
   const shareLine = () => {
-    const text = `我開團購美妝產品，用我的推薦鏈接購買，我們都能獲得優惠！ 🎉\n${userData.referralLink}`;
+    const text = `這是我的專屬推薦連結 快來跟我一起團購吧！\n${userData.referralLink}`;
     const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
     window.open(lineUrl, "_blank");
   };
