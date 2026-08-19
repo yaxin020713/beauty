@@ -26,6 +26,8 @@ type CommissionRecord = {
   totalPrice: number;
   commission: number;
   itemsDetail: string;
+  status: string;
+  credited: boolean;
 };
 
 export default function UserProfile() {
@@ -599,14 +601,14 @@ export default function UserProfile() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-lg bg-emerald-50 p-4">
-            <p className="text-xs text-emerald-600 mb-1">累計分潤</p>
+            <p className="text-xs text-emerald-600 mb-1">待提現分潤</p>
             <p className="text-2xl font-bold text-emerald-600">
               NT${userData.totalCommission}
             </p>
           </div>
           {userData.pendingCommission > 0 && (
             <div className="rounded-lg bg-sapphire-50 p-4">
-              <p className="text-xs text-sapphire-600 mb-1">待提現</p>
+              <p className="text-xs text-sapphire-600 mb-1">撥款處理中</p>
               <p className="text-2xl font-bold text-sapphire-600">
                 NT${userData.pendingCommission}
               </p>
@@ -667,6 +669,13 @@ export default function UserProfile() {
                   <div className="text-right">
                     <p className="text-sm font-bold text-emerald-600">
                       +NT${record.commission}
+                    </p>
+                    <p
+                      className={`text-xs mt-1 ${
+                        record.credited ? "text-emerald-600" : "text-taupe-400"
+                      }`}
+                    >
+                      {record.credited ? "已入帳" : "訂單完成後入帳"}
                     </p>
                   </div>
                 </div>

@@ -9,6 +9,8 @@ type CommissionRecord = {
   totalPrice: number;
   commission: number;
   itemsDetail: string;
+  status: string;
+  credited: boolean;
 };
 
 export async function GET(request: NextRequest) {
@@ -57,12 +59,16 @@ export async function GET(request: NextRequest) {
         orderId = orderIdProp.title[0].plain_text;
       }
 
-      // 提取訂單日期
-      const dateProp = props.訂單日期;
-      let orderDate = "";
-      if (dateProp && "date" in dateProp && dateProp.date?.start) {
-        orderDate = dateProp.date.start;
-      }
+      // 訂單建立時間（訂單建立時並未寫入獨立的日期欄位，改用 Notion 頁面的建立時間）
+      const orderDate = (page as any).created_time || "";
+
+      // 訂單狀態：用來標示這筆分潤是否已經實際入帳給推薦人
+      // （分潤僅在訂單轉為「已完成」時才會計入累積分潤，見 applyReferralCommission）
+      const statusProp = props["訂單狀態"];
+      const status =
+        statusProp?.type === "select" && statusProp.select
+          ? (statusProp.select as any).name || ""
+          : "";
 
       // 提取結帳金額
       const priceProp = props.Total_Price;
@@ -101,6 +107,8 @@ export async function GET(request: NextRequest) {
           totalPrice,
           commission,
           itemsDetail: itemsDetail.split("\n")[0], // 只取第一行（商品部分）
+          status,
+          credited: status === "已完成",
         });
       }
     }
