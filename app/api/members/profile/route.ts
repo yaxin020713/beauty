@@ -57,14 +57,8 @@ export async function GET(request: NextRequest) {
     if ("properties" in memberPage) {
       const props = memberPage.properties;
 
-      // 檢查必填字段
-      const hasAllFields =
-        props.生日 &&
-        props.地址 &&
-        props.銀行代碼 &&
-        props.銀行帳號;
-
-      memberData.profileComplete = !!hasAllFields;
+      // 檢查必填字段（只需要生日）
+      memberData.profileComplete = !!(props.生日);
 
       if (props.生日 && "date" in props.生日) {
         memberData.birthday = (props.生日 as any).date?.start || null;

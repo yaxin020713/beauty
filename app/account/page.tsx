@@ -46,7 +46,21 @@ export default function AccountPage() {
           </div>
 
           {user ? (
-            <UserProfile />
+            <div className="space-y-8">
+              {/* 功能選單 */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <button
+                  onClick={() => router.push("/account/orders")}
+                  className="rounded-xl border-2 border-taupe-200 p-6 text-left transition hover:border-sapphire-500 hover:bg-sapphire-50"
+                >
+                  <h3 className="text-lg font-semibold text-ink mb-1">我的訂單</h3>
+                  <p className="text-sm text-taupe-600">查看你的所有預訂單</p>
+                </button>
+              </div>
+
+              {/* 會員資料 */}
+              <UserProfile />
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-4 rounded-lg bg-taupe-50 p-12 text-center">
               <p className="text-lg text-taupe-600">需要登入才能訪問此頁面</p>
