@@ -13,46 +13,75 @@ export default function ProductCard({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [showVariantSelector, setShowVariantSelector] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [variantsLoaded, setVariantsLoaded] = useState(false);
+
+  const loadVariants = async () => {
+    if (variantsLoaded) return;
+
+    try {
+      const res = await fetch(`/api/products/${product.id}/variants`);
+      if (res.ok) {
+        const data = await res.json();
+        const variantList = data.variants || [];
+        setVariants(variantList);
+        setVariantsLoaded(true);
+
+        if (variantList.length === 1) {
+          setSelectedVariant(variantList[0]);
+          return variantList;
+        } else if (variantList.length > 1) {
+          return variantList;
+        }
+      }
+    } catch (error) {
+      console.error("載入選項失敗:", error);
+    }
+    return [];
+  };
 
   const handleAddToCart = async () => {
     setLoading(true);
     try {
-      if (!variants.length) {
+      // 先加載變體
+      if (!variantsLoaded) {
+        const loadedVariants = await loadVariants();
+
+        // 如果有多個變體，顯示選擇器
+        if (loadedVariants.length > 1) {
+          setShowVariantSelector(true);
+          return;
+        }
+
+        // 如果只有一個變體，自動選擇
+        if (loadedVariants.length === 1) {
+          addToCart(product, {
+            variantId: loadedVariants[0].id,
+            optionName: loadedVariants[0].optionName,
+          });
+          openCart();
+          return;
+        }
+
+        // 如果沒有變體，直接加入
         addToCart(product);
         openCart();
         return;
       }
 
-      if (!selectedVariant) {
+      // 變體已加載
+      if (variants.length > 1 && !selectedVariant) {
         setShowVariantSelector(true);
         return;
       }
 
-      addToCart(product, {
+      addToCart(product, selectedVariant ? {
         variantId: selectedVariant.id,
         optionName: selectedVariant.optionName,
-      });
+      } : undefined);
       openCart();
       setSelectedVariant(null);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadVariants = async () => {
-    try {
-      const res = await fetch(`/api/products/${product.id}/variants`);
-      if (res.ok) {
-        const data = await res.json();
-        setVariants(data.variants || []);
-        if (data.variants?.length === 1) {
-          setSelectedVariant(data.variants[0]);
-        } else if (data.variants?.length) {
-          setShowVariantSelector(true);
-        }
-      }
-    } catch (error) {
-      console.error("載入選項失敗:", error);
     }
   };
 
