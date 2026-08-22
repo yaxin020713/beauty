@@ -18,6 +18,7 @@ type OrderItem = {
   orderStatus: string;
   shippingMethod: "convenience_711" | "face_to_face";
   store7_11: string;
+  paymentLast5?: number;
 };
 
 export default function OrdersPage() {
@@ -26,6 +27,9 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [paymentError, setPaymentError] = useState<{ [key: string]: string }>({});
+  const [submittingPayment, setSubmittingPayment] = useState<{ [key: string]: boolean }>({});
+  const [paymentForm, setPaymentForm] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     if (!isLoading && user?.email) {
@@ -55,6 +59,48 @@ export default function OrdersPage() {
       setError("無法加載訂單，請稍後再試");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaymentSubmit = async (orderId: string) => {
+    const last5 = paymentForm[orderId];
+
+    if (!last5 || last5.replace(/\D/g, "").length === 0) {
+      setPaymentError(prev => ({
+        ...prev,
+        [orderId]: "請填寫匯款末5碼"
+      }));
+      return;
+    }
+
+    setSubmittingPayment(prev => ({ ...prev, [orderId]: true }));
+    setPaymentError(prev => ({ ...prev, [orderId]: "" }));
+
+    try {
+      const response = await fetch("/api/orders/update-payment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          paymentLast5: last5,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("更新失敗");
+      }
+
+      // 刷新訂單列表
+      await loadOrders();
+      setPaymentForm(prev => ({ ...prev, [orderId]: "" }));
+    } catch (err) {
+      console.error("付款更新失敗:", err);
+      setPaymentError(prev => ({
+        ...prev,
+        [orderId]: "付款資訊更新失敗，請稍後再試"
+      }));
+    } finally {
+      setSubmittingPayment(prev => ({ ...prev, [orderId]: false }));
     }
   };
 
@@ -221,7 +267,7 @@ export default function OrdersPage() {
                     </div>
 
                     {/* 金額 */}
-                    <div className="border-t border-taupe-200 pt-6">
+                    <div className="border-t border-taupe-200 pt-6 space-y-6">
                       <div className="flex items-center justify-end gap-12">
                         <div className="text-right">
                           <p className="text-xs uppercase tracking-wider text-taupe-600 mb-1">
@@ -232,6 +278,53 @@ export default function OrdersPage() {
                           </p>
                         </div>
                       </div>
+
+                      {/* 付款欄位 */}
+                      {order.orderStatus === "新訂單" && !order.paymentLast5 ? (
+                        <div className="bg-blue-50 rounded-lg p-4 space-y-4">
+                          <div>
+                            <p className="text-sm font-semibold text-blue-900 mb-3">
+                              💳 請填寫付款資訊
+                            </p>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="匯款末5碼"
+                              maxLength="5"
+                              value={paymentForm[order.id] || ""}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, "").slice(0, 5);
+                                setPaymentForm(prev => ({
+                                  ...prev,
+                                  [order.id]: val
+                                }));
+                              }}
+                              className="w-full rounded-lg border border-blue-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            />
+                            {paymentError[order.id] && (
+                              <p className="text-xs text-red-600 mt-2">
+                                {paymentError[order.id]}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handlePaymentSubmit(order.id)}
+                            disabled={submittingPayment[order.id]}
+                            className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {submittingPayment[order.id] ? "更新中..." : "確認已付款"}
+                          </button>
+                        </div>
+                      ) : order.paymentLast5 ? (
+                        <div className="bg-emerald-50 rounded-lg p-4">
+                          <p className="text-xs uppercase tracking-wider text-emerald-700 mb-1">
+                            付款末5碼
+                          </p>
+                          <p className="text-sm font-mono text-emerald-900">
+                            ****{String(order.paymentLast5).padStart(5, "0")}
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </div>

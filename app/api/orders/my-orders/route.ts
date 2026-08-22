@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
           ? "convenience_711"
           : "face_to_face",
         store7_11: props["7-11取貨店號"]?.rich_text?.[0]?.plain_text || "",
+        paymentLast5: props["帳號末5碼"]?.number || undefined,
       };
     }).filter(Boolean);
 

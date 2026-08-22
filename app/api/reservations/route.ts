@@ -60,12 +60,8 @@ export async function POST(request: NextRequest) {
       )
       .join("\n");
 
-    // 构建运费和收货方式的说明
-    const shippingInfo = shippingMethod === "convenience_711"
-      ? `7-11超商取貨（編號：${store7_11}）- 運費NT$${shippingFee}`
-      : `面交（洽詢細節請Line聯繫）- 免運費`;
-
-    const fullItemsDetail = `${itemsDetail}\n\n[收貨方式]\n${shippingInfo}`;
+    // Items_Detail 只包含商品列表，收貨方式已有專門欄位
+    const fullItemsDetail = itemsDetail;
 
     // 保存到 Orders 表
     const properties: Record<string, any> = {
