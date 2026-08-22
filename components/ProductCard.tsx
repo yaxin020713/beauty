@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, ShoppingCart } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
@@ -9,6 +9,7 @@ import { useCart } from "@/components/CartContext";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [showVariantSelector, setShowVariantSelector] = useState(false);
@@ -40,8 +41,11 @@ export default function ProductCard({ product }: { product: Product }) {
     return [];
   };
 
-  const triggerFlyingAnimation = (button: HTMLElement) => {
-    const rect = button.getBoundingClientRect();
+  const triggerFlyingAnimation = (button?: HTMLElement) => {
+    const targetButton = button || buttonRef.current;
+    if (!targetButton) return;
+
+    const rect = targetButton.getBoundingClientRect();
     const flyId = `fly-${Date.now()}`;
     setFlyingItem({
       id: flyId,
@@ -67,11 +71,9 @@ export default function ProductCard({ product }: { product: Product }) {
           return;
         }
 
-        // 如果只有一個變體，自動選擇
+        // 如果只有一個變體，自動選擇並加入
         if (loadedVariants.length === 1) {
-          if (e?.currentTarget) {
-            triggerFlyingAnimation(e.currentTarget);
-          }
+          triggerFlyingAnimation(e?.currentTarget);
           addToCart(product, {
             variantId: loadedVariants[0].id,
             optionName: loadedVariants[0].optionName,
@@ -80,9 +82,7 @@ export default function ProductCard({ product }: { product: Product }) {
         }
 
         // 如果沒有變體，直接加入
-        if (e?.currentTarget) {
-          triggerFlyingAnimation(e.currentTarget);
-        }
+        triggerFlyingAnimation(e?.currentTarget);
         addToCart(product);
         return;
       }
@@ -93,9 +93,7 @@ export default function ProductCard({ product }: { product: Product }) {
         return;
       }
 
-      if (e?.currentTarget) {
-        triggerFlyingAnimation(e.currentTarget);
-      }
+      triggerFlyingAnimation(e?.currentTarget);
       addToCart(product, selectedVariant ? {
         variantId: selectedVariant.id,
         optionName: selectedVariant.optionName,
@@ -201,6 +199,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* 按鈕區域 */}
         <div className="mt-auto flex gap-2">
           <motion.button
+            ref={buttonRef}
             type="button"
             onClick={(e) => {
               e.preventDefault();
@@ -244,7 +243,13 @@ export default function ProductCard({ product }: { product: Product }) {
                     onClick={() => {
                       setSelectedVariant(variant);
                       setShowVariantSelector(false);
-                      handleAddToCart();
+                      setTimeout(() => {
+                        triggerFlyingAnimation();
+                        addToCart(product, {
+                          variantId: variant.id,
+                          optionName: variant.optionName,
+                        });
+                      }, 0);
                     }}
                     className={`p-3 rounded-xl text-sm font-medium transition ${
                       selectedVariant?.id === variant.id
