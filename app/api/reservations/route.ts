@@ -168,15 +168,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 儲存分潮金
-    if (totalCommission > 0) {
-      properties["分潮"] = { number: totalCommission };
-    }
-
     // 處理推薦碼邏輯
-    // 情況A：推薦連結進入，未修改 → 推薦碼 + 推薦人Email
-    // 情況B：推薦連結進入，手動修改碼 → 次推薦碼 + 次推薦人Email
-    // 情況C：官方連結進入，手動填寫碼 → 次推薦碼 + 次推薦人Email
+    // 情況A：推薦連結進入，未修改 → 推薦碼 + 推薦人信箱 + 分潮（主要分潮金）
+    // 情況B：推薦連結進入，手動修改碼 → 推薦碼2 + 推薦人信箱2 + 分潮2（次要分潮金）
+    // 情況C：官方連結進入，手動填寫碼 → 推薦碼2 + 推薦人信箱2 + 分潮2（次要分潮金）
 
     if (manualReferralCode && urlReferralCode && manualReferralCode === urlReferralCode) {
       // 情況A：推薦連結進入未修改（manualCode自動填充等於urlCode）
@@ -185,31 +180,37 @@ export async function POST(request: NextRequest) {
         properties["推薦碼"] = {
           rich_text: [{ text: { content: referrer.code } }],
         };
-        properties["推薦人Email"] = {
+        properties["推薦人信箱"] = {
           rich_text: [{ text: { content: referrer.email } }],
         };
+        // 分潮金全部存入分潮（主要字段）
+        properties["分潮"] = { number: totalCommission };
       }
     } else if (manualReferralCode && urlReferralCode && manualReferralCode !== urlReferralCode) {
       // 情況B：推薦連結進入但手動修改碼
       const secondaryReferrer = await resolveReferrer(manualReferralCode, customerEmail);
       if (secondaryReferrer) {
-        properties["次推薦碼"] = {
+        properties["推薦碼2"] = {
           rich_text: [{ text: { content: secondaryReferrer.code } }],
         };
-        properties["次推薦人Email"] = {
+        properties["推薦人信箱2"] = {
           rich_text: [{ text: { content: secondaryReferrer.email } }],
         };
+        // 分潮金全部存入分潮2（次要字段），推薦碼和推薦人信箱留空
+        properties["分潮2"] = { number: totalCommission };
       }
     } else if (manualReferralCode && !urlReferralCode) {
       // 情況C：官方連結進入，手動填寫碼
       const secondaryReferrer = await resolveReferrer(manualReferralCode, customerEmail);
       if (secondaryReferrer) {
-        properties["次推薦碼"] = {
+        properties["推薦碼2"] = {
           rich_text: [{ text: { content: secondaryReferrer.code } }],
         };
-        properties["次推薦人Email"] = {
+        properties["推薦人信箱2"] = {
           rich_text: [{ text: { content: secondaryReferrer.email } }],
         };
+        // 分潮金全部存入分潮2（次要字段），推薦碼和推薦人信箱留空
+        properties["分潮2"] = { number: totalCommission };
       }
     } else if (urlReferralCode && !manualReferralCode) {
       // 推薦連結進入，未填寫manualCode（邊界情況）
@@ -218,9 +219,11 @@ export async function POST(request: NextRequest) {
         properties["推薦碼"] = {
           rich_text: [{ text: { content: referrer.code } }],
         };
-        properties["推薦人Email"] = {
+        properties["推薦人信箱"] = {
           rich_text: [{ text: { content: referrer.email } }],
         };
+        // 分潮金全部存入分潮（主要字段）
+        properties["分潮"] = { number: totalCommission };
       }
     }
 

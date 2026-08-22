@@ -10,9 +10,9 @@ function readNumber(prop: any): number {
   return prop?.type === "number" ? prop.number || 0 : 0;
 }
 
-// 把分潤入帳給單一位推薦人：
-// - 累積分潤：終身總額，只增不減，純粹作為歷史紀錄
-// - 尚未提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
+// 把分潮入帳給單一位推薦人：
+// - 累積分潮：終身總額，只增不減，純粹作為歷史紀錄
+// - 尚未提現分潮：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
 async function creditMemberCommission(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 
@@ -30,12 +30,12 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   let currentTotalCommission = 0;
   let currentAvailableCommission = 0;
   if ("properties" in referrerPage) {
-    const totalProp = referrerPage.properties.累積分潤;
+    const totalProp = referrerPage.properties.累積分潮;
     if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
       currentTotalCommission = totalProp.number || 0;
     }
 
-    const availableProp = referrerPage.properties.尚未提現分潤;
+    const availableProp = referrerPage.properties.尚未提現分潮;
     if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
       currentAvailableCommission = availableProp.number || 0;
     }
@@ -44,14 +44,14 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      累積分潤: { number: currentTotalCommission + amount },
-      尚未提現分潤: { number: currentAvailableCommission + amount },
+      累積分潮: { number: currentTotalCommission + amount },
+      尚未提現分潮: { number: currentAvailableCommission + amount },
     },
   });
 }
 
-// 讀取訂單頁面上已試算好的分潤資訊，入帳給推薦人。訂單使用推薦連結與手動輸入的推薦碼
-// 分屬不同人時，訂單上會同時存在第二位推薦人（推薦人信箱2 / 分潤2），兩者都要入帳。
+// 讀取訂單頁面上的分潮資訊，入帳給推薦人。
+// 優先次推薦人與對應分潮金（手動修改或官方連結手動填寫），次之推薦人與對應分潮金（推薦連結自動帶入）。
 // 呼叫時機：訂單狀態轉為「已完成」時（管理員手動操作或每日自動排程），
 // 而非下單當下，因此呼叫端須自行確保不會對同一筆訂單重複呼叫。
 export async function applyReferralCommission(orderPage: unknown): Promise<void> {
@@ -59,18 +59,21 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   if (!MEMBERS_DB_ID) return;
 
   const props = (orderPage as { properties: Record<string, any> }).properties;
-  const commissionAmount = readNumber(props["分潤"]);
 
-  // 優先使用次推薦人（手動修改或官方連結手動填寫）
-  const secondaryEmail = readRichText(props["次推薦人Email"]);
-  if (secondaryEmail) {
-    await creditMemberCommission(secondaryEmail, commissionAmount);
+  // 優先使用次推薦人與對應分潮金（手動修改或官方連結手動填寫）
+  const secondaryEmail = readRichText(props["推薦人信箱2"]);
+  const secondaryCommission = readNumber(props["分潮2"]);
+  if (secondaryEmail && secondaryCommission > 0) {
+    await creditMemberCommission(secondaryEmail, secondaryCommission);
     return;
   }
 
-  // 其次使用推薦人（推薦連結自動帶入）
-  const primaryEmail = readRichText(props["推薦人Email"]);
-  await creditMemberCommission(primaryEmail, commissionAmount);
+  // 其次使用推薦人與對應分潮金（推薦連結自動帶入）
+  const primaryEmail = readRichText(props["推薦人信箱"]);
+  const primaryCommission = readNumber(props["分潮"]);
+  if (primaryEmail && primaryCommission > 0) {
+    await creditMemberCommission(primaryEmail, primaryCommission);
+  }
 }
 
 // 生成唯一的推荐码（8位字符，易于分享）
