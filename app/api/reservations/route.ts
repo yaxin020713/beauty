@@ -21,6 +21,8 @@ export async function POST(request: NextRequest) {
       store7_11,
       shippingMethod,
       shippingFee,
+      totalPrice,
+      totalAmount,
     } = body;
 
     // 验证必填字段
@@ -81,6 +83,9 @@ export async function POST(request: NextRequest) {
       },
       "聯繫用Email": {
         rich_text: [{ text: { content: customerEmail } }],
+      },
+      "Total_Price": {
+        number: totalAmount || (totalPrice + shippingFee),
       },
       "訂單狀態": {
         select: { name: "新訂單" },

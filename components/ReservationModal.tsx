@@ -101,6 +101,8 @@ export default function ReservationModal({
           store7_11: shippingMethod === "convenience_711" ? store7_11 : undefined,
           shippingMethod,
           shippingFee,
+          totalPrice,
+          totalAmount,
         }),
       });
 
