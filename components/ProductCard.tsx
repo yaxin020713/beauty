@@ -42,15 +42,16 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   const triggerFlyingAnimation = (button?: HTMLElement) => {
-    const targetButton = button || buttonRef.current;
-    if (!targetButton) return;
+    // 尋找商品圖片元素來獲取起點位置
+    const imageContainer = document.querySelector('[data-product-card-image]');
+    if (!imageContainer) return;
 
-    const rect = targetButton.getBoundingClientRect();
+    const rect = imageContainer.getBoundingClientRect();
     const flyId = `fly-${Date.now()}`;
     setFlyingItem({
       id: flyId,
-      startX: rect.left + rect.width / 2,
-      startY: rect.top + rect.height / 2,
+      startX: rect.left,  // 從左邊開始
+      startY: rect.top + rect.height / 2,  // 垂直中心
     });
 
     setTimeout(() => {
@@ -153,7 +154,7 @@ export default function ProductCard({ product }: { product: Product }) {
       >
       {/* 商品圖片 - 可點擊進入詳情頁 */}
       <Link href={`/products/${product.id}`}>
-        <div className="relative aspect-square w-full overflow-hidden bg-taupe-100 cursor-pointer">
+        <div data-product-card-image className="relative aspect-square w-full overflow-hidden bg-taupe-100 cursor-pointer">
           {product.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

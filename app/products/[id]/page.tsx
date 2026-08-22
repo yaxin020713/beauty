@@ -64,8 +64,8 @@ export default function ProductPage() {
       const flyId = `fly-${Date.now()}`;
       setFlyingItem({
         id: flyId,
-        startX: rect.left + rect.width / 2,
-        startY: rect.top + rect.height / 2,
+        startX: rect.left,  // 從左邊開始
+        startY: rect.top + rect.height / 2,  // 垂直中心
       });
 
       // 動畫完成後再加入購物車
