@@ -126,15 +126,14 @@ export default function ProductCard({ product }: { product: Product }) {
               value={selectedVariant?.id || ""}
               onChange={(e) => {
                 const variant = variants.find((v) => v.id === e.target.value);
-                if (variant && variant.stock > 0) setSelectedVariant(variant);
+                if (variant) setSelectedVariant(variant);
               }}
               className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-xs outline-none focus:border-sapphire-500 bg-white"
             >
               <option value="">選擇色號 *</option>
               {variants.map((variant) => (
-                <option key={variant.id} value={variant.id} disabled={variant.stock === 0}>
+                <option key={variant.id} value={variant.id}>
                   {variant.optionName}
-                  {variant.stock === 0 ? " (已售完)" : ""}
                 </option>
               ))}
             </select>

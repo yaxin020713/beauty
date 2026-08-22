@@ -202,15 +202,14 @@ export default function ProductPage() {
                   value={selectedVariant?.id || ""}
                   onChange={(e) => {
                     const variant = variants.find((v) => v.id === e.target.value);
-                    if (variant && variant.stock > 0) setSelectedVariant(variant);
+                    if (variant) setSelectedVariant(variant);
                   }}
                   className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
                 >
                   <option value="">選擇色號</option>
                   {variants.map((variant) => (
-                    <option key={variant.id} value={variant.id} disabled={variant.stock === 0}>
+                    <option key={variant.id} value={variant.id}>
                       {variant.optionName}
-                      {variant.stock === 0 ? " (已售完)" : `（庫存: ${variant.stock}）`}
                     </option>
                   ))}
                 </select>
