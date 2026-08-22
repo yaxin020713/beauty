@@ -290,7 +290,7 @@ export default function OrdersPage() {
                               type="text"
                               inputMode="numeric"
                               placeholder="匯款末5碼"
-                              maxLength="5"
+                              maxLength={5}
                               value={paymentForm[order.id] || ""}
                               onChange={(e) => {
                                 const val = e.target.value.replace(/\D/g, "").slice(0, 5);
