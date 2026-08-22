@@ -6,6 +6,7 @@ const ordersDbId = process.env.NOTION_ORDERS_DB_ID;
 const membersDbId = process.env.NOTION_MEMBERS_DB_ID;
 const withdrawalsDbId = process.env.NOTION_WITHDRAWALS_DB_ID;
 const productVariantsDbId = process.env.NOTION_PRODUCT_VARIANTS_DB_ID;
+const batchesDbId = process.env.NOTION_BATCHES_DB_ID;
 
 if (!apiKey || !productsDbId || !ordersDbId) {
   throw new Error(
@@ -31,6 +32,12 @@ if (!productVariantsDbId) {
   );
 }
 
+if (!batchesDbId) {
+  console.warn(
+    "未設置 NOTION_BATCHES_DB_ID，預訂批次功能將不可用。請在 .env.local 中添加 NOTION_BATCHES_DB_ID"
+  );
+}
+
 // 全域共用單一 Notion client
 export const notion = new Client({ auth: apiKey });
 
@@ -39,3 +46,4 @@ export const ORDERS_DB_ID = ordersDbId;
 export const MEMBERS_DB_ID = membersDbId || "";
 export const WITHDRAWALS_DB_ID = withdrawalsDbId || "";
 export const PRODUCT_VARIANTS_DB_ID = productVariantsDbId || "";
+export const BATCHES_DB_ID = batchesDbId || "";
