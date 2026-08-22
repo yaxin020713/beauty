@@ -45,20 +45,25 @@ export default function ReservationModal({
       // Auto-fill from logged-in user email
       if (user?.email) {
         setCustomerEmail(user.email);
-      }
 
-      // Try to load member profile from localStorage
-      try {
-        const memberProfile = localStorage.getItem("member_profile");
-        if (memberProfile) {
-          const profile = JSON.parse(memberProfile);
-          if (profile.recipientName) setCustomerName(profile.recipientName);
-          if (profile.contactPhone) setCustomerPhone(profile.contactPhone);
-          if (profile.email && !user?.email) setCustomerEmail(profile.email);
-          if (profile.store711Code) setStore7_11(profile.store711Code);
-        }
-      } catch (error) {
-        console.warn("從 localStorage 讀取會員信息失敗:", error);
+        // Load member profile from Notion
+        const loadMemberProfile = async () => {
+          try {
+            const response = await fetch(
+              `/api/members/profile?email=${encodeURIComponent(user.email)}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              if (data.recipientName) setCustomerName(data.recipientName);
+              if (data.contactPhone) setCustomerPhone(data.contactPhone);
+              if (data.store711Code) setStore7_11(data.store711Code);
+            }
+          } catch (error) {
+            console.warn("載入會員資料失敗:", error);
+          }
+        };
+
+        loadMemberProfile();
       }
     }
   }, [open, user]);
@@ -302,31 +307,24 @@ export default function ReservationModal({
                       <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
                         7-11 取貨門市編號 *
                       </label>
-                      <div className="space-y-2">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            required={shippingMethod === "convenience_711"}
-                            placeholder="例：007832"
-                            value={store7_11}
-                            onChange={(e) => setStore7_11(e.target.value)}
-                            className="flex-1 rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
-                          />
-                          <a
-                            href="https://emap.pricerite.com.tw/pricerite/storelist"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-taupe-100 text-taupe-700 hover:bg-taupe-200 transition text-sm font-medium"
-                            title="查詢 7-11 門市編號"
-                          >
-                            <HelpCircle className="h-4 w-4" />
-                            <span className="hidden sm:inline">查詢</span>
-                          </a>
-                        </div>
-                        <p className="text-xs text-taupe-500">
-                          不知道門市編號？點「查詢」即可在 7-11 官網查詢最近的門市編號
-                        </p>
-                      </div>
+                      <input
+                        type="text"
+                        required={shippingMethod === "convenience_711"}
+                        placeholder="例：807"
+                        value={store7_11}
+                        onChange={(e) => setStore7_11(e.target.value)}
+                        className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                      />
+                      <p className="text-xs text-taupe-500">
+                        <a
+                          href="https://www.ibon.com.tw/MOBILE/retail_inquiry.aspx#gsc.tab=0"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sapphire-600 hover:text-sapphire-700 hover:underline"
+                        >
+                          點選連結查詢7-11門市編號
+                        </a>
+                      </p>
                     </div>
                   )}
 

@@ -42,24 +42,6 @@ export default function MemberProfileModal({
     setLoading(true);
     try {
       await onSubmit({ birthday, address, store711Code, recipientName, contactPhone });
-
-      // 保存會員信息到 localStorage 以便預訂時使用
-      try {
-        localStorage.setItem(
-          "member_profile",
-          JSON.stringify({
-            email,
-            recipientName,
-            contactPhone,
-            birthday,
-            address,
-            store711Code,
-          })
-        );
-      } catch (storageError) {
-        console.warn("保存會員信息到 localStorage 失敗:", storageError);
-      }
-
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失敗，請稍後再試");
