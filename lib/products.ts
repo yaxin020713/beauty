@@ -51,6 +51,17 @@ function asUrl(p: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+function asText(p: unknown): string {
+  if (!p || typeof p !== "object") return "";
+  const record = p as Record<string, unknown>;
+  if (record["type"] !== "rich_text") return "";
+  const richText = record["rich_text"];
+  if (!Array.isArray(richText)) return "";
+  return (richText as { plain_text?: string }[])
+    .map((t) => t.plain_text ?? "")
+    .join("");
+}
+
 /** 讀取所有商品頁面並對映為前端使用的 Product 型別 */
 export async function fetchProducts(): Promise<Product[]> {
   const response = await notion.databases.query({
@@ -77,8 +88,15 @@ export async function fetchProducts(): Promise<Product[]> {
         });
       }
 
+      const productId = asRichText(props["product_id"]);
+
+      if (idx < 3) {
+        console.log(`[fetchProducts] 商品${idx + 1} properties keys:`, Object.keys(props));
+        console.log(`[fetchProducts] 商品${idx + 1} product_id:`, productId);
+      }
+
       const product: Product = {
-        id: page.id,
+        id: productId || page.id,
         name,
         brand,
         category: asSelect(props["Category"]),
@@ -221,6 +239,48 @@ export async function updateProduct(
   });
 
   return response;
+}
+
+/** 按 product_id 查詢單個商品 */
+export async function fetchProductByProductId(productId: string): Promise<Product | null> {
+  const response = await notion.databases.query({
+    database_id: PRODUCTS_DB_ID,
+    filter: {
+      property: "product_id",
+      rich_text: {
+        equals: productId,
+      },
+    },
+    page_size: 1,
+  });
+
+  if (response.results.length === 0) {
+    console.warn(`[fetchProductByProductId] 找不到 product_id: ${productId}`);
+    return null;
+  }
+
+  const page = response.results[0];
+  if (!("properties" in page)) return null;
+
+  const props = page.properties as Record<string, unknown>;
+  const name = asTitle(props["Name"]);
+  const brand = asRichText(props["品牌"]);
+
+  const product: Product = {
+    id: productId,
+    name,
+    brand,
+    category: asSelect(props["Category"]),
+    price: asNumber(props["Price"]),
+    weight_g: asNumber(props["Weight_g"]),
+    cost50: asNumber(props["Cost_50"]),
+    cost100: asNumber(props["Cost_100"]),
+    image: asUrl(props["Image"]),
+    description: asRichText(props["Description"]),
+    totalSold: asNumber(props["Total_Sold"]),
+  };
+
+  return product.name ? product : null;
 }
 
 

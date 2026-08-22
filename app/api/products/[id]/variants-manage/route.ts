@@ -1,18 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notion, PRODUCT_VARIANTS_DB_ID } from "@/lib/notion";
+import { notion, PRODUCTS_DB_ID, PRODUCT_VARIANTS_DB_ID } from "@/lib/notion";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id: productId } = await params;
   const { email, variants } = await request.json();
 
-  if (!email || !id || !Array.isArray(variants)) {
+  if (!email || !productId || !Array.isArray(variants)) {
     return NextResponse.json({ error: "缺少必要參數" }, { status: 400 });
   }
 
   try {
+    // 先用 product_id 查詢得到 Notion page ID
+    const productQuery = await notion.databases.query({
+      database_id: PRODUCTS_DB_ID,
+      filter: {
+        property: "product_id",
+        rich_text: {
+          equals: productId,
+        },
+      },
+      page_size: 1,
+    });
+
+    if (productQuery.results.length === 0) {
+      return NextResponse.json(
+        { error: "商品不存在" },
+        { status: 404 }
+      );
+    }
+
+    const notionPageId = productQuery.results[0].id;
     const results = [];
 
     for (const variant of variants) {
@@ -25,7 +45,7 @@ export async function POST(
             select: { name: variant.optionName },
           },
           "Product": {
-            relation: [{ id }],
+            relation: [{ id: notionPageId }],
           },
           "Stock": {
             number: variant.stock || 0,

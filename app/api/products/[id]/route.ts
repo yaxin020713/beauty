@@ -1,5 +1,27 @@
 import { NextResponse } from "next/server";
-import { updateProduct } from "@/lib/products";
+import { fetchProductByProductId, updateProduct } from "@/lib/products";
+
+export async function GET(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const product = await fetchProductByProductId(params.id);
+    if (!product) {
+      return NextResponse.json(
+        { error: "商品不存在" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json({ product });
+  } catch (error) {
+    console.error("[api/products/:id GET] 讀取商品失敗:", error);
+    return NextResponse.json(
+      { error: "讀取商品失敗" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PUT(
   request: Request,

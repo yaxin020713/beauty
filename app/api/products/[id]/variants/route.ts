@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notion, PRODUCT_VARIANTS_DB_ID } from "@/lib/notion";
+import { notion, PRODUCTS_DB_ID, PRODUCT_VARIANTS_DB_ID } from "@/lib/notion";
 import type { ProductVariant } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -8,19 +8,41 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id: productId } = await params;
 
-  if (!id) {
+  if (!productId) {
     return NextResponse.json({ error: "缺少 productId" }, { status: 400 });
   }
 
   try {
+    // 先用 product_id 查詢 Products 表找到 Notion page ID
+    const productQuery = await notion.databases.query({
+      database_id: PRODUCTS_DB_ID,
+      filter: {
+        property: "product_id",
+        rich_text: {
+          equals: productId,
+        },
+      },
+      page_size: 1,
+    });
+
+    if (productQuery.results.length === 0) {
+      return NextResponse.json(
+        { error: "商品不存在" },
+        { status: 404 }
+      );
+    }
+
+    const notionPageId = productQuery.results[0].id;
+
+    // 再用 Notion page ID 查詢 ProductVariants
     const query = await notion.databases.query({
       database_id: PRODUCT_VARIANTS_DB_ID,
       filter: {
         property: "Product",
         relation: {
-          contains: id,
+          contains: notionPageId,
         },
       },
     });
