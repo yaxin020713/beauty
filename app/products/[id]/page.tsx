@@ -17,6 +17,7 @@ export default function ProductPage() {
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [flyingItem, setFlyingItem] = useState<{ id: string; startX: number; startY: number } | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -56,11 +57,34 @@ export default function ProductPage() {
   const handleAddToCart = () => {
     if (!product || (variants.length > 0 && !selectedVariant)) return;
 
-    addToCart(product, selectedVariant ? {
-      variantId: selectedVariant.id,
-      optionName: selectedVariant.optionName,
-    } : undefined);
-    openCart();
+    // 觸發飛行動畫
+    const productImage = document.querySelector('[data-product-image]');
+    if (productImage) {
+      const rect = productImage.getBoundingClientRect();
+      const flyId = `fly-${Date.now()}`;
+      setFlyingItem({
+        id: flyId,
+        startX: rect.left + rect.width / 2,
+        startY: rect.top + rect.height / 2,
+      });
+
+      // 動畫完成後再加入購物車
+      setTimeout(() => {
+        addToCart(product, selectedVariant ? {
+          variantId: selectedVariant.id,
+          optionName: selectedVariant.optionName,
+        } : undefined);
+        openCart();
+        setFlyingItem(null);
+      }, 600);
+    } else {
+      // 如果找不到圖片，直接加入購物車
+      addToCart(product, selectedVariant ? {
+        variantId: selectedVariant.id,
+        optionName: selectedVariant.optionName,
+      } : undefined);
+      openCart();
+    }
   };
 
   if (loading && !product) {
@@ -87,6 +111,46 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* 飛行動畫 */}
+      {flyingItem && (
+        <motion.div
+          key={flyingItem.id}
+          className="fixed pointer-events-none z-50"
+          initial={{
+            left: flyingItem.startX,
+            top: flyingItem.startY,
+            opacity: 1,
+            scale: 1,
+          }}
+          animate={{
+            left: "calc(100% - 40px)",
+            top: "20px",
+            opacity: 0,
+            scale: 0.3,
+          }}
+          transition={{
+            duration: 0.6,
+            ease: "easeInOut",
+          }}
+          style={{
+            width: 80,
+            height: 80,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="w-full h-full rounded-xl overflow-hidden shadow-lg border border-taupe-200">
+            {product?.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* 返回按鈕 */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-taupe-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -109,7 +173,7 @@ export default function ProductPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col gap-4"
           >
-            <div className="aspect-square w-full rounded-3xl overflow-hidden bg-taupe-100">
+            <div data-product-image className="aspect-square w-full rounded-3xl overflow-hidden bg-taupe-100">
               {product.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
