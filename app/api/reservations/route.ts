@@ -142,17 +142,45 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // 處理推薦碼邏輯
-    // 優先使用手動輸入的推薦碼，其次使用 URL 參數的推薦碼
-    const primaryCode = manualReferralCode || urlReferralCode;
-    const secondaryCode =
-      manualReferralCode && urlReferralCode && manualReferralCode !== urlReferralCode
-        ? urlReferralCode
-        : null;
+    // 計算分潮金：根據每個商品的分潮值 × 數量加總
+    let totalCommission = 0;
+    for (const item of items) {
+      try {
+        const productQuery = await notion.databases.query({
+          database_id: PRODUCTS_DB_ID,
+          filter: {
+            property: "product_id",
+            rich_text: { equals: item.productId },
+          },
+          page_size: 1,
+        });
 
-    // 解析主推薦碼
-    if (primaryCode) {
-      const referrer = await resolveReferrer(primaryCode, customerEmail);
+        if (productQuery.results.length > 0) {
+          const productProps = productQuery.results[0].properties;
+          const commissionProp = productProps.分潤;
+          if (commissionProp && "number" in commissionProp) {
+            const itemCommission = (commissionProp.number || 0) * item.quantity;
+            totalCommission += itemCommission;
+          }
+        }
+      } catch (err) {
+        console.warn(`[api/reservations] 查詢商品 ${item.productId} 的分潮失敗:`, err);
+      }
+    }
+
+    // 儲存分潮金
+    if (totalCommission > 0) {
+      properties["分潮"] = { number: totalCommission };
+    }
+
+    // 處理推薦碼邏輯
+    // 情況A：推薦連結進入，未修改 → 推薦碼 + 推薦人Email
+    // 情況B：推薦連結進入，手動修改碼 → 次推薦碼 + 次推薦人Email
+    // 情況C：官方連結進入，手動填寫碼 → 次推薦碼 + 次推薦人Email
+
+    if (manualReferralCode && urlReferralCode && manualReferralCode === urlReferralCode) {
+      // 情況A：推薦連結進入未修改（manualCode自動填充等於urlCode）
+      const referrer = await resolveReferrer(urlReferralCode, customerEmail);
       if (referrer) {
         properties["推薦碼"] = {
           rich_text: [{ text: { content: referrer.code } }],
@@ -161,17 +189,37 @@ export async function POST(request: NextRequest) {
           rich_text: [{ text: { content: referrer.email } }],
         };
       }
-    }
-
-    // 如果有次推薦碼（兩個推薦碼不同），解析並存儲
-    if (secondaryCode) {
-      const secondaryReferrer = await resolveReferrer(secondaryCode, customerEmail);
+    } else if (manualReferralCode && urlReferralCode && manualReferralCode !== urlReferralCode) {
+      // 情況B：推薦連結進入但手動修改碼
+      const secondaryReferrer = await resolveReferrer(manualReferralCode, customerEmail);
       if (secondaryReferrer) {
         properties["次推薦碼"] = {
           rich_text: [{ text: { content: secondaryReferrer.code } }],
         };
         properties["次推薦人Email"] = {
           rich_text: [{ text: { content: secondaryReferrer.email } }],
+        };
+      }
+    } else if (manualReferralCode && !urlReferralCode) {
+      // 情況C：官方連結進入，手動填寫碼
+      const secondaryReferrer = await resolveReferrer(manualReferralCode, customerEmail);
+      if (secondaryReferrer) {
+        properties["次推薦碼"] = {
+          rich_text: [{ text: { content: secondaryReferrer.code } }],
+        };
+        properties["次推薦人Email"] = {
+          rich_text: [{ text: { content: secondaryReferrer.email } }],
+        };
+      }
+    } else if (urlReferralCode && !manualReferralCode) {
+      // 推薦連結進入，未填寫manualCode（邊界情況）
+      const referrer = await resolveReferrer(urlReferralCode, customerEmail);
+      if (referrer) {
+        properties["推薦碼"] = {
+          rich_text: [{ text: { content: referrer.code } }],
+        };
+        properties["推薦人Email"] = {
+          rich_text: [{ text: { content: referrer.email } }],
         };
       }
     }

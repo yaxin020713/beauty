@@ -59,9 +59,18 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   if (!MEMBERS_DB_ID) return;
 
   const props = (orderPage as { properties: Record<string, any> }).properties;
+  const commissionAmount = readNumber(props["分潤"]);
 
-  await creditMemberCommission(readRichText(props["推薦人信箱"]), readNumber(props["分潤"]));
-  await creditMemberCommission(readRichText(props["推薦人信箱2"]), readNumber(props["分潤2"]));
+  // 優先使用次推薦人（手動修改或官方連結手動填寫）
+  const secondaryEmail = readRichText(props["次推薦人Email"]);
+  if (secondaryEmail) {
+    await creditMemberCommission(secondaryEmail, commissionAmount);
+    return;
+  }
+
+  // 其次使用推薦人（推薦連結自動帶入）
+  const primaryEmail = readRichText(props["推薦人Email"]);
+  await creditMemberCommission(primaryEmail, commissionAmount);
 }
 
 // 生成唯一的推荐码（8位字符，易于分享）
