@@ -11,6 +11,7 @@ import PromoBanner from "@/components/PromoBanner";
 import CartDrawer from "@/components/CartDrawer";
 import StorefrontContent from "@/components/StorefrontContent";
 import Footer from "@/components/Footer";
+import StorefrontWrapper from "@/components/StorefrontWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -30,19 +31,21 @@ export default async function StorefrontPage() {
   const products = await loadProducts();
 
   return (
-    <div className="min-h-screen bg-taupe-100 text-ink">
-      <Header />
-      <PromoBanner
-        freeShippingThreshold={FREE_SHIPPING_THRESHOLD}
-        discountThreshold={DISCOUNT_THRESHOLD}
-        discountAmount={DISCOUNT_AMOUNT}
-        belowThresholdShippingFee={SHIPPING_COSTS.CONVENIENCE_711}
-        ctaHref="#shop"
-        imageSrc="/images/banner.jpg"
-      />
-      <StorefrontContent products={products} />
-      <Footer />
-      <CartDrawer />
-    </div>
+    <StorefrontWrapper>
+      <div className="min-h-screen bg-taupe-100 text-ink">
+        <Header />
+        <PromoBanner
+          freeShippingThreshold={FREE_SHIPPING_THRESHOLD}
+          discountThreshold={DISCOUNT_THRESHOLD}
+          discountAmount={DISCOUNT_AMOUNT}
+          belowThresholdShippingFee={SHIPPING_COSTS.CONVENIENCE_711}
+          ctaHref="#shop"
+          imageSrc="/images/banner.jpg"
+        />
+        <StorefrontContent products={products} />
+        <Footer />
+        <CartDrawer />
+      </div>
+    </StorefrontWrapper>
   );
 }
