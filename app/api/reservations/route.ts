@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notion, ORDERS_DB_ID } from "@/lib/notion";
+import { notion, ORDERS_DB_ID, PRODUCTS_DB_ID, updateProductReservedQuantity } from "@/lib/notion";
+
+interface ReservationItem {
+  productId: string;
+  productName: string;
+  variant?: { optionName: string };
+  quantity: number;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      productName,
-      productId,
-      variant,
-      quantity,
+      items,
       customerName,
       customerPhone,
       customerEmail,
@@ -17,9 +21,8 @@ export async function POST(request: NextRequest) {
 
     // 验证必填字段
     if (
-      !productName ||
-      !productId ||
-      !quantity ||
+      !Array.isArray(items) ||
+      items.length === 0 ||
       !customerName ||
       !customerPhone ||
       !customerEmail ||
@@ -34,13 +37,17 @@ export async function POST(request: NextRequest) {
     // 生成 Order_ID
     const orderId = `訂單-${Date.now()}`;
 
-    // 生成 Items_Detail 字符串
-    const itemsDetail = variant
-      ? `${productName} (${variant.optionName}) x${quantity}`
-      : `${productName} x${quantity}`;
+    // 生成 Items_Detail 字符串（多行格式）
+    const itemsDetail = items
+      .map((item: ReservationItem) =>
+        item.variant
+          ? `${item.productName} (${item.variant.optionName}) x${item.quantity}`
+          : `${item.productName} x${item.quantity}`
+      )
+      .join("\n");
 
     // 保存到 Orders 表
-    const response = await notion.pages.create({
+    await notion.pages.create({
       parent: { database_id: ORDERS_DB_ID },
       properties: {
         "Order_ID": {
@@ -66,6 +73,34 @@ export async function POST(request: NextRequest) {
         },
       } as Record<string, any>,
     });
+
+    // 为每个商品更新 Reserved_Quantity
+    for (const item of items) {
+      try {
+        // 查询该商品的 Notion page ID
+        const productQuery = await notion.databases.query({
+          database_id: PRODUCTS_DB_ID,
+          filter: {
+            property: "product_id",
+            rich_text: {
+              equals: item.productId,
+            },
+          },
+          page_size: 1,
+        });
+
+        if (productQuery.results.length > 0) {
+          const productPageId = productQuery.results[0].id;
+          await updateProductReservedQuantity(productPageId, item.quantity);
+        }
+      } catch (itemError) {
+        console.error(
+          `[api/reservations] 更新商品 ${item.productId} 的 Reserved_Quantity 失敗:`,
+          itemError
+        );
+        // 继续处理其他商品，不中断流程
+      }
+    }
 
     return NextResponse.json(
       {

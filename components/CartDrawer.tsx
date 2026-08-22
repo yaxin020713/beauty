@@ -4,10 +4,9 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useCart } from "./CartContext";
-import CheckoutModal from "./CheckoutModal";
+import ReservationModal from "./ReservationModal";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { cn } from "@/lib/utils";
-import { FREE_SHIPPING_THRESHOLD, SHIPPING_COSTS } from "@/lib/shipping";
 
 export default function CartDrawer() {
   const {
@@ -20,13 +19,13 @@ export default function CartDrawer() {
     totalQuantity,
   } = useCart();
 
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isReservationOpen, setIsReservationOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 640px)");
 
-  // 前往結帳：關閉側欄並開啟結帳 Modal
-  const handleCheckoutClick = () => {
+  // 前往預訂：關閉側欄並開啟預訂 Modal
+  const handleReservationClick = () => {
     closeCart();
-    setIsCheckoutOpen(true);
+    setIsReservationOpen(true);
   };
 
   // 手機：從底部上滑；桌面：從右側滑入
@@ -177,10 +176,10 @@ export default function CartDrawer() {
                     ))}
                   </ul>
 
-                  {/* 底部：總額與前往結帳 */}
+                  {/* 底部：總額與前往預訂 */}
                   <div className="space-y-2 border-t border-taupe-100 bg-taupe-50/60 px-5 py-4">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-sm text-taupe-600">訂單總金額</span>
+                      <span className="text-sm text-taupe-600">預訂總金額</span>
                       <span className="text-2xl font-semibold text-ink">
                         <span className="mr-0.5 align-top text-sm font-normal text-taupe-400">
                           NT$
@@ -189,14 +188,14 @@ export default function CartDrawer() {
                       </span>
                     </div>
                     <p className="text-xs text-taupe-400">
-                      (未滿 ${FREE_SHIPPING_THRESHOLD.toLocaleString()} 運費(含包材費) ${SHIPPING_COSTS.CONVENIENCE_711})
+                      貨到付款 + 7-11 取貨
                     </p>
                     <button
                       type="button"
-                      onClick={handleCheckoutClick}
+                      onClick={handleReservationClick}
                       className="flex w-full items-center justify-center gap-2 rounded-full bg-taupe-900 py-3.5 text-sm font-medium text-white transition hover:bg-taupe-700"
                     >
-                      前往結帳
+                      前往預訂
                       <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                     </button>
                   </div>
@@ -207,10 +206,10 @@ export default function CartDrawer() {
         )}
       </AnimatePresence>
 
-      {/* 結帳 Modal */}
-      <CheckoutModal
-        open={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
+      {/* 預訂 Modal */}
+      <ReservationModal
+        open={isReservationOpen}
+        onClose={() => setIsReservationOpen(false)}
       />
     </>
   );

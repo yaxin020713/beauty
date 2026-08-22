@@ -47,3 +47,34 @@ export const MEMBERS_DB_ID = membersDbId || "";
 export const WITHDRAWALS_DB_ID = withdrawalsDbId || "";
 export const PRODUCT_VARIANTS_DB_ID = productVariantsDbId || "";
 export const BATCHES_DB_ID = batchesDbId || "";
+
+export async function updateProductReservedQuantity(
+  productPageId: string,
+  quantityToAdd: number
+): Promise<void> {
+  try {
+    // 先查詢當前的 Reserved_Quantity
+    const page = await notion.pages.retrieve({ page_id: productPageId });
+    const props = page.properties as Record<string, any>;
+    const currentReserved =
+      props.Reserved_Quantity && "number" in props.Reserved_Quantity
+        ? (props.Reserved_Quantity.number ?? 0)
+        : 0;
+
+    // 更新為新值
+    await notion.pages.update({
+      page_id: productPageId,
+      properties: {
+        Reserved_Quantity: {
+          number: currentReserved + quantityToAdd,
+        },
+      } as Record<string, any>,
+    });
+  } catch (error) {
+    console.error(
+      `[updateProductReservedQuantity] 更新失敗 (productPageId: ${productPageId}):`,
+      error
+    );
+    throw error;
+  }
+}

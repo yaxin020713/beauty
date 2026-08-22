@@ -1,11 +1,60 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import type { Product } from "@/lib/types";
+import { ChevronRight, ShoppingCart } from "lucide-react";
+import type { Product, ProductVariant } from "@/lib/types";
+import { useCart } from "@/components/CartContext";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const { addToCart, openCart } = useCart();
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [showVariantSelector, setShowVariantSelector] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleAddToCart = async () => {
+    setLoading(true);
+    try {
+      if (!variants.length) {
+        addToCart(product);
+        openCart();
+        return;
+      }
+
+      if (!selectedVariant) {
+        setShowVariantSelector(true);
+        return;
+      }
+
+      addToCart(product, {
+        variantId: selectedVariant.id,
+        optionName: selectedVariant.optionName,
+      });
+      openCart();
+      setSelectedVariant(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadVariants = async () => {
+    try {
+      const res = await fetch(`/api/products/${product.id}/variants`);
+      if (res.ok) {
+        const data = await res.json();
+        setVariants(data.variants || []);
+        if (data.variants?.length === 1) {
+          setSelectedVariant(data.variants[0]);
+        } else if (data.variants?.length) {
+          setShowVariantSelector(true);
+        }
+      }
+    } catch (error) {
+      console.error("載入選項失敗:", error);
+    }
+  };
 
   return (
     <motion.article
@@ -59,19 +108,72 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* 按鈕區域 */}
-        <div className="mt-auto">
-          <Link href={`/products/${product.id}`}>
+        <div className="mt-auto flex gap-2">
+          <motion.button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddToCart();
+            }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            disabled={loading}
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-white bg-taupe-900 hover:bg-taupe-800 disabled:bg-taupe-400 transition-colors duration-300"
+          >
+            <ShoppingCart className="h-4 w-4" strokeWidth={2} />
+            {loading ? "加載中..." : "加入預定購物車"}
+          </motion.button>
+          <Link href={`/products/${product.id}`} className="flex-1">
             <motion.button
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-taupe-700 bg-taupe-100 hover:bg-taupe-200 transition-colors duration-300"
             >
-              查看詳情
+              詳情
               <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
             </motion.button>
           </Link>
         </div>
+
+        {/* 選項選擇彈窗 */}
+        {showVariantSelector && variants.length > 0 && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
+            <motion.div
+              initial={{ y: 100 }}
+              animate={{ y: 0 }}
+              exit={{ y: 100 }}
+              className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-6 space-y-4"
+            >
+              <h3 className="font-semibold text-lg">選擇色號</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {variants.map((variant) => (
+                  <button
+                    key={variant.id}
+                    onClick={() => {
+                      setSelectedVariant(variant);
+                      setShowVariantSelector(false);
+                      handleAddToCart();
+                    }}
+                    className={`p-3 rounded-xl text-sm font-medium transition ${
+                      selectedVariant?.id === variant.id
+                        ? "bg-taupe-900 text-white"
+                        : "bg-taupe-100 text-taupe-700 hover:bg-taupe-200"
+                    }`}
+                  >
+                    {variant.optionName}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowVariantSelector(false)}
+                className="w-full py-2 text-taupe-600 font-medium"
+              >
+                取消
+              </button>
+            </motion.div>
+          </div>
+        )}
       </div>
     </motion.article>
   );
