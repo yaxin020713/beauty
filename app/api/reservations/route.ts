@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notion, ORDERS_DB_ID, PRODUCTS_DB_ID, updateProductReservedQuantity } from "@/lib/notion";
+import { notion, ORDERS_DB_ID, PRODUCTS_DB_ID, MEMBERS_DB_ID, updateProductReservedQuantity } from "@/lib/notion";
 
 interface ReservationItem {
   productId: string;
@@ -9,6 +9,50 @@ interface ReservationItem {
 }
 
 type ShippingMethod = "convenience_711" | "face_to_face";
+
+async function resolveReferrer(
+  code: string,
+  buyerEmail: string
+): Promise<{ code: string; email: string } | null> {
+  if (!code || !MEMBERS_DB_ID) return null;
+
+  try {
+    const referrerQuery = await notion.databases.query({
+      database_id: MEMBERS_DB_ID,
+      filter: {
+        property: "推薦碼",
+        rich_text: { equals: code },
+      },
+    });
+
+    if (referrerQuery.results.length === 0) return null;
+
+    const referrerPage = referrerQuery.results[0];
+    if (!("properties" in referrerPage)) return null;
+
+    const emailProp = referrerPage.properties.Email;
+    const email =
+      emailProp &&
+      "title" in emailProp &&
+      Array.isArray(emailProp.title) &&
+      emailProp.title.length > 0
+        ? emailProp.title[0].plain_text
+        : "";
+
+    if (!email) return null;
+
+    const isSelfReferral = email.trim().toLowerCase() === buyerEmail.trim().toLowerCase();
+    if (isSelfReferral) {
+      console.warn(`[api/reservations] 偵測到自我推薦，忽略推薦碼 ${code}: ${buyerEmail}`);
+      return null;
+    }
+
+    return { code, email };
+  } catch (err) {
+    console.warn(`[api/reservations] 查詢推薦碼 ${code} 失敗:`, err);
+    return null;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +67,7 @@ export async function POST(request: NextRequest) {
       shippingFee,
       totalPrice,
       totalAmount,
+      referralCode,
     } = body;
 
     // 验证必填字段
@@ -93,6 +138,19 @@ export async function POST(request: NextRequest) {
       properties["7-11取貨店號"] = {
         rich_text: [{ text: { content: store7_11 } }],
       };
+    }
+
+    // 處理推薦碼
+    if (referralCode) {
+      const referrer = await resolveReferrer(referralCode, customerEmail);
+      if (referrer) {
+        properties["推薦碼"] = {
+          rich_text: [{ text: { content: referrer.code } }],
+        };
+        properties["推薦人Email"] = {
+          rich_text: [{ text: { content: referrer.email } }],
+        };
+      }
     }
 
     await notion.pages.create({

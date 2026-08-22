@@ -51,6 +51,8 @@ type CartContextType = {
   mobileFilterOpen: boolean;
   openMobileFilter: () => void;
   closeMobileFilter: () => void;
+  referralCode: string | null;
+  setReferralCode: (code: string | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -178,6 +180,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -301,6 +304,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         mobileFilterOpen,
         openMobileFilter,
         closeMobileFilter,
+        referralCode,
+        setReferralCode,
       }}
     >
       {children}

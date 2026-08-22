@@ -21,7 +21,7 @@ export default function ReservationModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { cartItems, clearCart, totalPrice } = useCart();
+  const { cartItems, clearCart, totalPrice, referralCode } = useCart();
   const { user } = useAuth();
 
   const [customerName, setCustomerName] = useState("");
@@ -103,6 +103,7 @@ export default function ReservationModal({
           shippingFee,
           totalPrice,
           totalAmount,
+          referralCode,
         }),
       });
 
