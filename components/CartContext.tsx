@@ -3,7 +3,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { Product } from "@/lib/types";
 
-export type CartItem = Product & { quantity: number };
+export type CartItem = Product & {
+  quantity: number;
+  variantId?: string;
+  optionName?: string;
+};
 
 export enum UserRole {
   Admin = "admin",
@@ -38,9 +42,9 @@ type CartContextType = {
   totalQuantity: number;
   totalPrice: number;
   totalWeightKg: number;
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, delta: number) => void;
+  addToCart: (product: Product, variant?: { variantId: string; optionName: string }) => void;
+  removeFromCart: (productId: string, variantId?: string) => void;
+  updateQuantity: (productId: string, variantId: string | undefined, delta: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -211,29 +215,48 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .toFixed(3)
   );
 
-  const addToCart = useCallback((product: Product) => {
+  const addToCart = useCallback((product: Product, variant?: { variantId: string; optionName: string }) => {
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+      const existing = prev.find(
+        (item) =>
+          item.id === product.id &&
+          (!variant ? !item.variantId : item.variantId === variant.variantId)
+      );
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
+          item.id === product.id &&
+          (!variant ? !item.variantId : item.variantId === variant.variantId)
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [
+        ...prev,
+        {
+          ...product,
+          quantity: 1,
+          variantId: variant?.variantId,
+          optionName: variant?.optionName,
+        },
+      ];
     });
   }, []);
 
-  const removeFromCart = useCallback((productId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== productId));
+  const removeFromCart = useCallback((productId: string, variantId?: string) => {
+    setCartItems((prev) =>
+      prev.filter(
+        (item) =>
+          !(item.id === productId && (!variantId ? !item.variantId : item.variantId === variantId))
+      )
+    );
   }, []);
 
-  const updateQuantity = useCallback((productId: string, delta: number) => {
+  const updateQuantity = useCallback((productId: string, variantId: string | undefined, delta: number) => {
     setCartItems((prev) =>
       prev
         .map((item) =>
-          item.id === productId
+          item.id === productId &&
+          (!variantId ? !item.variantId : item.variantId === variantId)
             ? { ...item, quantity: Math.max(0, item.quantity + delta) }
             : item
         )

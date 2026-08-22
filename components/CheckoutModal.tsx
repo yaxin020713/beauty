@@ -138,8 +138,10 @@ export default function CheckoutModal({
           referralCode: referralCode.trim() || undefined,
           linkReferralCode: linkReferralCode.trim() || undefined,
           items: cartItems.map(
-            ({ id, name, price, weight_g, quantity }) => ({
+            ({ id, name, price, weight_g, quantity, variantId, optionName }) => ({
               productId: id,
+              variantId,
+              optionName,
               name,
               price,
               weight_g,

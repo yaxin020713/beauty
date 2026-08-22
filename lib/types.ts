@@ -12,3 +12,11 @@ export type Product = {
   description: string;
   totalSold: number;
 };
+
+// 商品變體型別（對應 Notion ProductVariants 資料庫）
+export type ProductVariant = {
+  id: string;
+  productId: string;
+  optionName: string;
+  stock: number;
+};

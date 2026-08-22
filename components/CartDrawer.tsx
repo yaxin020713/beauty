@@ -96,7 +96,7 @@ export default function CartDrawer() {
                   <ul className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
                     {cartItems.map((item) => (
                       <li
-                        key={item.id}
+                        key={`${item.id}-${item.variantId || "default"}`}
                         className="flex gap-3 border-b border-taupe-100 pb-4"
                       >
                         {/* 縮圖 */}
@@ -117,12 +117,19 @@ export default function CartDrawer() {
 
                         <div className="flex flex-1 flex-col">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="font-medium leading-snug text-ink">
-                              {item.name}
-                            </p>
+                            <div className="flex-1">
+                              <p className="font-medium leading-snug text-ink">
+                                {item.name}
+                              </p>
+                              {item.optionName && (
+                                <p className="text-xs text-taupe-500 mt-0.5">
+                                  色號：{item.optionName}
+                                </p>
+                              )}
+                            </div>
                             <button
                               type="button"
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => removeFromCart(item.id, item.variantId)}
                               aria-label={`移除 ${item.name}`}
                               className="rounded p-1 text-taupe-400 transition hover:bg-red-50 hover:text-red-500"
                             >
@@ -138,7 +145,7 @@ export default function CartDrawer() {
                             <div className="flex items-center gap-1">
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.id, -1)}
+                                onClick={() => updateQuantity(item.id, item.variantId, -1)}
                                 aria-label="減少數量"
                                 className={cn(
                                   "flex h-7 w-7 items-center justify-center rounded-full border border-taupe-200 text-taupe-600 transition hover:bg-taupe-50",
@@ -153,7 +160,7 @@ export default function CartDrawer() {
                               </span>
                               <button
                                 type="button"
-                                onClick={() => updateQuantity(item.id, 1)}
+                                onClick={() => updateQuantity(item.id, item.variantId, 1)}
                                 aria-label="增加數量"
                                 className="flex h-7 w-7 items-center justify-center rounded-full border border-taupe-200 text-taupe-600 transition hover:bg-taupe-50"
                               >

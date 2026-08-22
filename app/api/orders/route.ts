@@ -6,6 +6,8 @@ import { calculateMembershipLevel } from "@/lib/membership";
 // 前台購物車單一項目的型別
 type CartItem = {
   productId: string;
+  variantId?: string;
+  optionName?: string;
   name: string;
   price: number;
   weight_g: number;
@@ -150,9 +152,12 @@ export async function POST(request: NextRequest) {
     ? `7-11 超商取貨 (門市編號: ${selectedStore})`
     : "面交";
 
-  // 組合商品明細文字，附上該商品此訂單的總重量，例："小黑瓶 x2（200g）, 白繃帶 x1（50g）"
+  // 組合商品明細文字，附上該商品此訂單的總重量與選項，例："小黑瓶 B10 x2（200g）, 白繃帶 x1（50g）"
   const itemsDetail = items
-    .map((item) => `${item.name} x${item.quantity}（${item.weight_g * item.quantity}g）`)
+    .map((item) => {
+      const optionStr = item.optionName ? ` ${item.optionName}` : "";
+      return `${item.name}${optionStr} x${item.quantity}（${item.weight_g * item.quantity}g）`;
+    })
     .join(", ");
 
   const orderId = `訂單-${Date.now()}`;
@@ -255,7 +260,7 @@ export async function POST(request: NextRequest) {
       properties,
     });
 
-    // 2. 逐項更新商品的 Total_Sold（累加購買數量）
+    // 2. 逐項更新商品的 Total_Sold（累加購買數量）與變體的 Stock（減少庫存）
     for (const item of items) {
       try {
         const productPage = await notion.pages.retrieve({
@@ -276,6 +281,32 @@ export async function POST(request: NextRequest) {
             Total_Sold: { number: currentSold + item.quantity },
           },
         });
+
+        // 如果有 variantId，還需要更新 variant 的庫存
+        if (item.variantId) {
+          try {
+            const variantPage = await notion.pages.retrieve({
+              page_id: item.variantId,
+            });
+
+            let currentStock = 0;
+            if ("properties" in variantPage) {
+              const stockProp = variantPage.properties.Stock;
+              if (stockProp?.type === "number") {
+                currentStock = stockProp.number ?? 0;
+              }
+            }
+
+            await notion.pages.update({
+              page_id: item.variantId,
+              properties: {
+                Stock: { number: Math.max(0, currentStock - item.quantity) },
+              },
+            });
+          } catch (error) {
+            console.warn(`[api/orders] 無法更新變體 ${item.variantId} 的庫存:`, error instanceof Error ? error.message : error);
+          }
+        }
       } catch (error) {
         // 如果產品不存在或無法更新，繼續處理其他訂單項目
         console.warn(`[api/orders] 無法更新商品 ${item.productId} 的銷量:`, error instanceof Error ? error.message : error);
