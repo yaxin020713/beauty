@@ -66,31 +66,37 @@ export async function POST(request: NextRequest) {
     const fullItemsDetail = `${itemsDetail}\n\n[收货方式]\n${shippingInfo}`;
 
     // 保存到 Orders 表
+    const properties: Record<string, any> = {
+      "Order_ID": {
+        title: [{ text: { content: orderId } }],
+      },
+      "Customer_Name": {
+        rich_text: [{ text: { content: customerName } }],
+      },
+      "Customer_Phone": {
+        rich_text: [{ text: { content: customerPhone } }],
+      },
+      "Items_Detail": {
+        rich_text: [{ text: { content: fullItemsDetail } }],
+      },
+      "聯繫用Email": {
+        rich_text: [{ text: { content: customerEmail } }],
+      },
+      "訂單狀態": {
+        select: { name: "新訂單" },
+      },
+    };
+
+    // 如果是7-11超商，添加门市店号
+    if (shippingMethod === "convenience_711") {
+      properties["7-11取貨店號"] = {
+        rich_text: [{ text: { content: store7_11 } }],
+      };
+    }
+
     await notion.pages.create({
       parent: { database_id: ORDERS_DB_ID },
-      properties: {
-        "Order_ID": {
-          title: [{ text: { content: orderId } }],
-        },
-        "Customer_Name": {
-          rich_text: [{ text: { content: customerName } }],
-        },
-        "Customer_Phone": {
-          rich_text: [{ text: { content: customerPhone } }],
-        },
-        "Items_Detail": {
-          rich_text: [{ text: { content: fullItemsDetail } }],
-        },
-        "聯絡郵箱": {
-          rich_text: [{ text: { content: customerEmail } }],
-        },
-        "7-11超商貨號": {
-          rich_text: [{ text: { content: store7_11 || "" } }],
-        },
-        "Payment_Status": {
-          select: { name: "待聯繫" },
-        },
-      } as Record<string, any>,
+      properties,
     });
 
     // 为每个商品更新 Reserved_Quantity
