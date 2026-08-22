@@ -213,10 +213,10 @@ export default function ReservationModal({
                     />
                   </div>
 
-                  {/* 郵箱 */}
+                  {/* 聯絡email */}
                   <div className="space-y-3">
                     <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
-                      郵箱 *
+                      聯絡email *
                     </label>
                     <input
                       type="email"
