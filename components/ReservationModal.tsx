@@ -111,15 +111,16 @@ export default function ReservationModal({
             aria-hidden="true"
           />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="absolute inset-4 flex items-center justify-center sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2"
-          >
-            <div className="w-full max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
+              {/* Modal Container */}
+          <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="w-full max-w-md pointer-events-auto"
+            >
+              <div className="max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
               {/* 標題 */}
               <div className="sticky top-0 flex items-center justify-between border-b border-taupe-100 bg-white px-6 py-4">
                 <h2 className="text-lg font-semibold text-ink">
@@ -273,7 +274,8 @@ export default function ReservationModal({
                 </form>
               )}
             </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       )}
     </AnimatePresence>
