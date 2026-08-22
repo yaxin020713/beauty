@@ -249,7 +249,7 @@ export default function OrdersPage() {
                       </p>
                       <div className="bg-taupe-50 rounded-lg p-4">
                         <pre className="text-xs font-mono text-taupe-700 whitespace-pre-wrap">
-                          {order.itemsDetail}
+                          {order.itemsDetail.split("【收貨方式】")[0]}
                         </pre>
                       </div>
                     </div>
