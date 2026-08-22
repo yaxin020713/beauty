@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Loader2, X } from "lucide-react";
-import { useCart } from "./CartContext";
+import { Check, Loader2, X, HelpCircle } from "lucide-react";
+import { useCart, useAuth } from "./CartContext";
 import { cn } from "@/lib/utils";
+import { SHIPPING_COSTS } from "@/lib/shipping";
+
+type ShippingMethod = "convenience_711" | "face_to_face";
 
 type ReservationResult = {
   orderId: string;
@@ -18,30 +21,39 @@ export default function ReservationModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const { cartItems, clearCart } = useCart();
+  const { cartItems, clearCart, totalPrice } = useCart();
+  const { user } = useAuth();
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [store7_11, setStore7_11] = useState("");
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [reservationResult, setReservationResult] = useState<ReservationResult | null>(null);
+
+  const shippingFee = shippingMethod === "convenience_711" ? SHIPPING_COSTS.CONVENIENCE_711 : 0;
+  const totalAmount = totalPrice + shippingFee;
 
   useEffect(() => {
     if (open) {
       setError("");
       setReservationResult(null);
       setSubmitting(false);
+      // Auto-fill email from logged-in user
+      if (user?.email) {
+        setCustomerEmail(user.email);
+      }
     }
-  }, [open]);
+  }, [open, user]);
 
   const canSubmit =
     !submitting &&
     customerName &&
     customerPhone &&
     customerEmail &&
-    store7_11;
+    (shippingMethod === "face_to_face" || store7_11);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +78,9 @@ export default function ReservationModal({
           customerName,
           customerPhone,
           customerEmail,
-          store7_11,
+          store7_11: shippingMethod === "convenience_711" ? store7_11 : undefined,
+          shippingMethod,
+          shippingFee,
         }),
       });
 
@@ -162,27 +176,67 @@ export default function ReservationModal({
               ) : (
                 /* 預訂表單 */
                 <form onSubmit={handleSubmit} className="space-y-6 px-6 py-6">
-                  {/* 商品清單 */}
-                  <div className="space-y-3 border-b border-taupe-100 pb-6">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
-                      預訂商品
-                    </h3>
-                    <ul className="space-y-2">
-                      {cartItems.map((item) => (
-                        <li
-                          key={`${item.id}-${item.variantId || "default"}`}
-                          className="flex justify-between text-sm"
-                        >
-                          <span className="text-taupe-700">
-                            {item.name}
-                            {item.optionName && (
-                              <span className="text-taupe-500"> ({item.optionName})</span>
-                            )}
-                          </span>
-                          <span className="font-medium text-ink">x{item.quantity}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  {/* 商品清單與運費 */}
+                  <div className="space-y-4 border-b border-taupe-100 pb-6">
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-taupe-600 mb-3">
+                        預訂商品
+                      </h3>
+                      <ul className="space-y-2">
+                        {cartItems.map((item) => (
+                          <li
+                            key={`${item.id}-${item.variantId || "default"}`}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="text-taupe-700">
+                              {item.name}
+                              {item.optionName && (
+                                <span className="text-taupe-500"> ({item.optionName})</span>
+                              )}
+                            </span>
+                            <span className="font-medium text-ink">x{item.quantity}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* 運費選擇 */}
+                    <div className="space-y-3 pt-3">
+                      <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                        收貨方式 *
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-taupe-200 hover:bg-taupe-50 transition">
+                          <input
+                            type="radio"
+                            name="shipping"
+                            value="convenience_711"
+                            checked={shippingMethod === "convenience_711"}
+                            onChange={(e) => setShippingMethod(e.target.value as ShippingMethod)}
+                            className="w-4 h-4"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-ink">7-11 超商取貨</p>
+                            <p className="text-xs text-taupe-500">+ NT$ {SHIPPING_COSTS.CONVENIENCE_711} 運費</p>
+                          </div>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-taupe-200 hover:bg-taupe-50 transition">
+                          <input
+                            type="radio"
+                            name="shipping"
+                            value="face_to_face"
+                            checked={shippingMethod === "face_to_face"}
+                            onChange={(e) => setShippingMethod(e.target.value as ShippingMethod)}
+                            className="w-4 h-4"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-ink">面交</p>
+                            <p className="text-xs text-taupe-500">免運費（洽詢細節請 Line 聯繫）</p>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                   {/* 姓名 */}
@@ -228,19 +282,38 @@ export default function ReservationModal({
                   </div>
 
                   {/* 7-11 超商編號 */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
-                      7-11 取貨門市編號 *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="例：007832"
-                      value={store7_11}
-                      onChange={(e) => setStore7_11(e.target.value)}
-                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
-                    />
-                  </div>
+                  {shippingMethod === "convenience_711" && (
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                        7-11 取貨門市編號 *
+                      </label>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            required={shippingMethod === "convenience_711"}
+                            placeholder="例：007832"
+                            value={store7_11}
+                            onChange={(e) => setStore7_11(e.target.value)}
+                            className="flex-1 rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                          />
+                          <a
+                            href="https://emap.pricerite.com.tw/pricerite/storelist"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-taupe-100 text-taupe-700 hover:bg-taupe-200 transition text-sm font-medium"
+                            title="查詢 7-11 門市編號"
+                          >
+                            <HelpCircle className="h-4 w-4" />
+                            <span className="hidden sm:inline">查詢</span>
+                          </a>
+                        </div>
+                        <p className="text-xs text-taupe-500">
+                          不知道門市編號？點「查詢」即可在 7-11 官網查詢最近的門市編號
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 錯誤訊息 */}
                   {error && (
@@ -248,6 +321,24 @@ export default function ReservationModal({
                       {error}
                     </div>
                   )}
+
+                  {/* 預訂總額 */}
+                  <div className="space-y-2 border-t border-taupe-100 pt-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-taupe-600">商品小計</span>
+                      <span className="font-medium text-ink">NT$ {totalPrice.toLocaleString()}</span>
+                    </div>
+                    {shippingFee > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-taupe-600">運費</span>
+                        <span className="font-medium text-ink">NT$ {shippingFee}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-base font-semibold pt-2 border-t border-taupe-100">
+                      <span className="text-ink">預訂總額</span>
+                      <span className="text-ink">NT$ {totalAmount.toLocaleString()}</span>
+                    </div>
+                  </div>
 
                   {/* 提交按鈕 */}
                   <motion.button

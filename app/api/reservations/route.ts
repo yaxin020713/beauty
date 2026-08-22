@@ -8,6 +8,8 @@ interface ReservationItem {
   quantity: number;
 }
 
+type ShippingMethod = "convenience_711" | "face_to_face";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -17,6 +19,8 @@ export async function POST(request: NextRequest) {
       customerPhone,
       customerEmail,
       store7_11,
+      shippingMethod,
+      shippingFee,
     } = body;
 
     // 验证必填字段
@@ -26,10 +30,18 @@ export async function POST(request: NextRequest) {
       !customerName ||
       !customerPhone ||
       !customerEmail ||
-      !store7_11
+      !shippingMethod
     ) {
       return NextResponse.json(
         { error: "缺少必要信息" },
+        { status: 400 }
+      );
+    }
+
+    // 如果是7-11超商，需要门市编号
+    if (shippingMethod === "convenience_711" && !store7_11) {
+      return NextResponse.json(
+        { error: "请选择7-11门市编号" },
         { status: 400 }
       );
     }
@@ -46,6 +58,13 @@ export async function POST(request: NextRequest) {
       )
       .join("\n");
 
+    // 构建运费和收货方式的说明
+    const shippingInfo = shippingMethod === "convenience_711"
+      ? `7-11超商取货（编号：${store7_11}）- 运费NT$${shippingFee}`
+      : `面交（洽詢細節請Line聯繫）- 免運費`;
+
+    const fullItemsDetail = `${itemsDetail}\n\n[收货方式]\n${shippingInfo}`;
+
     // 保存到 Orders 表
     await notion.pages.create({
       parent: { database_id: ORDERS_DB_ID },
@@ -60,13 +79,13 @@ export async function POST(request: NextRequest) {
           rich_text: [{ text: { content: customerPhone } }],
         },
         "Items_Detail": {
-          rich_text: [{ text: { content: itemsDetail } }],
+          rich_text: [{ text: { content: fullItemsDetail } }],
         },
         "聯絡郵箱": {
           rich_text: [{ text: { content: customerEmail } }],
         },
         "7-11超商貨號": {
-          rich_text: [{ text: { content: store7_11 } }],
+          rich_text: [{ text: { content: store7_11 || "" } }],
         },
         "Payment_Status": {
           select: { name: "待聯繫" },
