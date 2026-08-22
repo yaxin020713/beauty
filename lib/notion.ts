@@ -55,11 +55,14 @@ export async function updateProductReservedQuantity(
   try {
     // 先查詢當前的 Reserved_Quantity
     const page = await notion.pages.retrieve({ page_id: productPageId });
-    const props = page.properties as Record<string, any>;
-    const currentReserved =
-      props.Reserved_Quantity && "number" in props.Reserved_Quantity
-        ? (props.Reserved_Quantity.number ?? 0)
-        : 0;
+
+    let currentReserved = 0;
+    if ("properties" in page && page.properties) {
+      const props = page.properties as Record<string, any>;
+      if (props.Reserved_Quantity && "number" in props.Reserved_Quantity) {
+        currentReserved = props.Reserved_Quantity.number ?? 0;
+      }
+    }
 
     // 更新為新值
     await notion.pages.update({
