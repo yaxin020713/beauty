@@ -225,6 +225,9 @@ export async function POST(request: NextRequest) {
         // 分潮金全部存入分潮（主要字段）
         properties["分潮"] = { number: totalCommission };
       }
+    } else if (totalCommission > 0) {
+      // 無推薦碼情況：仍存儲分潮金（但無推薦人，分潮不會入帳）
+      properties["分潮"] = { number: totalCommission };
     }
 
     await notion.pages.create({
