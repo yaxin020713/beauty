@@ -41,9 +41,24 @@ export default function ReservationModal({
       setError("");
       setReservationResult(null);
       setSubmitting(false);
-      // Auto-fill email from logged-in user
+
+      // Auto-fill from logged-in user email
       if (user?.email) {
         setCustomerEmail(user.email);
+      }
+
+      // Try to load member profile from localStorage
+      try {
+        const memberProfile = localStorage.getItem("member_profile");
+        if (memberProfile) {
+          const profile = JSON.parse(memberProfile);
+          if (profile.recipientName) setCustomerName(profile.recipientName);
+          if (profile.contactPhone) setCustomerPhone(profile.contactPhone);
+          if (profile.email && !user?.email) setCustomerEmail(profile.email);
+          if (profile.store711Code) setStore7_11(profile.store711Code);
+        }
+      } catch (error) {
+        console.warn("從 localStorage 讀取會員信息失敗:", error);
       }
     }
   }, [open, user]);
