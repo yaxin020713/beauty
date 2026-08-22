@@ -56,6 +56,7 @@ async function resolveReferrer(
 
 export async function POST(request: NextRequest) {
   try {
+    // Force cache bust: 2026-08-22
     const body = await request.json();
     const {
       items,
