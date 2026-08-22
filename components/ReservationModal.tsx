@@ -43,6 +43,11 @@ export default function ReservationModal({
       setReservationResult(null);
       setSubmitting(false);
 
+      // Auto-fill referral code from URL parameter
+      if (referralCode) {
+        setManualReferralCode(referralCode);
+      }
+
       // Auto-fill from logged-in user email
       if (user?.email) {
         setCustomerEmail(user.email);
@@ -67,7 +72,7 @@ export default function ReservationModal({
         loadMemberProfile();
       }
     }
-  }, [open, user]);
+  }, [open, user, referralCode]);
 
   const canSubmit =
     !submitting &&
@@ -359,7 +364,7 @@ export default function ReservationModal({
                     />
                     {referralCode && (
                       <p className="text-xs text-taupe-500">
-                        目前連結推薦碼：<span className="font-mono font-semibold text-taupe-700">{referralCode}</span>
+                        透過推薦連結進入，已自動填入推薦碼。若有不同推薦人，可修改此欄位。
                       </p>
                     )}
                   </div>
