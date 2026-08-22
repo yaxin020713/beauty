@@ -29,6 +29,7 @@ export default function ReservationModal({
   const [customerEmail, setCustomerEmail] = useState("");
   const [store7_11, setStore7_11] = useState("");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
+  const [manualReferralCode, setManualReferralCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [reservationResult, setReservationResult] = useState<ReservationResult | null>(null);
@@ -103,7 +104,8 @@ export default function ReservationModal({
           shippingFee,
           totalPrice,
           totalAmount,
-          referralCode,
+          urlReferralCode: referralCode,
+          manualReferralCode: manualReferralCode || undefined,
         }),
       });
 
@@ -120,6 +122,7 @@ export default function ReservationModal({
           setCustomerPhone("");
           setCustomerEmail("");
           setStore7_11("");
+          setManualReferralCode("");
           setReservationResult(null);
         }, 2000);
       } else {
@@ -341,6 +344,25 @@ export default function ReservationModal({
                       </p>
                     </div>
                   )}
+
+                  {/* 推薦碼 */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                      推薦碼 (選填)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="輸入推薦碼以獲得分潤"
+                      value={manualReferralCode}
+                      onChange={(e) => setManualReferralCode(e.target.value.toUpperCase())}
+                      className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                    />
+                    {referralCode && (
+                      <p className="text-xs text-taupe-500">
+                        目前連結推薦碼：<span className="font-mono font-semibold text-taupe-700">{referralCode}</span>
+                      </p>
+                    )}
+                  </div>
 
                   {/* 錯誤訊息 */}
                   {error && (

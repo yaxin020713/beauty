@@ -67,7 +67,8 @@ export async function POST(request: NextRequest) {
       shippingFee,
       totalPrice,
       totalAmount,
-      referralCode,
+      urlReferralCode,
+      manualReferralCode,
     } = body;
 
     // 验证必填字段
@@ -140,15 +141,36 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // 處理推薦碼
-    if (referralCode) {
-      const referrer = await resolveReferrer(referralCode, customerEmail);
+    // 處理推薦碼邏輯
+    // 優先使用手動輸入的推薦碼，其次使用 URL 參數的推薦碼
+    const primaryCode = manualReferralCode || urlReferralCode;
+    const secondaryCode =
+      manualReferralCode && urlReferralCode && manualReferralCode !== urlReferralCode
+        ? urlReferralCode
+        : null;
+
+    // 解析主推薦碼
+    if (primaryCode) {
+      const referrer = await resolveReferrer(primaryCode, customerEmail);
       if (referrer) {
         properties["推薦碼"] = {
           rich_text: [{ text: { content: referrer.code } }],
         };
         properties["推薦人Email"] = {
           rich_text: [{ text: { content: referrer.email } }],
+        };
+      }
+    }
+
+    // 如果有次推薦碼（兩個推薦碼不同），解析並存儲
+    if (secondaryCode) {
+      const secondaryReferrer = await resolveReferrer(secondaryCode, customerEmail);
+      if (secondaryReferrer) {
+        properties["次推薦碼"] = {
+          rich_text: [{ text: { content: secondaryReferrer.code } }],
+        };
+        properties["次推薦人Email"] = {
+          rich_text: [{ text: { content: secondaryReferrer.email } }],
         };
       }
     }
