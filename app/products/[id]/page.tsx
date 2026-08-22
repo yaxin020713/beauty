@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, ShoppingCart } from "lucide-react";
@@ -12,6 +12,7 @@ export default function ProductPage() {
   const params = useParams();
   const productId = params.id as string;
   const { addToCart, openCart } = useCart();
+  const imageRef = useRef<HTMLDivElement>(null);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -58,33 +59,38 @@ export default function ProductPage() {
     if (!product || (variants.length > 0 && !selectedVariant)) return;
 
     // 觸發飛行動畫
-    const productImage = document.querySelector('[data-product-image]');
-    if (productImage) {
-      const rect = productImage.getBoundingClientRect();
+    const imageElement = imageRef.current;
+    if (imageElement) {
+      const rect = imageElement.getBoundingClientRect();
       const flyId = `fly-${Date.now()}`;
-      setFlyingItem({
-        id: flyId,
-        startX: rect.left,  // 從左邊開始
-        startY: rect.top + rect.height / 2,  // 垂直中心
-      });
 
-      // 動畫完成後再加入購物車
-      setTimeout(() => {
-        addToCart(product, selectedVariant ? {
-          variantId: selectedVariant.id,
-          optionName: selectedVariant.optionName,
-        } : undefined);
-        openCart();
-        setFlyingItem(null);
-      }, 600);
-    } else {
-      // 如果找不到圖片，直接加入購物車
-      addToCart(product, selectedVariant ? {
-        variantId: selectedVariant.id,
-        optionName: selectedVariant.optionName,
-      } : undefined);
-      openCart();
+      // 確保動畫起點在可見範圍內
+      if (rect.bottom > 0) {  // 圖片至少部分在視口中
+        setFlyingItem({
+          id: flyId,
+          startX: Math.max(0, rect.left),  // 從左邊開始，但不超出左邊界
+          startY: rect.top + rect.height / 2,  // 垂直中心
+        });
+
+        // 動畫完成後再加入購物車
+        setTimeout(() => {
+          addToCart(product, selectedVariant ? {
+            variantId: selectedVariant.id,
+            optionName: selectedVariant.optionName,
+          } : undefined);
+          openCart();
+          setFlyingItem(null);
+        }, 600);
+        return;
+      }
     }
+
+    // 如果找不到圖片或圖片不可見，直接加入購物車（無動畫）
+    addToCart(product, selectedVariant ? {
+      variantId: selectedVariant.id,
+      optionName: selectedVariant.optionName,
+    } : undefined);
+    openCart();
   };
 
   if (loading && !product) {
@@ -115,7 +121,7 @@ export default function ProductPage() {
       {flyingItem && (
         <motion.div
           key={flyingItem.id}
-          className="fixed pointer-events-none z-50"
+          className="fixed pointer-events-none z-[9999]"
           initial={{
             left: flyingItem.startX,
             top: flyingItem.startY,
@@ -125,7 +131,7 @@ export default function ProductPage() {
           animate={{
             left: "calc(100% - 40px)",
             top: "20px",
-            opacity: 0,
+            opacity: 0.8,
             scale: 0.3,
           }}
           transition={{
@@ -138,7 +144,7 @@ export default function ProductPage() {
             transform: "translate(-50%, -50%)",
           }}
         >
-          <div className="w-full h-full rounded-xl overflow-hidden shadow-lg border border-taupe-200">
+          <div className="w-full h-full rounded-xl overflow-hidden shadow-2xl border-2 border-taupe-400 bg-white">
             {product?.image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -173,7 +179,7 @@ export default function ProductPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col gap-4"
           >
-            <div data-product-image className="aspect-square w-full rounded-3xl overflow-hidden bg-taupe-100">
+            <div ref={imageRef} data-product-image className="aspect-square w-full rounded-3xl overflow-hidden bg-taupe-100">
               {product.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
