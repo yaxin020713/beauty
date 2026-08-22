@@ -812,6 +812,10 @@ function WithdrawalsTab({
   );
 }
 
+type ProductWithVariants = Product & {
+  variantCount?: number;
+};
+
 function ProductsTab({
   products,
   onEdit,
@@ -821,8 +825,39 @@ function ProductsTab({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("全部");
+  const [productsWithVariants, setProductsWithVariants] = useState<ProductWithVariants[]>([]);
+  const [loadingVariants, setLoadingVariants] = useState(true);
 
-  const filteredProducts = products.filter((product) => {
+  useEffect(() => {
+    const loadVariantCounts = async () => {
+      setLoadingVariants(true);
+      const updated = await Promise.all(
+        products.map(async (product) => {
+          try {
+            const res = await fetch(`/api/products/${product.id}/variants`);
+            if (res.ok) {
+              const data = await res.json();
+              return {
+                ...product,
+                variantCount: data.variants?.length || 0,
+              };
+            }
+          } catch (err) {
+            console.error("載入變體失敗:", err);
+          }
+          return { ...product, variantCount: 0 };
+        })
+      );
+      setProductsWithVariants(updated);
+      setLoadingVariants(false);
+    };
+
+    if (products.length > 0) {
+      loadVariantCounts();
+    }
+  }, [products]);
+
+  const filteredProducts = productsWithVariants.filter((product) => {
     const matchesSearch =
       product.name.includes(searchTerm) ||
       product.brand.includes(searchTerm) ||
@@ -891,6 +926,11 @@ function ProductsTab({
                     {product.totalSold > 0 && (
                       <span className="text-xs text-emerald-700 font-medium">
                         已售 {product.totalSold} 件
+                      </span>
+                    )}
+                    {!loadingVariants && product.variantCount && product.variantCount > 0 && (
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-700">
+                        {product.variantCount} 個選項
                       </span>
                     )}
                   </div>

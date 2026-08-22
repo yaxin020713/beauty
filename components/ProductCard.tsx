@@ -38,6 +38,7 @@ export default function ProductCard({ product }: { product: Product }) {
     fetchVariants();
   }, [product.id]);
 
+
   // 元件卸載時清除計時器
   useEffect(() => {
     return () => {

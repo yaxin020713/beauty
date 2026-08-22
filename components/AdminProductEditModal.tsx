@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, CheckCircle2, Loader2, X } from "lucide-react";
-import type { Product } from "@/lib/types";
+import { AlertTriangle, CheckCircle2, Loader2, X, Trash2 } from "lucide-react";
+import type { Product, ProductVariant } from "@/lib/types";
 import { useAuth } from "./CartContext";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +36,9 @@ export default function AdminProductEditModal({
   const [success, setSuccess] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [newVariants, setNewVariants] = useState<{ optionName: string; stock: string }[]>([]);
+  const [loadingVariants, setLoadingVariants] = useState(false);
 
   useEffect(() => {
     if (open && product) {
@@ -53,8 +56,26 @@ export default function AdminProductEditModal({
       setImagePreview(product.image);
       setError("");
       setSuccess(false);
+      setNewVariants([]);
+      fetchVariants();
     }
   }, [open, product]);
+
+  const fetchVariants = async () => {
+    if (!product) return;
+    setLoadingVariants(true);
+    try {
+      const res = await fetch(`/api/products/${product.id}/variants`);
+      if (res.ok) {
+        const data = await res.json();
+        setVariants(data.variants || []);
+      }
+    } catch (error) {
+      console.error("載入變體失敗:", error);
+    } finally {
+      setLoadingVariants(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -140,6 +161,24 @@ export default function AdminProductEditModal({
       if (!res.ok) {
         setError(data.error ?? "編輯失敗");
         return;
+      }
+
+      if (newVariants.length > 0) {
+        const variantRes = await fetch(`/api/products/${product.id}/variants-manage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.email,
+            variants: newVariants.map((v) => ({
+              optionName: v.optionName.trim(),
+              stock: parseInt(v.stock) || 0,
+            })),
+          }),
+        });
+
+        if (!variantRes.ok) {
+          console.error("新增選項失敗");
+        }
       }
 
       setSuccess(true);
@@ -368,6 +407,108 @@ export default function AdminProductEditModal({
                     rows={3}
                     className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20 resize-none"
                   />
+                </div>
+
+                <div className="pt-2 border-t border-taupe-200">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-3">
+                    現有選項 ({variants.length})
+                  </label>
+                  {loadingVariants ? (
+                    <p className="text-xs text-taupe-500">載入中...</p>
+                  ) : variants.length === 0 ? (
+                    <p className="text-xs text-taupe-500 mb-3">此商品暫無選項</p>
+                  ) : (
+                    <div className="space-y-2 mb-4 max-h-32 overflow-y-auto">
+                      {variants.map((variant) => (
+                        <div
+                          key={variant.id}
+                          className="flex items-center justify-between bg-taupe-50 p-3 rounded-lg"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-ink">{variant.optionName}</p>
+                            <p className="text-xs text-taupe-500">庫存: {variant.stock}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!product) return;
+                              if (confirm("確認刪除此選項？")) {
+                                try {
+                                  const res = await fetch(
+                                    `/api/products/${product.id}/variants-manage`,
+                                    {
+                                      method: "DELETE",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ variantId: variant.id }),
+                                    }
+                                  );
+                                  if (res.ok) {
+                                    fetchVariants();
+                                  }
+                                } catch (err) {
+                                  console.error("刪除失敗:", err);
+                                }
+                              }
+                            }}
+                            className="px-2 py-1 rounded text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-2">
+                      新增選項
+                    </label>
+                    <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                      {newVariants.map((variant, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={variant.optionName}
+                            onChange={(e) => {
+                              const updated = [...newVariants];
+                              updated[idx].optionName = e.target.value;
+                              setNewVariants(updated);
+                            }}
+                            placeholder="例：B10"
+                            className="flex-1 rounded-lg border border-taupe-200 px-3 py-2 text-xs outline-none focus:border-sapphire-600 focus:ring-2 focus:ring-sapphire-600/20"
+                          />
+                          <input
+                            type="number"
+                            value={variant.stock}
+                            onChange={(e) => {
+                              const updated = [...newVariants];
+                              updated[idx].stock = e.target.value;
+                              setNewVariants(updated);
+                            }}
+                            placeholder="庫存"
+                            min="0"
+                            className="w-20 rounded-lg border border-taupe-200 px-3 py-2 text-xs outline-none focus:border-sapphire-600 focus:ring-2 focus:ring-sapphire-600/20"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewVariants(newVariants.filter((_, i) => i !== idx));
+                            }}
+                            className="px-3 py-2 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+                          >
+                            移除
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewVariants([...newVariants, { optionName: "", stock: "0" }])}
+                      className="w-full px-3 py-2 text-xs font-medium rounded-lg bg-taupe-100 text-taupe-700 hover:bg-taupe-200 transition"
+                    >
+                      + 新增選項
+                    </button>
+                  </div>
                 </div>
 
                 {error && (

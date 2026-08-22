@@ -6,11 +6,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ productId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { productId } = await params;
+  const { id } = await params;
 
-  if (!productId) {
+  if (!id) {
     return NextResponse.json({ error: "缺少 productId" }, { status: 400 });
   }
 
@@ -20,7 +20,7 @@ export async function GET(
       filter: {
         property: "Product",
         relation: {
-          contains: productId,
+          contains: id,
         },
       },
     });
@@ -32,21 +32,18 @@ export async function GET(
         const props = page.properties as Record<string, any>;
         const variantId = page.id;
 
-        // 獲取關聯的產品 ID
         const productProp = props.Product;
         let relatedProductId = "";
         if (productProp && "relation" in productProp && Array.isArray(productProp.relation)) {
           relatedProductId = productProp.relation[0]?.id || "";
         }
 
-        // 獲取選項名稱
         const optionProp = props.Option_Name;
         let optionName = "";
         if (optionProp && "select" in optionProp && optionProp.select) {
           optionName = optionProp.select.name || "";
         }
 
-        // 獲取庫存
         const stockProp = props.Stock;
         const stock =
           stockProp && "number" in stockProp ? (stockProp.number ?? 0) : 0;

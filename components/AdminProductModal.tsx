@@ -28,6 +28,7 @@ export default function AdminProductModal({
     description: "",
   });
 
+  const [variants, setVariants] = useState<{ optionName: string; stock: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -39,6 +40,7 @@ export default function AdminProductModal({
       setError("");
       setSuccess(false);
       setImagePreview("");
+      setVariants([]);
       setFormData({
         name: "",
         brand: "",
@@ -138,6 +140,27 @@ export default function AdminProductModal({
         setError(data.error ?? "上架失敗");
         return;
       }
+
+      const productId = data.id;
+
+      if (variants.length > 0) {
+        const variantRes = await fetch(`/api/products/${productId}/variants-manage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.email,
+            variants: variants.map((v) => ({
+              optionName: v.optionName.trim(),
+              stock: parseInt(v.stock) || 0,
+            })),
+          }),
+        });
+
+        if (!variantRes.ok) {
+          console.error("建立選項失敗");
+        }
+      }
+
 
       setSuccess(true);
       setTimeout(() => {
@@ -365,6 +388,57 @@ export default function AdminProductModal({
                     rows={3}
                     className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-sm text-ink placeholder:text-taupe-400 focus:border-sapphire-600 focus:outline-none focus:ring-2 focus:ring-sapphire-600/20 resize-none"
                   />
+                </div>
+
+                <div className="pt-2 border-t border-taupe-200">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-taupe-600 mb-3">
+                    商品選項 (選填) - 如色號、規格等
+                  </label>
+                  <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+                    {variants.map((variant, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={variant.optionName}
+                          onChange={(e) => {
+                            const newVariants = [...variants];
+                            newVariants[idx].optionName = e.target.value;
+                            setVariants(newVariants);
+                          }}
+                          placeholder="例：B10"
+                          className="flex-1 rounded-lg border border-taupe-200 px-3 py-2 text-xs outline-none focus:border-sapphire-600 focus:ring-2 focus:ring-sapphire-600/20"
+                        />
+                        <input
+                          type="number"
+                          value={variant.stock}
+                          onChange={(e) => {
+                            const newVariants = [...variants];
+                            newVariants[idx].stock = e.target.value;
+                            setVariants(newVariants);
+                          }}
+                          placeholder="庫存"
+                          min="0"
+                          className="w-20 rounded-lg border border-taupe-200 px-3 py-2 text-xs outline-none focus:border-sapphire-600 focus:ring-2 focus:ring-sapphire-600/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVariants(variants.filter((_, i) => i !== idx));
+                          }}
+                          className="px-3 py-2 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+                        >
+                          移除
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setVariants([...variants, { optionName: "", stock: "0" }])}
+                    className="w-full px-3 py-2 text-xs font-medium rounded-lg bg-taupe-100 text-taupe-700 hover:bg-taupe-200 transition"
+                  >
+                    + 新增選項
+                  </button>
                 </div>
 
                 {error && (
