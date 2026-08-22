@@ -252,7 +252,18 @@ export default function ReservationModal({
                           />
                           <div className="flex-1">
                             <p className="text-sm font-medium text-ink">面交</p>
-                            <p className="text-xs text-taupe-500">免運費（洽詢細節請 Line 聯繫）</p>
+                            <p className="text-xs text-taupe-500">
+                              免運費（
+                              <a
+                                href="https://lin.ee/8klCvGm"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sapphire-600 hover:text-sapphire-700 hover:underline"
+                              >
+                                點選 Line 聯繫小幫手洽詢面交細節
+                              </a>
+                              ）
+                            </p>
                           </div>
                         </label>
                       </div>
