@@ -81,7 +81,7 @@ export default function OrdersPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderId,
+          pageId: orderId,
           paymentLast5: last5,
         }),
       });

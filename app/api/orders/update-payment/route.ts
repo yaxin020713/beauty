@@ -6,9 +6,9 @@ export const dynamic = "force-dynamic";
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { orderId, paymentLast5 } = body;
+    const { orderId, paymentLast5, pageId } = body;
 
-    if (!orderId || !paymentLast5) {
+    if (!paymentLast5 || (!orderId && !pageId)) {
       return NextResponse.json(
         { error: "缺少必要信息" },
         { status: 400 }
@@ -22,24 +22,30 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // 查詢訂單
-    const queryResponse = await notion.databases.query({
-      database_id: ORDERS_DB_ID,
-      filter: {
-        property: "Order_ID",
-        title: { equals: orderId },
-      },
-      page_size: 1,
-    });
+    let orderPageId: string;
 
-    if (queryResponse.results.length === 0) {
-      return NextResponse.json(
-        { error: "訂單不存在" },
-        { status: 404 }
-      );
+    // 如果直接提供 pageId，使用它；否則查詢 Order_ID
+    if (pageId) {
+      orderPageId = pageId;
+    } else {
+      const queryResponse = await notion.databases.query({
+        database_id: ORDERS_DB_ID,
+        filter: {
+          property: "Order_ID",
+          title: { equals: orderId },
+        },
+        page_size: 1,
+      });
+
+      if (queryResponse.results.length === 0) {
+        return NextResponse.json(
+          { error: "訂單不存在" },
+          { status: 404 }
+        );
+      }
+
+      orderPageId = queryResponse.results[0].id;
     }
-
-    const orderPageId = queryResponse.results[0].id;
 
     // 更新訂單
     await notion.pages.update({
