@@ -156,10 +156,12 @@ export async function POST(request: NextRequest) {
         });
 
         if (productQuery.results.length > 0) {
-          const productProps = productQuery.results[0].properties;
+          const productPage = productQuery.results[0];
+          if (!("properties" in productPage)) continue;
+          const productProps = productPage.properties;
           const commissionProp = productProps.分潤;
-          if (commissionProp && "number" in commissionProp) {
-            const itemCommission = (commissionProp.number || 0) * item.quantity;
+          if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
+            const itemCommission = commissionProp.number * item.quantity;
             totalCommission += itemCommission;
           }
         }
