@@ -332,7 +332,7 @@ export default function ReservationModal({
                       <input
                         type="text"
                         required={shippingMethod === "convenience_711"}
-                        placeholder="例：807"
+                        placeholder="例：121068"
                         value={store7_11}
                         onChange={(e) => setStore7_11(e.target.value)}
                         className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"

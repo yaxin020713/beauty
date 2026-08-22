@@ -446,7 +446,7 @@ export default function UserProfile() {
                   value={editBankCode}
                   onChange={(e) => setEditBankCode(e.target.value)}
                   disabled={editLoading}
-                  placeholder="例：807"
+                  placeholder="例：121068"
                   className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
                 />
               </div>
