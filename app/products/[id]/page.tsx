@@ -3,22 +3,29 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
-import { useCart } from "@/components/CartContext";
 import { cn } from "@/lib/utils";
 
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.id as string;
-  const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [loading, setLoading] = useState(true);
-  const [added, setAdded] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const [formData, setFormData] = useState({
+    quantity: 1,
+    customerName: "",
+    customerPhone: "",
+    customerEmail: "",
+    store7_11: "",
+  });
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -55,27 +62,51 @@ export default function ProductPage() {
     fetchVariants();
   }, [productId]);
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    if (!selectedVariant && variants.length > 0) {
-      return;
+  const handleReservation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product || (!selectedVariant && variants.length > 0)) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: product.name,
+          productId: productId,
+          variant: selectedVariant,
+          quantity: formData.quantity,
+          customerName: formData.customerName,
+          customerPhone: formData.customerPhone,
+          customerEmail: formData.customerEmail,
+          store7_11: formData.store7_11,
+        }),
+      });
+
+      if (res.ok) {
+        setSubmitted(true);
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
+      } else {
+        alert("預訂失敗，請稍後再試");
+      }
+    } catch (error) {
+      console.error("預訂失敗:", error);
+      alert("預訂失敗，請稍後再試");
+    } finally {
+      setSubmitting(false);
     }
-
-    addToCart(
-      product,
-      variants.length > 0
-        ? {
-            variantId: selectedVariant!.id,
-            optionName: selectedVariant!.optionName,
-          }
-        : undefined
-    );
-
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1400);
   };
 
-  const canAddToCart = !loading && (variants.length === 0 || selectedVariant);
+  const canSubmit =
+    !loading &&
+    !submitting &&
+    formData.customerName &&
+    formData.customerPhone &&
+    formData.customerEmail &&
+    formData.store7_11 &&
+    (variants.length === 0 || selectedVariant);
 
   if (loading && !product) {
     return (
@@ -192,62 +223,145 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* 選項選擇 */}
-            {variants.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
-                  選擇色號 *
-                </h2>
-                <select
-                  value={selectedVariant?.id || ""}
-                  onChange={(e) => {
-                    const variant = variants.find((v) => v.id === e.target.value);
-                    if (variant) setSelectedVariant(variant);
-                  }}
-                  className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
-                >
-                  <option value="">選擇色號</option>
-                  {variants.map((variant) => (
-                    <option key={variant.id} value={variant.id}>
-                      {variant.optionName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* 預訂表單 */}
+            <form onSubmit={handleReservation} className="space-y-6 border-t border-taupe-200 pt-6">
+              {/* 選項選擇 */}
+              {variants.length > 0 && (
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                    選擇色號 *
+                  </label>
+                  <select
+                    required
+                    value={selectedVariant?.id || ""}
+                    onChange={(e) => {
+                      const variant = variants.find((v) => v.id === e.target.value);
+                      if (variant) setSelectedVariant(variant);
+                    }}
+                    className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                  >
+                    <option value="">選擇色號</option>
+                    {variants.map((variant) => (
+                      <option key={variant.id} value={variant.id}>
+                        {variant.optionName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-            {/* 加入購物車按鈕 */}
-            <motion.button
-              onClick={handleAddToCart}
-              disabled={!canAddToCart}
-              whileTap={canAddToCart ? { scale: 0.98 } : {}}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className={cn(
-                "w-full py-4 rounded-xl font-medium text-lg transition flex items-center justify-center gap-2",
-                added
-                  ? "bg-navy-800 text-white"
-                  : canAddToCart
-                    ? "bg-taupe-900 text-white hover:bg-taupe-800"
-                    : "bg-taupe-300 text-taupe-600 cursor-not-allowed"
-              )}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  載入中...
-                </>
-              ) : added ? (
-                <>
-                  <Check className="h-5 w-5" strokeWidth={2.5} />
-                  已加入購物車
-                </>
-              ) : (
-                <>
-                  <Plus className="h-5 w-5" strokeWidth={2.5} />
-                  加入購物車
-                </>
-              )}
-            </motion.button>
+              {/* 數量 */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                  數量 *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={formData.quantity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })
+                  }
+                  className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                />
+              </div>
+
+              {/* 顧客姓名 */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                  姓名 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.customerName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customerName: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                />
+              </div>
+
+              {/* 電話 */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                  電話 *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={formData.customerPhone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customerPhone: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                />
+              </div>
+
+              {/* 郵箱 */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                  郵箱 *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={formData.customerEmail}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customerEmail: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                />
+              </div>
+
+              {/* 7-11 超商編號 */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold uppercase tracking-wider text-taupe-600">
+                  7-11 取貨門市編號 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="例：007832"
+                  value={formData.store7_11}
+                  onChange={(e) =>
+                    setFormData({ ...formData, store7_11: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
+                />
+              </div>
+
+              {/* 預訂按鈕 */}
+              <motion.button
+                type="submit"
+                disabled={!canSubmit}
+                whileTap={canSubmit ? { scale: 0.98 } : {}}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className={cn(
+                  "w-full py-4 rounded-xl font-medium text-lg transition flex items-center justify-center gap-2",
+                  submitted
+                    ? "bg-navy-800 text-white"
+                    : canSubmit
+                      ? "bg-taupe-900 text-white hover:bg-taupe-800"
+                      : "bg-taupe-300 text-taupe-600 cursor-not-allowed"
+                )}
+              >
+                {loading || submitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    {loading ? "載入中..." : "提交中..."}
+                  </>
+                ) : submitted ? (
+                  <>
+                    <Check className="h-5 w-5" strokeWidth={2.5} />
+                    預訂成功！即將返回...
+                  </>
+                ) : (
+                  "提交預訂"
+                )}
+              </motion.button>
+            </form>
 
             {/* 商品詳細資訊 */}
             {(product.weight_g || product.cost50 || product.cost100) && (
