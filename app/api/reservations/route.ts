@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // 計算分潮金：根據每個商品的分潮值 × 數量加總
+    // 計算分潤金：根據每個商品的分潤值 × 數量加總
     let totalCommission = 0;
     for (const item of items) {
       try {
@@ -164,14 +164,14 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (err) {
-        console.warn(`[api/reservations] 查詢商品 ${item.productId} 的分潮失敗:`, err);
+        console.warn(`[api/reservations] 查詢商品 ${item.productId} 的分潤失敗:`, err);
       }
     }
 
     // 處理推薦碼邏輯
-    // 情況A：推薦連結進入，未修改 → 推薦碼 + 推薦人信箱 + 分潮（主要分潮金）
-    // 情況B：推薦連結進入，手動修改碼 → 推薦碼2 + 推薦人信箱2 + 分潮2（次要分潮金）
-    // 情況C：官方連結進入，手動填寫碼 → 推薦碼2 + 推薦人信箱2 + 分潮2（次要分潮金）
+    // 情況A：推薦連結進入，未修改 → 推薦碼 + 推薦人信箱 + 分潤（主要分潤金）
+    // 情況B：推薦連結進入，手動修改碼 → 推薦碼2 + 推薦人信箱2 + 分潤2（次要分潤金）
+    // 情況C：官方連結進入，手動填寫碼 → 推薦碼2 + 推薦人信箱2 + 分潤2（次要分潤金）
 
     if (manualReferralCode && urlReferralCode && manualReferralCode === urlReferralCode) {
       // 情況A：推薦連結進入未修改（manualCode自動填充等於urlCode）
@@ -183,8 +183,8 @@ export async function POST(request: NextRequest) {
         properties["推薦人信箱"] = {
           rich_text: [{ text: { content: referrer.email } }],
         };
-        // 分潮金全部存入分潮（主要字段）
-        properties["分潮"] = { number: totalCommission };
+        // 分潤金全部存入分潤（主要字段）
+        properties["分潤"] = { number: totalCommission };
       }
     } else if (manualReferralCode && urlReferralCode && manualReferralCode !== urlReferralCode) {
       // 情況B：推薦連結進入但手動修改碼
@@ -196,8 +196,8 @@ export async function POST(request: NextRequest) {
         properties["推薦人信箱2"] = {
           rich_text: [{ text: { content: secondaryReferrer.email } }],
         };
-        // 分潮金全部存入分潮2（次要字段），推薦碼和推薦人信箱留空
-        properties["分潮2"] = { number: totalCommission };
+        // 分潤金全部存入分潤2（次要字段），推薦碼和推薦人信箱留空
+        properties["分潤2"] = { number: totalCommission };
       }
     } else if (manualReferralCode && !urlReferralCode) {
       // 情況C：官方連結進入，手動填寫碼
@@ -209,8 +209,8 @@ export async function POST(request: NextRequest) {
         properties["推薦人信箱2"] = {
           rich_text: [{ text: { content: secondaryReferrer.email } }],
         };
-        // 分潮金全部存入分潮2（次要字段），推薦碼和推薦人信箱留空
-        properties["分潮2"] = { number: totalCommission };
+        // 分潤金全部存入分潤2（次要字段），推薦碼和推薦人信箱留空
+        properties["分潤2"] = { number: totalCommission };
       }
     } else if (urlReferralCode && !manualReferralCode) {
       // 推薦連結進入，未填寫manualCode（邊界情況）
@@ -222,12 +222,12 @@ export async function POST(request: NextRequest) {
         properties["推薦人信箱"] = {
           rich_text: [{ text: { content: referrer.email } }],
         };
-        // 分潮金全部存入分潮（主要字段）
-        properties["分潮"] = { number: totalCommission };
+        // 分潤金全部存入分潤（主要字段）
+        properties["分潤"] = { number: totalCommission };
       }
     } else if (totalCommission > 0) {
-      // 無推薦碼情況：仍存儲分潮金（但無推薦人，分潮不會入帳）
-      properties["分潮"] = { number: totalCommission };
+      // 無推薦碼情況：仍存儲分潤金（但無推薦人，分潤不會入帳）
+      properties["分潤"] = { number: totalCommission };
     }
 
     await notion.pages.create({
