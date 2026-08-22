@@ -321,7 +321,7 @@ export default function OrdersPage() {
                             付款末5碼
                           </p>
                           <p className="text-sm font-mono text-emerald-900">
-                            ****{String(order.paymentLast5).padStart(5, "0")}
+                            {String(order.paymentLast5).padStart(5, "0")}
                           </p>
                         </div>
                       ) : null}
