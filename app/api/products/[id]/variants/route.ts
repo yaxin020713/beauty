@@ -35,6 +35,7 @@ export async function GET(
     }
 
     const notionPageId = productQuery.results[0].id;
+    console.log(`[variants API] productId: ${productId}, notionPageId: ${notionPageId}`);
 
     // 再用 Notion page ID 查詢 ProductVariants
     const query = await notion.databases.query({
@@ -46,6 +47,8 @@ export async function GET(
         },
       },
     });
+
+    console.log(`[variants API] 查詢結果數量: ${query.results.length}`);
 
     const variants: ProductVariant[] = query.results
       .map((page) => {
