@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, ChevronRight } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
 import { useCart } from "./CartContext";
 import { cn } from "@/lib/utils";
@@ -73,35 +74,39 @@ export default function ProductCard({ product }: { product: Product }) {
       transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-taupe-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_16px_40px_-16px_rgba(28,25,23,0.18)]"
     >
-      {/* 商品圖片 */}
-      <div className="relative aspect-square w-full overflow-hidden bg-taupe-100">
-        {product.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.image}
-            alt={product.name}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs text-taupe-400">
-            暫無圖片
-          </div>
-        )}
+      {/* 商品圖片 - 可點擊進入詳情頁 */}
+      <Link href={`/products/${product.id}`}>
+        <div className="relative aspect-square w-full overflow-hidden bg-taupe-100 cursor-pointer">
+          {product.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={product.image}
+              alt={product.name}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-taupe-400">
+              暫無圖片
+            </div>
+          )}
 
-        {/* 分類標籤 */}
-        {product.category && (
-          <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-taupe-600 backdrop-blur-sm">
-            {product.category}
-          </span>
-        )}
-      </div>
+          {/* 分類標籤 */}
+          {product.category && (
+            <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-taupe-600 backdrop-blur-sm">
+              {product.category}
+            </span>
+          )}
+        </div>
+      </Link>
 
       {/* 商品內容 */}
       <div className="flex flex-1 flex-col gap-2.5 p-4">
-        <h3 className="line-clamp-2 font-medium leading-snug text-ink">
-          {product.name}
-        </h3>
+        <Link href={`/products/${product.id}`}>
+          <h3 className="line-clamp-2 font-medium leading-snug text-ink hover:text-sapphire-600 transition cursor-pointer">
+            {product.name}
+          </h3>
+        </Link>
 
         <div className="text-xl font-semibold text-ink">
           <span className="mr-0.5 align-top text-xs font-normal text-taupe-400">
@@ -136,32 +141,44 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* 加入購物車 */}
-        <motion.button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!canAddToCart || loading}
-          whileTap={canAddToCart ? { scale: 0.94 } : {}}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className={cn(
-            "mt-auto flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-white transition-colors duration-300",
-            added ? "bg-navy-800" : "bg-taupe-900 hover:bg-taupe-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          )}
-        >
-          {loading ? (
-            "載入中..."
-          ) : added ? (
-            <>
-              <Check className="h-4 w-4" strokeWidth={2.5} />
-              已加入
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" strokeWidth={2.5} />
-              加入購物車
-            </>
-          )}
-        </motion.button>
+        {/* 按鈕區域 */}
+        <div className="mt-auto space-y-2">
+          <motion.button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!canAddToCart || loading}
+            whileTap={canAddToCart ? { scale: 0.94 } : {}}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className={cn(
+              "w-full flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-white transition-colors duration-300",
+              added ? "bg-navy-800" : "bg-taupe-900 hover:bg-taupe-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
+          >
+            {loading ? (
+              "載入中..."
+            ) : added ? (
+              <>
+                <Check className="h-4 w-4" strokeWidth={2.5} />
+                已加入
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" strokeWidth={2.5} />
+                加入購物車
+              </>
+            )}
+          </motion.button>
+
+          <Link href={`/products/${product.id}`}>
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-taupe-700 bg-taupe-100 hover:bg-taupe-200 transition-colors duration-300"
+            >
+              查看詳情
+              <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+          </Link>
+        </div>
       </div>
     </motion.article>
   );
