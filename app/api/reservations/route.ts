@@ -56,7 +56,7 @@ async function resolveReferrer(
 
 export async function POST(request: NextRequest) {
   try {
-    // Force cache bust: 2026-08-22
+    // Force Vercel rebuild: 2026-08-22T15:40:00Z
     const body = await request.json();
     const {
       items,
