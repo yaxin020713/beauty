@@ -8,12 +8,13 @@ import type { Product, ProductVariant } from "@/lib/types";
 import { useCart } from "@/components/CartContext";
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addToCart, openCart } = useCart();
+  const { addToCart } = useCart();
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [showVariantSelector, setShowVariantSelector] = useState(false);
   const [loading, setLoading] = useState(false);
   const [variantsLoaded, setVariantsLoaded] = useState(false);
+  const [flyingItem, setFlyingItem] = useState<{ id: string; startX: number; startY: number } | null>(null);
 
   const loadVariants = async () => {
     if (variantsLoaded) return;
@@ -39,7 +40,21 @@ export default function ProductCard({ product }: { product: Product }) {
     return [];
   };
 
-  const handleAddToCart = async () => {
+  const triggerFlyingAnimation = (button: HTMLElement) => {
+    const rect = button.getBoundingClientRect();
+    const flyId = `fly-${Date.now()}`;
+    setFlyingItem({
+      id: flyId,
+      startX: rect.left + rect.width / 2,
+      startY: rect.top + rect.height / 2,
+    });
+
+    setTimeout(() => {
+      setFlyingItem(null);
+    }, 600);
+  };
+
+  const handleAddToCart = async (e?: React.MouseEvent<HTMLElement>) => {
     setLoading(true);
     try {
       // 先加載變體
@@ -54,17 +69,21 @@ export default function ProductCard({ product }: { product: Product }) {
 
         // 如果只有一個變體，自動選擇
         if (loadedVariants.length === 1) {
+          if (e?.currentTarget) {
+            triggerFlyingAnimation(e.currentTarget);
+          }
           addToCart(product, {
             variantId: loadedVariants[0].id,
             optionName: loadedVariants[0].optionName,
           });
-          openCart();
           return;
         }
 
         // 如果沒有變體，直接加入
+        if (e?.currentTarget) {
+          triggerFlyingAnimation(e.currentTarget);
+        }
         addToCart(product);
-        openCart();
         return;
       }
 
@@ -74,11 +93,13 @@ export default function ProductCard({ product }: { product: Product }) {
         return;
       }
 
+      if (e?.currentTarget) {
+        triggerFlyingAnimation(e.currentTarget);
+      }
       addToCart(product, selectedVariant ? {
         variantId: selectedVariant.id,
         optionName: selectedVariant.optionName,
       } : undefined);
-      openCart();
       setSelectedVariant(null);
     } finally {
       setLoading(false);
@@ -86,11 +107,52 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <motion.article
-      whileHover={{ y: -4 }}
-      transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-taupe-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_16px_40px_-16px_rgba(28,25,23,0.18)]"
-    >
+    <>
+      {/* 飛行動畫 */}
+      {flyingItem && (
+        <motion.div
+          key={flyingItem.id}
+          className="fixed pointer-events-none z-50"
+          initial={{
+            left: flyingItem.startX,
+            top: flyingItem.startY,
+            opacity: 1,
+            scale: 1,
+          }}
+          animate={{
+            left: "calc(100% - 40px)",
+            top: "20px",
+            opacity: 0,
+            scale: 0.3,
+          }}
+          transition={{
+            duration: 0.6,
+            ease: "easeInOut",
+          }}
+          style={{
+            width: 80,
+            height: 80,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="w-full h-full rounded-xl overflow-hidden shadow-lg border border-taupe-200">
+            {product?.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      <motion.article
+        whileHover={{ y: -4 }}
+        transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
+        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-taupe-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_16px_40px_-16px_rgba(28,25,23,0.18)]"
+      >
       {/* 商品圖片 - 可點擊進入詳情頁 */}
       <Link href={`/products/${product.id}`}>
         <div className="relative aspect-square w-full overflow-hidden bg-taupe-100 cursor-pointer">
@@ -142,7 +204,7 @@ export default function ProductCard({ product }: { product: Product }) {
             type="button"
             onClick={(e) => {
               e.preventDefault();
-              handleAddToCart();
+              handleAddToCart(e as any);
             }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -205,5 +267,6 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
       </div>
     </motion.article>
+    </>
   );
 }
