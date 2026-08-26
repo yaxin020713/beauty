@@ -14,6 +14,7 @@ import {
   Edit2,
   CheckCircle2,
   Wallet,
+  Boxes,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import type { Product } from "@/lib/types";
@@ -74,7 +75,7 @@ export default function AdminDashboard({
   onClose: () => void;
 }) {
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState<"orders" | "statistics" | "products" | "withdrawals">("statistics");
+  const [tab, setTab] = useState<"orders" | "statistics" | "products" | "withdrawals" | "batches">("statistics");
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [products, setProducts] = useState<ProductStats[]>([]);
@@ -216,6 +217,19 @@ export default function AdminDashboard({
                   提現管理 ({withdrawals.filter((w) => w.status === "處理中").length})
                 </span>
               </button>
+              <button
+                onClick={() => setTab("batches")}
+                className={`px-4 py-3 text-sm font-medium transition whitespace-nowrap ${
+                  tab === "batches"
+                    ? "border-b-2 border-sapphire-600 text-sapphire-600"
+                    : "text-taupe-600 hover:text-ink"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Boxes className="h-4 w-4" />
+                  批次管理
+                </span>
+              </button>
             </div>
 
             {error && (
@@ -241,8 +255,10 @@ export default function AdminDashboard({
               />
             ) : tab === "orders" ? (
               <OrdersTab orders={orders} />
-            ) : (
+            ) : tab === "withdrawals" ? (
               <WithdrawalsTab withdrawals={withdrawals} onUpdated={fetchData} />
+            ) : (
+              <BatchesTab />
             )}
 
             <button
@@ -946,6 +962,167 @@ function ProductsTab({
             </div>
           ))
         )}
+      </div>
+    </div>
+  );
+}
+
+function BatchesTab() {
+  const [batchId, setBatchId] = useState("");
+  const [notificationType, setNotificationType] = useState<"payment" | "shipment">("payment");
+  const [loading, setLoading] = useState(false);
+  const [previewCount, setPreviewCount] = useState(0);
+  const [message, setMessage] = useState("");
+
+  const handlePreview = async () => {
+    if (!batchId.trim()) {
+      setMessage("請輸入批次 ID");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+    try {
+      const res = await fetch(
+        `/api/admin/batches/${batchId}/notifications/export?type=${notificationType}&format=preview`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewCount(data.total);
+        setMessage(`✅ 找到 ${data.total} 筆通知記錄`);
+      } else {
+        const error = await res.json();
+        setMessage(`❌ ${error.error}`);
+      }
+    } catch (error) {
+      setMessage(`❌ 錯誤: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!batchId.trim()) {
+      setMessage("請輸入批次 ID");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/batches/${batchId}/notifications/export?type=${notificationType}&format=download`
+      );
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download =
+          res.headers
+            .get("content-disposition")
+            ?.split("filename=")[1]
+            ?.replaceAll('"', "") || "notifications.csv";
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setMessage(`✅ 已下載 ${previewCount} 筆通知清單`);
+      } else {
+        const error = await res.json();
+        setMessage(`❌ ${error.error}`);
+      }
+    } catch (error) {
+      setMessage(`❌ 錯誤: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl bg-blue-50 p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-taupe-900 mb-2">
+            批次 ID
+          </label>
+          <input
+            type="text"
+            value={batchId}
+            onChange={(e) => setBatchId(e.target.value)}
+            placeholder="輸入批次 ID（例如：batch-2026-08）"
+            className="w-full px-4 py-2 border border-taupe-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sapphire-400 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-taupe-900 mb-2">
+            通知類型
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="type"
+                value="payment"
+                checked={notificationType === "payment"}
+                onChange={(e) => setNotificationType(e.target.value as "payment")}
+              />
+              <span className="text-sm">付款通知</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="type"
+                value="shipment"
+                checked={notificationType === "shipment"}
+                onChange={(e) => setNotificationType(e.target.value as "shipment")}
+              />
+              <span className="text-sm">出貨通知</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={handlePreview}
+            disabled={loading || !batchId.trim()}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-sapphire-100 text-sapphire-700 font-medium rounded-lg hover:bg-sapphire-200 disabled:bg-taupe-300 disabled:text-taupe-600 transition text-sm"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            預覽
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={loading || !batchId.trim() || previewCount === 0}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-taupe-900 text-white font-medium rounded-lg hover:bg-taupe-800 disabled:bg-taupe-400 transition text-sm"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            導出 CSV
+          </button>
+        </div>
+
+        {message && (
+          <div
+            className={`text-sm p-3 rounded-lg ${
+              message.startsWith("✅")
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-lg bg-taupe-50 p-4 text-sm text-taupe-700 space-y-2">
+        <p className="font-semibold">📖 使用說明</p>
+        <ul className="list-disc list-inside space-y-1 text-xs">
+          <li>輸入批次 ID 並選擇通知類型</li>
+          <li>點「預覽」檢查將發送的郵件數量</li>
+          <li>點「導出 CSV」下載完整清單</li>
+          <li>在 Excel 中複製郵件內容，貼到郵件客戶端發送</li>
+          <li>所有變數已自動帶入，無需修改</li>
+        </ul>
       </div>
     </div>
   );
