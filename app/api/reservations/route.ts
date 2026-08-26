@@ -237,6 +237,57 @@ export async function POST(request: NextRequest) {
       properties,
     });
 
+    // 更新（或建立）顧客的會員紀錄：累加訂單數、記錄本次下預訂單的日期
+    if (customerEmail && MEMBERS_DB_ID) {
+      try {
+        const customerQuery = await notion.databases.query({
+          database_id: MEMBERS_DB_ID,
+          filter: {
+            property: "Email",
+            title: { equals: customerEmail.toLowerCase() },
+          },
+        });
+
+        const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
+
+        if (customerQuery.results.length > 0) {
+          const customerPage = customerQuery.results[0];
+          let currentOrderCount = 0;
+          if ("properties" in customerPage) {
+            const countProp = customerPage.properties.訂單數;
+            if (countProp && "number" in countProp && typeof countProp.number === "number") {
+              currentOrderCount = countProp.number || 0;
+            }
+          }
+
+          await notion.pages.update({
+            page_id: customerPage.id,
+            properties: {
+              訂單數: { number: currentOrderCount + 1 },
+              上次預定日期: { date: { start: today } },
+            },
+          });
+        } else {
+          // 顧客還不存在，建立新的會員記錄
+          await notion.pages.create({
+            parent: { database_id: MEMBERS_DB_ID },
+            properties: {
+              Email: { title: [{ text: { content: customerEmail.toLowerCase() } }] },
+              會員等級: { select: { name: "銅級" } },
+              一年內累計消費金額: { number: 0 },
+              累積分潤: { number: 0 },
+              尚未提現分潤: { number: 0 },
+              處理中分潤: { number: 0 },
+              訂單數: { number: 1 },
+              上次預定日期: { date: { start: today } },
+            },
+          });
+        }
+      } catch (err) {
+        console.warn("[api/reservations] 無法更新客戶的訂單數/上次預定日期:", err);
+      }
+    }
+
     // 为每个商品更新 Reserved_Quantity
     for (const item of items) {
       try {
