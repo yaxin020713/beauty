@@ -357,7 +357,7 @@ export default function ReservationModal({
                     </label>
                     <input
                       type="text"
-                      placeholder="輸入推薦碼以獲得分潤"
+                      placeholder="輸入推薦碼"
                       value={manualReferralCode}
                       onChange={(e) => setManualReferralCode(e.target.value.toUpperCase())}
                       className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
