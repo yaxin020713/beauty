@@ -162,6 +162,9 @@ export default function Footer() {
           <p className="mt-1">
             因美妝個人衛生用品屬性，恕不接受個人喜好或心意改變之退換貨，僅接受「商品有瑕疵」或「送錯品項」之退貨申請。
           </p>
+          <p className="mt-1">
+            依消保法規定，美妝個人用品拆封後不適用 7 天鑑賞期。如需申請退貨，請保留原包裝完整，並於收貨 7 天內聯繫客服。
+          </p>
         </div>
         <div>
           <p className="font-medium text-ink">申請方式</p>
