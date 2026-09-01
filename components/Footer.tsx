@@ -29,7 +29,7 @@ export default function Footer() {
                 Vesper&apos;s Vanity
               </p>
               <p className="mt-3 text-sm leading-relaxed text-white/70">
-                精緻保養與專櫃彩妝選品 ｜ 100% 官方正貨保證
+                精緻保養與專櫃彩妝選品 ｜ 貿易商平行輸入｜合法報關
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-champagne-300/30 px-3 py-1 text-xs text-champagne-200">
