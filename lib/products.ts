@@ -51,6 +51,16 @@ function asUrl(p: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+// 「下架」為 checkbox：未勾選（false）＝上架中，勾選（true）＝已下架。
+// 採用「預設為上架」的語意，讓尚未設定過此欄位的既有商品在 Notion 新增此欄位後仍維持上架，
+// 不需要手動回填每一筆既有商品。
+function asCheckbox(p: unknown): boolean {
+  if (!p || typeof p !== "object") return false;
+  const record = p as Record<string, unknown>;
+  if (record["type"] !== "checkbox") return false;
+  return record["checkbox"] === true;
+}
+
 function asText(p: unknown): string {
   if (!p || typeof p !== "object") return "";
   const record = p as Record<string, unknown>;
@@ -107,6 +117,7 @@ export async function fetchProducts(): Promise<Product[]> {
         image: asUrl(props["Image"]),
         description: asRichText(props["Description"]),
         totalSold: asNumber(props["Total_Sold"]),
+        isActive: !asCheckbox(props["下架"]),
       };
 
       return product.name ? product : null;
@@ -180,6 +191,7 @@ export async function updateProduct(
     cost100?: number;
     image?: string;
     description?: string;
+    isActive?: boolean;
   }
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -232,6 +244,11 @@ export async function updateProduct(
         : [],
     };
   }
+  if (productData.isActive !== undefined) {
+    properties["下架"] = {
+      checkbox: !productData.isActive,
+    };
+  }
 
   const response = await notion.pages.update({
     page_id: pageId,
@@ -278,6 +295,7 @@ export async function fetchProductByProductId(productId: string): Promise<Produc
     image: asUrl(props["Image"]),
     description: asRichText(props["Description"]),
     totalSold: asNumber(props["Total_Sold"]),
+    isActive: !asCheckbox(props["下架"]),
   };
 
   return product.name ? product : null;

@@ -127,6 +127,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "購物車資料不完整" }, { status: 400 });
   }
 
+  // 檢查每個品項是否仍上架中，避免透過直接呼叫 API 繞過前台下單已下架的商品
+  for (const item of items) {
+    try {
+      const productPage = await notion.pages.retrieve({ page_id: item.productId });
+      if ("properties" in productPage) {
+        const delistedProp = productPage.properties["下架"];
+        const isDelisted =
+          !!delistedProp && "checkbox" in delistedProp && delistedProp.checkbox === true;
+        if (isDelisted) {
+          return NextResponse.json(
+            { error: `商品「${item.name}」已下架，暫不開放下單` },
+            { status: 400 }
+          );
+        }
+      }
+    } catch (err) {
+      console.warn(`[api/orders] 檢查商品 ${item.productId} 上架狀態失敗:`, err);
+    }
+  }
+
   // 自動計算商品小計
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,

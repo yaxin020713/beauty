@@ -28,7 +28,8 @@ async function loadProducts(): Promise<Product[]> {
 }
 
 export default async function StorefrontPage() {
-  const products = await loadProducts();
+  const allProducts = await loadProducts();
+  const products = allProducts.filter((product) => product.isActive);
 
   return (
     <StorefrontWrapper>

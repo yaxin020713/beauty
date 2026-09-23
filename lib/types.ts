@@ -11,6 +11,7 @@ export type Product = {
   image: string;
   description: string;
   totalSold: number;
+  isActive: boolean;
 };
 
 // 商品變體型別（對應 Notion ProductVariants 資料庫）

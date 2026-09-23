@@ -252,6 +252,7 @@ export default function AdminDashboard({
                   setEditingProduct(product);
                   setShowEditModal(true);
                 }}
+                onToggled={fetchData}
               />
             ) : tab === "orders" ? (
               <OrdersTab orders={orders} />
@@ -835,14 +836,37 @@ type ProductWithVariants = Product & {
 function ProductsTab({
   products,
   onEdit,
+  onToggled,
 }: {
   products: Product[];
   onEdit: (product: Product) => void;
+  onToggled: () => void;
 }) {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("全部");
   const [productsWithVariants, setProductsWithVariants] = useState<ProductWithVariants[]>([]);
   const [loadingVariants, setLoadingVariants] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const handleToggleActive = async (product: Product) => {
+    if (!user?.email || togglingId) return;
+    setTogglingId(product.id);
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, isActive: !product.isActive }),
+      });
+      if (res.ok) {
+        onToggled();
+      }
+    } catch (err) {
+      console.error("切換上架狀態失敗:", err);
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   useEffect(() => {
     const loadVariantCounts = async () => {
@@ -924,7 +948,9 @@ function ProductsTab({
           filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="rounded-xl bg-taupe-50 p-4 hover:bg-taupe-100 transition"
+              className={`rounded-xl p-4 transition ${
+                product.isActive ? "bg-taupe-50 hover:bg-taupe-100" : "bg-taupe-50/50 opacity-60 hover:opacity-100"
+              }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -933,6 +959,15 @@ function ProductsTab({
                     <p className="text-xs text-taupe-500">{product.brand}</p>
                   )}
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded ${
+                        product.isActive
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-taupe-200 text-taupe-600"
+                      }`}
+                    >
+                      {product.isActive ? "上架中" : "已下架"}
+                    </span>
                     <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
                       {product.category}
                     </span>
@@ -951,13 +986,32 @@ function ProductsTab({
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={() => onEdit(product)}
-                  className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 whitespace-nowrap"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                  編輯
-                </button>
+                <div className="flex flex-col items-stretch gap-2">
+                  <button
+                    onClick={() => handleToggleActive(product)}
+                    disabled={togglingId === product.id}
+                    className={`flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap disabled:opacity-50 ${
+                      product.isActive
+                        ? "bg-taupe-200 text-taupe-700 hover:bg-taupe-300"
+                        : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                    }`}
+                  >
+                    {togglingId === product.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : product.isActive ? (
+                      "下架"
+                    ) : (
+                      "上架"
+                    )}
+                  </button>
+                  <button
+                    onClick={() => onEdit(product)}
+                    className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 whitespace-nowrap"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    編輯
+                  </button>
+                </div>
               </div>
             </div>
           ))

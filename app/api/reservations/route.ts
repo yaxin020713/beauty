@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // 計算分潤金：根據每個商品的分潤值 × 數量加總
+    // 計算分潤金：根據每個商品的分潤值 × 數量加總；同時檢查每個品項是否仍上架中
     let totalCommission = 0;
     for (const item of items) {
       try {
@@ -159,6 +159,17 @@ export async function POST(request: NextRequest) {
           const productPage = productQuery.results[0];
           if (!("properties" in productPage)) continue;
           const productProps = productPage.properties;
+
+          const delistedProp = productProps["下架"];
+          const isDelisted =
+            !!delistedProp && "checkbox" in delistedProp && delistedProp.checkbox === true;
+          if (isDelisted) {
+            return NextResponse.json(
+              { error: `商品「${item.productName}」已下架，暫不開放預訂` },
+              { status: 400 }
+            );
+          }
+
           const commissionProp = productProps.分潤;
           if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
             const itemCommission = commissionProp.number * item.quantity;
