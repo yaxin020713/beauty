@@ -848,6 +848,7 @@ function ProductsTab({
   const [productsWithVariants, setProductsWithVariants] = useState<ProductWithVariants[]>([]);
   const [loadingVariants, setLoadingVariants] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const handleToggleActive = async (product: Product) => {
     if (!user?.email || togglingId) return;
@@ -865,6 +866,31 @@ function ProductsTab({
       console.error("切換上架狀態失敗:", err);
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleBulkSetActive = async (active: boolean, targets: Product[]) => {
+    if (!user?.email || bulkLoading || targets.length === 0) return;
+    const label = active ? "上架" : "下架";
+    if (!confirm(`確定要將目前顯示的 ${targets.length} 項商品全部設為「${label}」嗎？`)) return;
+
+    setBulkLoading(true);
+    try {
+      for (const product of targets) {
+        if (product.isActive === active) continue;
+        try {
+          await fetch(`/api/products/${product.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: user.email, isActive: active }),
+          });
+        } catch (err) {
+          console.error(`切換商品 ${product.name} 狀態失敗:`, err);
+        }
+      }
+      onToggled();
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -920,6 +946,30 @@ function ProductsTab({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-transparent text-sm outline-none text-ink placeholder:text-taupe-400"
           />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-xs text-taupe-500">
+            以下批次操作僅套用於「目前顯示（搜尋／分類篩選後）」的 {filteredProducts.length} 項商品
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={bulkLoading}
+              onClick={() => handleBulkSetActive(false, filteredProducts)}
+              className="px-3 py-1.5 text-xs font-medium rounded-full bg-taupe-200 text-taupe-700 hover:bg-taupe-300 disabled:opacity-50 whitespace-nowrap"
+            >
+              {bulkLoading ? "處理中..." : "全部下架"}
+            </button>
+            <button
+              type="button"
+              disabled={bulkLoading}
+              onClick={() => handleBulkSetActive(true, filteredProducts)}
+              className="px-3 py-1.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 disabled:opacity-50 whitespace-nowrap"
+            >
+              {bulkLoading ? "處理中..." : "全部上架"}
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-2 flex-wrap">
