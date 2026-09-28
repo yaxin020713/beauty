@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Wallet,
   Boxes,
+  Mail,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import type { Product } from "@/lib/types";
@@ -343,6 +344,8 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
+  const [generatingEmails, setGeneratingEmails] = useState(false);
+  const [emailGenerationMessage, setEmailGenerationMessage] = useState("");
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -398,6 +401,46 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     } catch (error) {
       console.error("標記已出貨失敗:", error);
       setSaveError("網路連線異常，請再試一次");
+    }
+  };
+
+  const handleGenerateEmails = async (templateType: "payment" | "shipment") => {
+    const pendingOrders = orders.filter((order) => order.status === "新訂單");
+
+    if (pendingOrders.length === 0) {
+      setEmailGenerationMessage("沒有新訂單可以生成郵件");
+      return;
+    }
+
+    setGeneratingEmails(true);
+    setEmailGenerationMessage("");
+
+    try {
+      const res = await fetch("/api/admin/generate-emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderIds: pendingOrders.map((o) => o.orderId),
+          templateType,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setEmailGenerationMessage(
+          `✅ 成功生成 ${data.summary.success} 筆郵件，失敗 ${data.summary.failed} 筆`
+        );
+      } else {
+        const error = await res.json().catch(() => null);
+        setEmailGenerationMessage(
+          `❌ 生成失敗: ${error?.error ?? "未知錯誤"}`
+        );
+      }
+    } catch (error) {
+      console.error("生成郵件失敗:", error);
+      setEmailGenerationMessage("❌ 網路連線異常，請再試一次");
+    } finally {
+      setGeneratingEmails(false);
     }
   };
 
@@ -483,14 +526,61 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
   return (
     <div className="space-y-4">
       <div className="space-y-3 flex flex-col">
-        <button
-          onClick={exportToExcel}
-          disabled={orders.length === 0}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
-        >
-          <Download className="h-4 w-4" />
-          匯出Excel報表
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={exportToExcel}
+            disabled={orders.length === 0}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
+          >
+            <Download className="h-4 w-4" />
+            匯出Excel報表
+          </button>
+          <button
+            onClick={() => handleGenerateEmails("payment")}
+            disabled={generatingEmails || orders.filter((o) => o.status === "新訂單").length === 0}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
+          >
+            {generatingEmails ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <Mail className="h-4 w-4" />
+                生成付款郵件
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => handleGenerateEmails("shipment")}
+            disabled={generatingEmails || orders.filter((o) => o.status === "新訂單").length === 0}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-purple-600 text-white transition hover:bg-purple-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
+          >
+            {generatingEmails ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <Mail className="h-4 w-4" />
+                生成出貨郵件
+              </>
+            )}
+          </button>
+        </div>
+        {emailGenerationMessage && (
+          <div
+            className={`text-sm p-3 rounded-xl text-center ${
+              emailGenerationMessage.startsWith("✅")
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
+            {emailGenerationMessage}
+          </div>
+        )}
         <div className="flex items-center gap-2 rounded-xl border border-taupe-200 px-4 py-2 bg-white">
           <Search className="h-4 w-4 text-taupe-400" />
           <input
