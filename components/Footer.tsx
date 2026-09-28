@@ -201,13 +201,8 @@ export default function Footer() {
           </ul>
         </div>
         <div className="mt-3 rounded-lg bg-taupe-50 p-3">
-          <p className="text-sm font-medium text-ink">
-            ⏱ 預估等待時間：下單後約 3 週送達超商取貨
-          </p>
-        </div>
-        <div className="mt-3">
           <p className="text-sm text-taupe-600">
-            實際交期可能因庫存、海關清關等因素而異，我們會盡快為您出貨，感謝您的耐心等待！
+            實際交期可能因庫存、海關清關等因素而異，歡迎至 LINE 官方帳號詢問訂單進度，感謝您的耐心等待！
           </p>
         </div>
       </InfoModal>
