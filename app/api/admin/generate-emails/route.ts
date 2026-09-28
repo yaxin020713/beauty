@@ -136,10 +136,10 @@ export async function POST(request: NextRequest) {
       templateType,
       batchName = "首團限定 - Lamer 經典乳霜",
       paymentDeadline = new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000
+        Date.now() + 3 * 24 * 60 * 60 * 1000
       ).toLocaleDateString("zh-TW"),
       estimatedShipDate = new Date(
-        Date.now() + 14 * 24 * 60 * 60 * 1000
+        Date.now() + 20 * 24 * 60 * 60 * 1000
       ).toLocaleDateString("zh-TW"),
     } = body;
 
