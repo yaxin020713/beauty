@@ -6,7 +6,7 @@ import { X, ShieldCheck, Banknote, Mail, MessageCircle, Clock } from "lucide-rea
 import { SHIPPING_COSTS } from "@/lib/shipping";
 
 const LINE_OA_URL = "https://lin.ee/8klCvGm";
-const SUPPORT_EMAIL = "yaxinzhu2002@gmail.com";
+const SUPPORT_EMAIL = "vespersvanity@gmail.com";
 
 type ModalKey = "guide" | "refund" | "shipping" | null;
 

@@ -1,30 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
 import { DEFAULT_TEMPLATES, renderTemplate } from "@/lib/notification-templates";
 import { BANK_INFO } from "@/lib/bank";
 
-const GMAIL_USER = process.env.GMAIL_USER;
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const PENDING_EMAILS_DB_ID = process.env.NOTION_PENDING_EMAILS_DB_ID;
 
-if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-  console.warn(
-    "[api/admin/send-email] 缺少 GMAIL_USER 或 GMAIL_APP_PASSWORD 環境變數"
-  );
-}
-
-// 建立 Gmail transporter
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: GMAIL_USER,
-    pass: GMAIL_APP_PASSWORD,
-  },
-});
-
-type SendEmailRequest = {
+type GenerateEmailsRequest = {
   orderIds: string[];
   templateType: "payment" | "shipment";
   batchName?: string;
@@ -56,27 +37,93 @@ async function getOrderData(orderId: string) {
       totalPrice: props.Total_Price?.number || 0,
     };
   } catch (error) {
-    console.error(`[api/admin/send-email] 查詢訂單 ${orderId} 失敗:`, error);
+    console.error(`[api/admin/generate-emails] 查詢訂單 ${orderId} 失敗:`, error);
     return null;
   }
 }
 
+async function savePendingEmail(
+  orderId: string,
+  customerName: string,
+  customerEmail: string,
+  subject: string,
+  body: string,
+  templateType: string
+) {
+  try {
+    await notion.pages.create({
+      parent: { database_id: PENDING_EMAILS_DB_ID! },
+      properties: {
+        Order_ID: {
+          title: [
+            {
+              text: { content: orderId },
+            },
+          ],
+        },
+        Customer_Name: {
+          rich_text: [
+            {
+              text: { content: customerName },
+            },
+          ],
+        },
+        Customer_Email: {
+          email: customerEmail,
+        },
+        Email_Subject: {
+          rich_text: [
+            {
+              text: { content: subject },
+            },
+          ],
+        },
+        Email_Body: {
+          rich_text: [
+            {
+              text: { content: body },
+            },
+          ],
+        },
+        Template_Type: {
+          select: { name: templateType },
+        },
+        Status: {
+          select: { name: "pending" },
+        },
+      },
+    });
+
+    return true;
+  } catch (error) {
+    console.error(
+      `[api/admin/generate-emails] 保存待發送郵件失敗 (${orderId}):`,
+      error instanceof Error ? error.message : JSON.stringify(error)
+    );
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
-  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+  if (!PENDING_EMAILS_DB_ID) {
     return NextResponse.json(
-      { error: "郵件服務未配置，請在 .env.local 設置 GMAIL_USER 和 GMAIL_APP_PASSWORD" },
+      { error: "待發送郵件資料庫未配置" },
       { status: 500 }
     );
   }
 
   try {
-    const body: SendEmailRequest = await request.json();
+    const body: GenerateEmailsRequest = await request.json();
     const {
       orderIds,
       templateType,
       batchName = "首團限定 - Lamer 經典乳霜",
-      paymentDeadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("zh-TW"),
-      estimatedShipDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString("zh-TW"),
+      paymentDeadline = new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString("zh-TW"),
+      estimatedShipDate = new Date(
+        Date.now() + 14 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString("zh-TW"),
     } = body;
 
     if (!Array.isArray(orderIds) || orderIds.length === 0) {
@@ -107,7 +154,6 @@ export async function POST(request: NextRequest) {
       message?: string;
     }> = [];
 
-    // 逐個查詢訂單並發送郵件
     for (const orderId of orderIds) {
       try {
         const orderData = await getOrderData(orderId);
@@ -120,7 +166,6 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // 準備郵件數據
         const emailData = {
           customerName: orderData.customerName,
           customerEmail: orderData.customerEmail,
@@ -132,27 +177,35 @@ export async function POST(request: NextRequest) {
           bankAccount: BANK_INFO.account,
         };
 
-        // 生成郵件內容
         const subject = renderTemplate(template.subject, emailData);
         const body = renderTemplate(template.body, emailData);
 
-        // 發送郵件
-        const info = await transporter.sendMail({
-          from: GMAIL_USER,
-          to: orderData.customerEmail,
-          subject,
-          text: body,
-        });
-
-        results.push({
+        const saved = await savePendingEmail(
           orderId,
-          status: "success",
-          message: `已寄送至 ${orderData.customerEmail}`,
-        });
-
-        console.log(
-          `[api/admin/send-email] 郵件已寄送 - 訂單: ${orderId}, MessageID: ${info.messageId}`
+          orderData.customerName,
+          orderData.customerEmail,
+          subject,
+          body,
+          templateType
         );
+
+        if (saved) {
+          results.push({
+            orderId,
+            status: "success",
+            message: "已生成郵件並存入 Notion",
+          });
+
+          console.log(
+            `[api/admin/generate-emails] 郵件已生成 - 訂單: ${orderId}`
+          );
+        } else {
+          results.push({
+            orderId,
+            status: "failed",
+            message: "保存到 Notion 失敗",
+          });
+        }
       } catch (error) {
         results.push({
           orderId,
@@ -161,7 +214,7 @@ export async function POST(request: NextRequest) {
         });
 
         console.error(
-          `[api/admin/send-email] 發送訂單 ${orderId} 的郵件失敗:`,
+          `[api/admin/generate-emails] 處理訂單 ${orderId} 失敗:`,
           error
         );
       }
@@ -183,7 +236,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("[api/admin/send-email] 處理請求失敗:", error);
+    console.error("[api/admin/generate-emails] 處理請求失敗:", error);
     return NextResponse.json(
       { error: "處理請求失敗，請稍後再試" },
       { status: 500 }
