@@ -50,9 +50,7 @@ export async function GET(request: NextRequest) {
         itemsDetail: props.Items_Detail?.rich_text?.[0]?.plain_text || "",
         totalPrice: props.Total_Price?.number || 0,
         orderStatus: props.訂單狀態?.select?.name || "未知",
-        shippingMethod: props["7-11取貨店號"]?.rich_text?.[0]?.plain_text
-          ? "convenience_711"
-          : "face_to_face",
+        shippingMethod: "convenience_711",
         store7_11: props["7-11取貨店號"]?.rich_text?.[0]?.plain_text || "",
         paymentLast5: props["帳號末5碼"]?.number || undefined,
       };

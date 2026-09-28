@@ -171,9 +171,7 @@ export async function POST(request: NextRequest) {
   );
 
   // 組合收貨方式資訊
-  const shippingInfo = shippingMethod === "convenience_711"
-    ? `7-11 超商取貨 (門市編號: ${selectedStore})`
-    : "面交";
+  const shippingInfo = `7-11 超商取貨 (門市編號: ${selectedStore})`;
 
   // 組合商品明細文字，附上該商品此訂單的總重量與選項，例："小黑瓶 B10 x2（200g）, 白繃帶 x1（50g）"
   const itemsDetail = items
@@ -266,12 +264,8 @@ export async function POST(request: NextRequest) {
       properties.分潤備註 = { rich_text: [{ text: { content: commissionNote } }] };
     }
 
-    // 7-11 取貨：寫入門市店號；面交：於面交否欄位標記「面交」
-    if (shippingMethod === "convenience_711") {
-      properties["7-11取貨店號"] = { rich_text: [{ text: { content: selectedStore } }] };
-    } else if (shippingMethod === "face_to_face") {
-      properties["面交否"] = { rich_text: [{ text: { content: "面交" } }] };
-    }
+    // 7-11 取貨：寫入門市店號
+    properties["7-11取貨店號"] = { rich_text: [{ text: { content: selectedStore } }] };
 
     // 帳號末5碼（數字型別）
     if (paymentLast5) {

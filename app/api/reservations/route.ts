@@ -8,7 +8,7 @@ interface ReservationItem {
   quantity: number;
 }
 
-type ShippingMethod = "convenience_711" | "face_to_face";
+type ShippingMethod = "convenience_711";
 
 async function resolveReferrer(
   code: string,

@@ -7,7 +7,7 @@ import { useCart, useAuth } from "./CartContext";
 import { cn } from "@/lib/utils";
 import { SHIPPING_COSTS } from "@/lib/shipping";
 
-type ShippingMethod = "convenience_711" | "face_to_face";
+type ShippingMethod = "convenience_711";
 
 type ReservationResult = {
   orderId: string;
@@ -34,7 +34,7 @@ export default function ReservationModal({
   const [error, setError] = useState("");
   const [reservationResult, setReservationResult] = useState<ReservationResult | null>(null);
 
-  const shippingFee = shippingMethod === "convenience_711" ? SHIPPING_COSTS.CONVENIENCE_711 : 0;
+  const shippingFee = SHIPPING_COSTS.CONVENIENCE_711;
   const totalAmount = totalPrice + shippingFee;
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function ReservationModal({
     customerName &&
     customerPhone &&
     customerEmail &&
-    (shippingMethod === "face_to_face" || store7_11);
+    store7_11;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -252,31 +252,6 @@ export default function ReservationModal({
                           </div>
                         </label>
 
-                        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-taupe-200 hover:bg-taupe-50 transition">
-                          <input
-                            type="radio"
-                            name="shipping"
-                            value="face_to_face"
-                            checked={shippingMethod === "face_to_face"}
-                            onChange={(e) => setShippingMethod(e.target.value as ShippingMethod)}
-                            className="w-4 h-4"
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-ink">面交</p>
-                            <p className="text-xs text-taupe-500">
-                              免運費（
-                              <a
-                                href="https://lin.ee/8klCvGm"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sapphire-600 hover:text-sapphire-700 hover:underline"
-                              >
-                                點選 Line 聯繫小幫手洽詢面交細節
-                              </a>
-                              ）
-                            </p>
-                          </div>
-                        </label>
                       </div>
                     </div>
                   </div>

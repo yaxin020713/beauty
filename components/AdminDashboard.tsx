@@ -357,15 +357,14 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
   const handleUpdateOrder = async (
     orderId: string,
     status: string,
-    paymentStatus: string,
-    faceToFace: string
+    paymentStatus: string
   ) => {
     setSaveError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, paymentStatus, faceToFace }),
+        body: JSON.stringify({ status, paymentStatus }),
       });
       if (res.ok) {
         setEditingOrderId(null);
@@ -415,7 +414,6 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
       "訂單總金額": order.totalPrice,
       "總重量(kg)": order.totalWeightKg,
       "7-11 取貨店號": order.storeNumber || "",
-      "面交": order.faceToFace || "",
       "匯款末五碼": order.paymentLast5 || "未提供",
       "訂單狀態": order.status,
       "付款狀態": order.paymentStatus,
@@ -567,7 +565,6 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                   {order.storeNumber && (
                     <p><span className="font-medium text-ink">7-11 店號:</span> {order.storeNumber}</p>
                   )}
-                  <p><span className="font-medium text-ink">面交:</span> {order.faceToFace || "未提供"}</p>
                   <p><span className="font-medium text-ink">出貨日期:</span> {order.shippingDate || "尚未出貨"}</p>
                   <p><span className="font-medium text-ink">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
 
@@ -606,13 +603,6 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                         <option value="已核帳">已核帳</option>
                         <option value="已退款">已退款</option>
                       </select>
-                      <textarea
-                        defaultValue={order.faceToFace}
-                        id={`facetoface-${order.id}`}
-                        placeholder="面交細節（例：時間、地點）"
-                        rows={2}
-                        className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
-                      />
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
@@ -622,14 +612,10 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                             const paymentSel = document.getElementById(
                               `payment-${order.id}`
                             ) as HTMLSelectElement;
-                            const faceToFaceInput = document.getElementById(
-                              `facetoface-${order.id}`
-                            ) as HTMLTextAreaElement;
                             handleUpdateOrder(
                               order.id,
                               statusSel.value,
-                              paymentSel.value,
-                              faceToFaceInput.value
+                              paymentSel.value
                             );
                           }}
                           className="flex-1 px-2 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700"

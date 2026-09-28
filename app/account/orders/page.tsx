@@ -16,7 +16,7 @@ type OrderItem = {
   itemsDetail: string;
   totalPrice: number;
   orderStatus: string;
-  shippingMethod: "convenience_711" | "face_to_face";
+  shippingMethod: "convenience_711";
   store7_11: string;
   paymentLast5?: number;
 };
@@ -260,9 +260,7 @@ export default function OrdersPage() {
                         收貨方式
                       </p>
                       <p className="text-sm text-ink">
-                        {order.shippingMethod === "convenience_711"
-                          ? `7-11 超商取貨 (編號：${order.store7_11})`
-                          : "面交"}
+                        7-11 超商取貨 (編號：{order.store7_11})
                       </p>
                     </div>
 

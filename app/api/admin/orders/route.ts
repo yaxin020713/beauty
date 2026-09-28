@@ -70,10 +70,6 @@ export async function GET(request: NextRequest) {
         props["7-11取貨店號"]?.type === "rich_text" && Array.isArray(props["7-11取貨店號"].rich_text)
           ? props["7-11取貨店號"].rich_text[0]?.plain_text || ""
           : "";
-      const faceToFace =
-        props["面交否"]?.type === "rich_text" && Array.isArray(props["面交否"].rich_text)
-          ? props["面交否"].rich_text[0]?.plain_text || ""
-          : "";
       const shippingDate =
         props["出貨日期"]?.type === "date" && props["出貨日期"].date
           ? props["出貨日期"].date.start || ""
@@ -93,7 +89,6 @@ export async function GET(request: NextRequest) {
         status: orderStatus,
         paymentStatus,
         storeNumber,
-        faceToFace,
         shippingDate,
         createdTime,
       };
