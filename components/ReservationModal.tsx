@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, Loader2, X, HelpCircle } from "lucide-react";
 import { useCart, useAuth } from "./CartContext";
 import { cn } from "@/lib/utils";
-import { SHIPPING_COSTS } from "@/lib/shipping";
+import { SHIPPING_COSTS, calculateShippingFee } from "@/lib/shipping";
 
 type ShippingMethod = "convenience_711";
 
@@ -34,7 +34,8 @@ export default function ReservationModal({
   const [error, setError] = useState("");
   const [reservationResult, setReservationResult] = useState<ReservationResult | null>(null);
 
-  const shippingFee = SHIPPING_COSTS.CONVENIENCE_711;
+  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const shippingFee = calculateShippingFee(totalQuantity, shippingMethod);
   const totalAmount = totalPrice + shippingFee;
 
   useEffect(() => {
@@ -248,7 +249,9 @@ export default function ReservationModal({
                           />
                           <div className="flex-1">
                             <p className="text-sm font-medium text-ink">7-11 超商取貨</p>
-                            <p className="text-xs text-taupe-500">+ NT$ {SHIPPING_COSTS.CONVENIENCE_711} 運費</p>
+                            <p className="text-xs text-taupe-500">
+                              {shippingFee > 0 ? `+ NT$ ${shippingFee} 運費` : "免運費"}
+                            </p>
                           </div>
                         </label>
 
