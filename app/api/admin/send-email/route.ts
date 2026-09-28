@@ -50,10 +50,19 @@ async function getOrderData(orderId: string) {
 
     const props = order.properties;
     return {
-      orderId: props.Order_ID?.title?.[0]?.plain_text || "",
-      customerName: props.Customer_Name?.rich_text?.[0]?.plain_text || "",
-      customerEmail: props["聯繫用Email"]?.rich_text?.[0]?.plain_text || "",
-      totalPrice: props.Total_Price?.number || 0,
+      orderId:
+        props.Order_ID?.type === "title" && Array.isArray(props.Order_ID.title)
+          ? props.Order_ID.title[0]?.plain_text || ""
+          : "",
+      customerName:
+        props.Customer_Name?.type === "rich_text" && Array.isArray(props.Customer_Name.rich_text)
+          ? props.Customer_Name.rich_text[0]?.plain_text || ""
+          : "",
+      customerEmail:
+        props["聯繫用Email"]?.type === "rich_text" && Array.isArray(props["聯繫用Email"].rich_text)
+          ? props["聯繫用Email"].rich_text[0]?.plain_text || ""
+          : "",
+      totalPrice: props.Total_Price?.type === "number" && typeof props.Total_Price.number === "number" ? props.Total_Price.number : 0,
     };
   } catch (error) {
     console.error(`[api/admin/send-email] 查詢訂單 ${orderId} 失敗:`, error);
