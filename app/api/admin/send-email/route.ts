@@ -63,6 +63,14 @@ async function getOrderData(orderId: string) {
           ? props["聯繫用Email"].rich_text[0]?.plain_text || ""
           : "",
       totalPrice: props.Total_Price?.type === "number" && typeof props.Total_Price.number === "number" ? props.Total_Price.number : 0,
+      itemsDetail:
+        props.Items_Detail?.type === "rich_text" && Array.isArray(props.Items_Detail.rich_text)
+          ? props.Items_Detail.rich_text[0]?.plain_text || ""
+          : "",
+      store7_11:
+        props["7-11取貨店號"]?.type === "rich_text" && Array.isArray(props["7-11取貨店號"].rich_text)
+          ? props["7-11取貨店號"].rich_text[0]?.plain_text || ""
+          : "",
     };
   } catch (error) {
     console.error(`[api/admin/send-email] 查詢訂單 ${orderId} 失敗:`, error);
@@ -137,6 +145,8 @@ export async function POST(request: NextRequest) {
           totalPrice: orderData.totalPrice,
           paymentDeadline,
           estimatedShipDate,
+          itemsDetail: orderData.itemsDetail,
+          store7_11: orderData.store7_11,
           bankName: BANK_INFO.bankName,
           bankAccount: BANK_INFO.account,
         };

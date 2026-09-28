@@ -15,6 +15,8 @@ export interface NotificationData {
   totalPrice: number;
   paymentDeadline: string;
   estimatedShipDate: string;
+  itemsDetail?: string;
+  store7_11?: string;
 }
 
 // 預設模板（後續會改為從 Notion 讀取）
@@ -34,9 +36,18 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
 付款截止日：{{截止日期}}
 預計出貨日：{{預計出貨日}}
 
+📦 訂購品項
+─────────────────────────
+{{訂單詳情}}
+
+🏪 收貨資訊
+─────────────────────────
+收貨人：{{客戶名稱}}
+7-11 門市編號：{{超商店號}}
+
 💳 匯款資訊
 ─────────────────────────
-銀行：{{銀行名稱}}
+銀行：{{銀行名稱}} ({{銀行代碼}})
 帳號：{{銀行帳號}}
 
 ✅ 完成付款後
@@ -83,7 +94,7 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
  */
 export function renderTemplate(
   template: string,
-  data: NotificationData & { bankName: string; bankAccount: string }
+  data: NotificationData & { bankName: string; bankAccount: string; bankCode?: string }
 ): string {
   return template
     .replace(/{{客戶名稱}}/g, data.customerName)
@@ -92,7 +103,10 @@ export function renderTemplate(
     .replace(/{{截止日期}}/g, data.paymentDeadline)
     .replace(/{{預計出貨日}}/g, data.estimatedShipDate)
     .replace(/{{銀行名稱}}/g, data.bankName)
-    .replace(/{{銀行帳號}}/g, data.bankAccount);
+    .replace(/{{銀行代碼}}/g, data.bankCode || "")
+    .replace(/{{銀行帳號}}/g, data.bankAccount)
+    .replace(/{{訂單詳情}}/g, data.itemsDetail || "")
+    .replace(/{{超商店號}}/g, data.store7_11 || "");
 }
 
 /**
@@ -106,6 +120,7 @@ export function generateNotificationEmail(
     ...data,
     bankName: BANK_INFO.bankName,
     bankAccount: BANK_INFO.account,
+    bankCode: BANK_INFO.code,
   };
 
   const subject = renderTemplate(template.subject, enrichedData);
