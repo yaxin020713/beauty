@@ -188,7 +188,7 @@ export default function CartDrawer() {
                       </span>
                     </div>
                     <p className="text-xs text-taupe-400">
-                      貨到付款 + 7-11 取貨
+                      銀行轉帳 + 7-11 超商取貨
                     </p>
                     <button
                       type="button"

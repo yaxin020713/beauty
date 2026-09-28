@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ShieldCheck, Banknote, Mail, MessageCircle, Clock } from "lucide-react";
-import {
-  FREE_SHIPPING_THRESHOLD,
-  DISCOUNT_THRESHOLD,
-  DISCOUNT_AMOUNT,
-  SHIPPING_COSTS,
-} from "@/lib/shipping";
+import { SHIPPING_COSTS } from "@/lib/shipping";
 
 const LINE_OA_URL = "https://lin.ee/8klCvGm";
 const SUPPORT_EMAIL = "yaxinzhu2002@gmail.com";
@@ -136,18 +131,18 @@ export default function Footer() {
         <div>
           <p className="font-medium text-ink">付款說明</p>
           <p className="mt-1">
-            本站僅提供「銀行轉帳」付款方式，訂單確認並完成轉帳後，我們將為您安排訂貨與出貨。
+            本站採預訂制，僅提供「銀行轉帳」付款方式。訂單確認並完成轉帳後，我們將統計訂購數量，達到訂購量後集中向廠商叫貨。
           </p>
         </div>
         <div>
-          <p className="font-medium text-ink">運費與免運</p>
+          <p className="font-medium text-ink">運費說明</p>
           <p className="mt-1">
-            單筆消費滿 NT${FREE_SHIPPING_THRESHOLD.toLocaleString()} 即享全館免運費；未滿
-            NT${FREE_SHIPPING_THRESHOLD.toLocaleString()} 運費（含包材費）NT${SHIPPING_COSTS.CONVENIENCE_711}。
+            本站統一採用 7-11 超商取貨方式：
           </p>
-          <p className="mt-1">
-            單筆消費滿 NT${DISCOUNT_THRESHOLD.toLocaleString()} 享免運＋現折 NT${DISCOUNT_AMOUNT}。
-          </p>
+          <ul className="mt-1 list-inside list-disc space-y-1 text-sm">
+            <li>購買 1 瓶：運費 NT${SHIPPING_COSTS.CONVENIENCE_711}</li>
+            <li>購買 2 瓶以上：免運費</li>
+          </ul>
         </div>
       </InfoModal>
 
@@ -186,33 +181,33 @@ export default function Footer() {
       >
         <div>
           <p className="mt-1">
-            本站商品皆採預購制，於收單後統一向國外原廠/正規通路採購。整體配送流程如下：
+            本站商品採預訂制。我們會統計訂購數量，達到訂購量後集中向廠商叫貨，並統一安排配送。整體配送流程如下：
           </p>
         </div>
         <div>
           <ul className="mt-2 list-inside list-disc space-y-2">
             <li>
-              <span className="font-medium text-ink">海外廠商備貨</span>
-              <span className="text-taupe-600">：約需 3–4 週（若單量允許，廠商會提前安排出貨）</span>
+              <span className="font-medium text-ink">統計訂單</span>
+              <span className="text-taupe-600">：每當訂購達到 30 瓶時，我們立即向廠商下單</span>
             </li>
             <li>
-              <span className="font-medium text-ink">國際運輸與抵台</span>
-              <span className="text-taupe-600">：商品抵台並完成品檢約需 5–7 個工作天</span>
+              <span className="font-medium text-ink">廠商備貨與海運</span>
+              <span className="text-taupe-600">：約需 2 週，貨品從海外運至台灣</span>
             </li>
             <li>
-              <span className="font-medium text-ink">本地出貨</span>
-              <span className="text-taupe-600">：確認商品無誤後，將於 3 天內安排寄出</span>
+              <span className="font-medium text-ink">配送到客戶</span>
+              <span className="text-taupe-600">：貨品抵台後，於 1 週內安排配送至 7-11 超商，客戶自行取貨</span>
             </li>
           </ul>
         </div>
         <div className="mt-3 rounded-lg bg-taupe-50 p-3">
           <p className="text-sm font-medium text-ink">
-            ⏱ 預估等待總時間：下單後約需 3-6 週 送達（急單請斟酌下單）
+            ⏱ 預估等待時間：下單後約 3 週送達超商取貨
           </p>
         </div>
         <div className="mt-3">
           <p className="text-sm text-taupe-600">
-            海外跨境物流易受海關清關及航班調度影響，我們會在品質控管範圍內盡快為您出貨，感謝您的耐心等待與體諒！
+            實際交期可能因庫存、海關清關等因素而異，我們會盡快為您出貨，感謝您的耐心等待！
           </p>
         </div>
       </InfoModal>

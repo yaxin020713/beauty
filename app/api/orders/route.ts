@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID, MEMBERS_DB_ID, PRODUCTS_DB_ID } from "@/lib/notion";
-import { calculateShippingFee, calculateDiscount, type ShippingMethod } from "@/lib/shipping";
+import { calculateShippingFee, type ShippingMethod } from "@/lib/shipping";
 import { calculateMembershipLevel } from "@/lib/membership";
 
 // 前台購物車單一項目的型別
@@ -153,14 +153,17 @@ export async function POST(request: NextRequest) {
     0
   );
 
-  // 自動計算運費（後端重新計算，不信任前端值；滿 FREE_SHIPPING_THRESHOLD 免運）
-  const shippingFee = calculateShippingFee(subtotal, shippingMethod);
+  // 自動計算總數量
+  const totalQuantity = items.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 
-  // 自動計算滿額現折（後端重新計算，不信任前端值）
-  const discount = calculateDiscount(subtotal);
+  // 自動計算運費（後端重新計算，不信任前端值；按數量判斷：1瓶 +100元，2瓶以上免運）
+  const shippingFee = calculateShippingFee(totalQuantity);
 
-  // 自動計算總金額與總重量（kg）
-  const totalPrice = subtotal + shippingFee - discount;
+  // 自動計算總金額與總重量（kg）。預購制不提供折扣。
+  const totalPrice = subtotal + shippingFee;
   const totalWeightKg = Number(
     items
       .reduce((sum, item) => sum + (item.weight_g * item.quantity) / 1000, 0)
@@ -233,7 +236,7 @@ export async function POST(request: NextRequest) {
 
     // 1. 建立訂單頁面
     // 在 Items_Detail 中附加運費、收貨方式與匯款末五碼資訊
-    const detailWithShipping = `${itemsDetail}\n運費: ${shippingFee > 0 ? `NT$${shippingFee}` : "免運"} | 取貨: ${shippingInfo}${discount > 0 ? ` | 滿額現折: -NT$${discount}` : ""}\n匯款末五碼: ${paymentLast5}`;
+    const detailWithShipping = `${itemsDetail}\n運費: ${shippingFee > 0 ? `NT$${shippingFee}` : "免運"} | 取貨: ${shippingInfo}\n匯款末五碼: ${paymentLast5}`;
 
     const properties: Record<string, any> = {
       Order_ID: { title: [{ text: { content: orderId } }] },
@@ -412,7 +415,6 @@ export async function POST(request: NextRequest) {
         totalPrice,
         totalWeightKg,
         shippingFee,
-        discount,
         itemsDetail,
         ...(referrer1 && { referralCode: referrer1.code, referrerEmail: referrer1.email }),
         ...(totalReferralCommission > 0 && { referralCommission: totalReferralCommission }),

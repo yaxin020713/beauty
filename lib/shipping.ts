@@ -1,32 +1,25 @@
 // 運費設定
 export const SHIPPING_COSTS = {
-  CONVENIENCE_711: 100, // 7-11 超商取貨運費
-  FACE_TO_FACE: 0, // 面交無運費
+  CONVENIENCE_711: 100, // 7-11 超商取貨運費（1瓶時）
 } as const;
 
-// 免運門檻（商品小計，不含運費）：滿此金額全館免運
-export const FREE_SHIPPING_THRESHOLD = 3000;
+// 免運門檻（商品數量）：滿此數量即享免運
+export const FREE_SHIPPING_THRESHOLD_QUANTITY = 2;
 
-// 現折門檻與金額：滿此金額（商品小計）現折 DISCOUNT_AMOUNT（此門檻高於免運門檻，故同時享免運）
-export const DISCOUNT_THRESHOLD = 6000;
-export const DISCOUNT_AMOUNT = 150;
+export type ShippingMethod = "convenience_711";
 
-export type ShippingMethod = "convenience_711" | "face_to_face";
-
-// 依商品小計與收貨方式計算運費，滿免運門檻則一律免運
+// 依商品數量計算運費：1瓶 +100元，2瓶以上免運
 export function calculateShippingFee(
-  subtotal: number,
-  shippingMethod: ShippingMethod
+  quantity: number,
+  _shippingMethod?: ShippingMethod
 ): number {
-  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
-  return shippingMethod === "convenience_711"
-    ? SHIPPING_COSTS.CONVENIENCE_711
-    : SHIPPING_COSTS.FACE_TO_FACE;
+  if (quantity >= FREE_SHIPPING_THRESHOLD_QUANTITY) return 0;
+  return SHIPPING_COSTS.CONVENIENCE_711;
 }
 
-// 依商品小計計算滿額現折金額
-export function calculateDiscount(subtotal: number): number {
-  return subtotal >= DISCOUNT_THRESHOLD ? DISCOUNT_AMOUNT : 0;
+// 預購制不提供滿額折扣
+export function calculateDiscount(): number {
+  return 0;
 }
 
 // 7-11 超商門市資料型別

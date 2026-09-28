@@ -9,7 +9,6 @@ import {
   Copy,
   CreditCard,
   X,
-  Truck,
   Package,
 } from "lucide-react";
 import { useCart, useAuth } from "./CartContext";
@@ -17,11 +16,8 @@ import { cn } from "@/lib/utils";
 import { BANK_INFO } from "@/lib/bank";
 import {
   SHIPPING_COSTS,
-  FREE_SHIPPING_THRESHOLD,
-  DISCOUNT_THRESHOLD,
-  DISCOUNT_AMOUNT,
+  FREE_SHIPPING_THRESHOLD_QUANTITY,
   calculateShippingFee,
-  calculateDiscount,
   type ShippingMethod,
 } from "@/lib/shipping";
 
@@ -99,16 +95,15 @@ export default function CheckoutModal({
   // 計算小計（不含運費）
   const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // 計算運費（滿 FREE_SHIPPING_THRESHOLD 免運）
-  const shippingFee = calculateShippingFee(subtotal, shippingMethod);
-  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  // 計算總數量
+  const totalQuantity = cartItems.reduce((sum, i) => sum + i.quantity, 0);
 
-  // 計算滿額現折（滿 DISCOUNT_THRESHOLD 現折 DISCOUNT_AMOUNT）
-  const discount = calculateDiscount(subtotal);
-  const qualifiesForDiscount = subtotal >= DISCOUNT_THRESHOLD;
+  // 計算運費（按數量判斷：1瓶 +100元，2瓶以上免運）
+  const shippingFee = calculateShippingFee(totalQuantity);
+  const qualifiesForFreeShipping = totalQuantity >= FREE_SHIPPING_THRESHOLD_QUANTITY;
 
-  // 計算總額（含運費、扣除折扣）
-  const total = subtotal + shippingFee - discount;
+  // 計算總額（含運費，預購制不提供折扣）
+  const total = subtotal + shippingFee;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,23 +280,9 @@ export default function CheckoutModal({
                         {shippingFee > 0 ? `NT$${shippingFee}` : "免運"}
                       </span>
                     </div>
-                    {discount > 0 && (
-                      <div className="flex justify-between text-sapphire-600">
-                        <span>滿額現折</span>
-                        <span className="font-medium">-NT${discount.toLocaleString()}</span>
-                      </div>
-                    )}
-                    {!qualifiesForFreeShipping ? (
+                    {!qualifiesForFreeShipping && (
                       <p className="text-xs text-sapphire-600">
-                        再加購 NT${(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()} 即享全館免運！
-                      </p>
-                    ) : !qualifiesForDiscount ? (
-                      <p className="text-xs text-sapphire-600">
-                        已享免運！再加購 NT${(DISCOUNT_THRESHOLD - subtotal).toLocaleString()} 即現折 NT${DISCOUNT_AMOUNT}！
-                      </p>
-                    ) : (
-                      <p className="text-xs text-sapphire-600">
-                        🎉 已享全館免運＋現折 NT${DISCOUNT_AMOUNT}！
+                        再買 {FREE_SHIPPING_THRESHOLD_QUANTITY - totalQuantity} 瓶即可享受免運費！
                       </p>
                     )}
                     <div className="border-t border-taupe-200 pt-1 mt-1 flex justify-between">
@@ -313,7 +294,7 @@ export default function CheckoutModal({
                     <div className="flex justify-between text-taupe-500 text-xs">
                       <span>品項數量</span>
                       <span className="font-medium text-ink">
-                        {cartItems.reduce((sum, i) => sum + i.quantity, 0)} 件
+                        {totalQuantity} 件
                       </span>
                     </div>
                   </div>
@@ -325,7 +306,7 @@ export default function CheckoutModal({
                     </p>
                     <div className="space-y-2">
                       {/* 7-11 超商取貨 */}
-                      <label className="flex items-start gap-3 p-3 border border-taupe-200 rounded-xl cursor-pointer hover:bg-taupe-50 transition">
+                      <label className="flex items-start gap-3 p-3 border border-sapphire-200 bg-sapphire-50 rounded-xl cursor-pointer">
                         <input
                           type="radio"
                           name="shippingMethod"
@@ -347,28 +328,6 @@ export default function CheckoutModal({
                           </div>
                           <p className="text-xs text-taupe-500 mt-1">
                             請填寫證件姓名，否則無法取貨
-                          </p>
-                        </div>
-                      </label>
-
-                      {/* 面交 */}
-                      <label className="flex items-start gap-3 p-3 border border-taupe-200 rounded-xl cursor-pointer hover:bg-taupe-50 transition">
-                        <input
-                          type="radio"
-                          name="shippingMethod"
-                          value="face_to_face"
-                          checked={shippingMethod === "face_to_face"}
-                          onChange={(e) => setShippingMethod(e.target.value as ShippingMethod)}
-                          className="mt-1 w-4 h-4 text-sapphire-600 cursor-pointer"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <Truck className="h-4 w-4 text-emerald-600" />
-                            <span className="font-medium text-ink">面交</span>
-                            <span className="text-xs text-emerald-600 font-medium">免運</span>
-                          </div>
-                          <p className="text-xs text-taupe-500 mt-1">
-                            需先聯繫小幫手確認交貨時間與地點
                           </p>
                         </div>
                       </label>
@@ -439,29 +398,6 @@ export default function CheckoutModal({
                     </div>
                   )}
 
-                  {/* 面交警告 */}
-                  {shippingMethod === "face_to_face" && (
-                    <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
-                      <div>
-                        <p className="font-medium mb-1">
-                          ⚠️ 請先聯繫小幫手確認面交詳細資訊
-                        </p>
-                        <p>
-                          如未與小幫手聯繫交貨細節請勿下單面交選項。{" "}
-                          <a
-                            href="https://lin.ee/8klCvGm"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium underline hover:text-amber-900"
-                          >
-                            點擊連結加入 Line 好友
-                          </a>
-                          {" "}聯繫面交詳細資訊。
-                        </p>
-                      </div>
-                    </div>
-                  )}
 
                   <input
                     type="text"

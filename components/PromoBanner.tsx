@@ -1,9 +1,5 @@
 type PromoBannerProps = {
   title?: string;
-  freeShippingThreshold?: number;
-  discountThreshold?: number;
-  discountAmount?: number;
-  belowThresholdShippingFee?: number;
   ctaLabel?: string;
   ctaHref?: string;
   imageSrc?: string;
@@ -11,21 +7,17 @@ type PromoBannerProps = {
 };
 
 export default function PromoBanner({
-  title = "全館限時尊榮禮遇 ｜ 輕奢保養日",
-  freeShippingThreshold = 3000,
-  discountThreshold = 6000,
-  discountAmount = 150,
-  belowThresholdShippingFee = 100,
-  ctaLabel = "立即選購 ➔",
+  title = "Lamer 經典乳霜 ｜ 臉部護膚新美學",
+  ctaLabel = "立即搶購 ➔",
   ctaHref = "#shop",
   imageSrc,
   imageAlt = "促銷活動橫幅",
 }: PromoBannerProps) {
   const perks = [
-    `滿 NT$${freeShippingThreshold.toLocaleString()} 全館免運費`,
-    `滿 NT$${discountThreshold.toLocaleString()} 再現折 NT$${discountAmount}`,
+    "首團限定｜NT$9,900 / 瓶",
+    "1瓶 + NT$100 運費｜2瓶以上免運",
+    "📦 預訂制｜集團購後進貨、3週到手",
   ];
-  const shippingNote = `(未滿 $${freeShippingThreshold.toLocaleString()} 運費(含包材費) $${belowThresholdShippingFee})`;
 
   // 標題若含「｜」則拆成兩行呈現，第二行縮排營造錯落感；否則單行顯示
   const titleParts = title.split("｜").map((part) => part.trim()).filter(Boolean);
@@ -73,7 +65,6 @@ export default function PromoBanner({
                 </li>
               ))}
             </ul>
-            <p className="mt-1 text-[10px] text-taupe-400 sm:text-xs">{shippingNote}</p>
             <a
               href={ctaHref}
               className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-navy-800 px-4 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-navy-900 sm:mt-5 sm:px-5 sm:py-2.5 sm:text-sm"
