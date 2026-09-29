@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID, PRODUCTS_DB_ID, MEMBERS_DB_ID, updateProductReservedQuantity } from "@/lib/notion";
+import { recordTermsAgreementIfNeeded } from "@/lib/referral";
 
 interface ReservationItem {
   productId: string;
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
       totalAmount,
       urlReferralCode,
       manualReferralCode,
+      agreedToTerms,
     } = body;
 
     // 验证必填字段
@@ -83,6 +85,14 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "缺少必要信息" },
+        { status: 400 }
+      );
+    }
+
+    // 必須同意會員資料使用條款才能下單（伺服器端再驗證一次，避免繞過前端限制）
+    if (!agreedToTerms) {
+      return NextResponse.json(
+        { error: "請先閱讀並同意會員資料使用條款" },
         { status: 400 }
       );
     }
@@ -248,6 +258,9 @@ export async function POST(request: NextRequest) {
       properties,
     });
 
+    // 補記錄條款同意時間（若該會員之前是選擇「稍後再填」略過完成會員檔案，就會在這裡第一次留下同意紀錄）
+    await recordTermsAgreementIfNeeded(customerEmail);
+
     // 更新（或建立）顧客的會員紀錄：累加訂單數、記錄本次下預訂單的日期
     if (customerEmail && MEMBERS_DB_ID) {
       try {
@@ -291,6 +304,7 @@ export async function POST(request: NextRequest) {
               處理中分潤: { number: 0 },
               訂單數: { number: 1 },
               上次預定日期: { date: { start: today } },
+              條款同意時間: { date: { start: new Date().toISOString() } },
             },
           });
         }

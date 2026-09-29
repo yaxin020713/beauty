@@ -6,6 +6,7 @@ import { Check, Loader2, X, HelpCircle } from "lucide-react";
 import { useCart, useAuth } from "./CartContext";
 import { cn } from "@/lib/utils";
 import { SHIPPING_COSTS, calculateShippingFee } from "@/lib/shipping";
+import MemberTermsModal from "./MemberTermsModal";
 
 type ShippingMethod = "convenience_711";
 
@@ -30,6 +31,8 @@ export default function ReservationModal({
   const [store7_11, setStore7_11] = useState("");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
   const [manualReferralCode, setManualReferralCode] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [reservationResult, setReservationResult] = useState<ReservationResult | null>(null);
@@ -43,6 +46,7 @@ export default function ReservationModal({
       setError("");
       setReservationResult(null);
       setSubmitting(false);
+      setAgreedToTerms(false);
 
       // Auto-fill referral code from URL parameter
       if (referralCode) {
@@ -80,7 +84,8 @@ export default function ReservationModal({
     customerName &&
     customerPhone &&
     customerEmail &&
-    store7_11;
+    store7_11 &&
+    agreedToTerms;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +117,7 @@ export default function ReservationModal({
           totalAmount,
           urlReferralCode: referralCode,
           manualReferralCode: manualReferralCode || undefined,
+          agreedToTerms,
         }),
       });
 
@@ -347,6 +353,27 @@ export default function ReservationModal({
                     )}
                   </div>
 
+                  {/* 條款同意 */}
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      id="reservation-terms-agree"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-taupe-300 text-sapphire-600 focus:ring-sapphire-500"
+                    />
+                    <label htmlFor="reservation-terms-agree" className="text-xs text-taupe-600">
+                      我已閱讀並同意{" "}
+                      <button
+                        type="button"
+                        onClick={() => setShowTerms(true)}
+                        className="text-sapphire-600 underline hover:text-sapphire-700"
+                      >
+                        《會員資料使用條款》
+                      </button>
+                    </label>
+                  </div>
+
                   {/* 錯誤訊息 */}
                   {error && (
                     <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -401,6 +428,7 @@ export default function ReservationModal({
           </div>
         </div>
       )}
+      <MemberTermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </AnimatePresence>
   );
 }

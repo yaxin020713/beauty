@@ -76,6 +76,41 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   }
 }
 
+// 若該 email 的會員記錄尚未記錄「條款同意時間」，於下單/預訂當下補記錄同意時間。
+// 讓完成會員檔案彈窗（選擇稍後再填）之外，實際下單這個無法略過的環節也能確保留下同意紀錄。
+export async function recordTermsAgreementIfNeeded(email: string): Promise<void> {
+  if (!email || !MEMBERS_DB_ID) return;
+
+  try {
+    const memberQuery = await notion.databases.query({
+      database_id: MEMBERS_DB_ID,
+      filter: {
+        property: "Email",
+        title: { equals: email.toLowerCase() },
+      },
+    });
+
+    if (memberQuery.results.length === 0) return;
+
+    const memberPage = memberQuery.results[0];
+    if (!("properties" in memberPage)) return;
+
+    const termsProp = memberPage.properties.條款同意時間;
+    const alreadyAgreed =
+      termsProp?.type === "date" && !!termsProp.date?.start;
+    if (alreadyAgreed) return;
+
+    await notion.pages.update({
+      page_id: memberPage.id,
+      properties: {
+        條款同意時間: { date: { start: new Date().toISOString() } },
+      },
+    });
+  } catch (err) {
+    console.warn(`[recordTermsAgreementIfNeeded] 記錄條款同意時間失敗 (${email}):`, err);
+  }
+}
+
 // 生成唯一的推荐码（8位字符，易于分享）
 export function generateReferralCode(email: string): string {
   // 使用邮箱 hash + 随机数生成唯一码
