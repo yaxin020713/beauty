@@ -12,6 +12,7 @@ type MemberData = {
   store711Code?: string;
   recipientName?: string;
   contactPhone?: string;
+  agreedToTerms?: boolean;
 };
 
 export async function GET(request: NextRequest) {
@@ -183,6 +184,12 @@ export async function POST(request: NextRequest) {
     if (body.contactPhone) {
       properties.聯絡電話 = {
         rich_text: [{ text: { content: body.contactPhone } }],
+      };
+    }
+
+    if (body.agreedToTerms) {
+      properties.條款同意時間 = {
+        date: { start: new Date().toISOString() },
       };
     }
 

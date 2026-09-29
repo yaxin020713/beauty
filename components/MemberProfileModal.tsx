@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import MemberTermsModal from "./MemberTermsModal";
 
 type MemberProfileModalProps = {
   email: string;
@@ -12,6 +13,7 @@ type MemberProfileModalProps = {
     store711Code?: string;
     recipientName?: string;
     contactPhone?: string;
+    agreedToTerms: boolean;
   }) => Promise<void>;
 };
 
@@ -25,6 +27,8 @@ export default function MemberProfileModal({
   const [store711Code, setStore711Code] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,9 +41,14 @@ export default function MemberProfileModal({
       return;
     }
 
+    if (!agreedToTerms) {
+      setError("請先閱讀並勾選同意會員資料使用條款");
+      return;
+    }
+
     setLoading(true);
     try {
-      await onSubmit({ birthday, store711Code, recipientName, contactPhone });
+      await onSubmit({ birthday, store711Code, recipientName, contactPhone, agreedToTerms });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失敗，請稍後再試");
@@ -148,6 +157,27 @@ export default function MemberProfileModal({
             </p>
           </div>
 
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="member-terms-agree"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              disabled={loading}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-taupe-300 text-sapphire-600 focus:ring-sapphire-500"
+            />
+            <label htmlFor="member-terms-agree" className="text-xs text-taupe-600">
+              我已閱讀並同意{" "}
+              <button
+                type="button"
+                onClick={() => setShowTerms(true)}
+                className="text-sapphire-600 underline hover:text-sapphire-700"
+              >
+                《會員資料使用條款》
+              </button>
+            </label>
+          </div>
+
           {error && (
             <div className="rounded-lg bg-rose-50 p-2 text-xs text-rose-600">
               {error}
@@ -173,6 +203,8 @@ export default function MemberProfileModal({
           </div>
         </form>
       </div>
+
+      <MemberTermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   );
 }

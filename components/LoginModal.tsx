@@ -84,6 +84,7 @@ export default function LoginModal() {
     store711Code?: string;
     recipientName?: string;
     contactPhone?: string;
+    agreedToTerms: boolean;
   }) => {
     if (!pendingMemberEmail) return;
 
@@ -97,6 +98,7 @@ export default function LoginModal() {
           store711Code: data.store711Code,
           recipientName: data.recipientName,
           contactPhone: data.contactPhone,
+          agreedToTerms: data.agreedToTerms,
         }),
       });
 
