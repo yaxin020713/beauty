@@ -16,6 +16,7 @@ import {
   Wallet,
   Boxes,
   Mail,
+  Copy,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import type { Product } from "@/lib/types";
@@ -255,7 +256,7 @@ export default function AdminDashboard({
                 onToggled={fetchData}
               />
             ) : tab === "orders" ? (
-              <OrdersTab orders={orders} />
+              <OrdersTab orders={orders} onUpdated={fetchData} />
             ) : tab === "withdrawals" ? (
               <WithdrawalsTab withdrawals={withdrawals} onUpdated={fetchData} />
             ) : (
@@ -337,7 +338,7 @@ function StatisticsTab({
   );
 }
 
-function OrdersTab({ orders }: { orders: OrderItem[] }) {
+function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () => void }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("全部");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -345,6 +346,28 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
   const [saveError, setSaveError] = useState("");
   const [generatingEmails, setGeneratingEmails] = useState(false);
   const [emailGenerationMessage, setEmailGenerationMessage] = useState("");
+  const [copyPromptMessage, setCopyPromptMessage] = useState("");
+
+  // 複製一段提示文字，讓管理員貼到手機版 Claude App，由 Claude 讀取 Notion「待發送郵件」
+  // 資料庫中狀態為 pending 的紀錄，逐一寄出並回填為 sent（需先在 Claude 帳號授權 Notion 與 Gmail 連接器）
+  const handleCopyDispatchPrompt = async () => {
+    const prompt = [
+      "請幫我處理待發送的訂單通知信：",
+      "1. 在 Notion 找到「待發送郵件」資料庫（欄位包含 Order_ID、Customer_Name、Customer_Email、Email_Subject、Email_Body、Template_Type、Status）。",
+      "2. 篩選出 Status 為 pending 的所有紀錄。",
+      "3. 對每一筆紀錄，用 Email_Subject 當標題、Email_Body 當內文，寄送到 Customer_Email。",
+      "4. 每寄出一封，就把該筆紀錄的 Status 改成 sent。",
+      "5. 全部處理完後，回報總共寄了幾封、有沒有寄送失敗的。",
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setCopyPromptMessage("✅ 已複製提示文字，請打開 Claude App 貼上並送出");
+    } catch (err) {
+      console.error("複製提示文字失敗:", err);
+      setCopyPromptMessage("❌ 複製失敗，請手動複製");
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -403,11 +426,17 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
     }
   };
 
+  // 付款通知：抓「新訂單」；出貨通知：抓已發過付款通知、尚未出貨的訂單
+  const getEligibleOrdersForEmail = (templateType: "payment" | "shipment") =>
+    orders.filter((order) =>
+      templateType === "payment" ? order.status === "新訂單" : order.status === "已發付款通知"
+    );
+
   const handleGenerateEmails = async (templateType: "payment" | "shipment") => {
-    const pendingOrders = orders.filter((order) => order.status === "新訂單");
+    const pendingOrders = getEligibleOrdersForEmail(templateType);
 
     if (pendingOrders.length === 0) {
-      setEmailGenerationMessage("沒有新訂單可以生成郵件");
+      setEmailGenerationMessage("沒有符合條件的訂單可以生成郵件");
       return;
     }
 
@@ -426,6 +455,36 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
 
       if (res.ok) {
         const data = await res.json();
+
+        // 生成成功或先前已生成過（略過）的訂單，代表通知信這一關已經處理過，
+        // 更新訂單狀態避免下次生成時被重複挑選到
+        const processedOrderIds = new Set(
+          (data.results as Array<{ orderId: string; status: string }>)
+            .filter((r) => r.status !== "failed")
+            .map((r) => r.orderId)
+        );
+        const ordersToUpdate = pendingOrders.filter((order) =>
+          processedOrderIds.has(order.orderId)
+        );
+
+        if (ordersToUpdate.length > 0) {
+          const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
+          await Promise.all(
+            ordersToUpdate.map((order) =>
+              fetch(`/api/admin/orders/${order.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(
+                  templateType === "payment"
+                    ? { status: "已發付款通知" }
+                    : { status: "已出貨", shippingDate: today }
+                ),
+              }).catch((err) => console.error(`更新訂單 ${order.orderId} 狀態失敗:`, err))
+            )
+          );
+          onUpdated();
+        }
+
         setEmailGenerationMessage(
           `✅ 成功生成 ${data.summary.success} 筆郵件，已略過（先前已生成過）${data.summary.skipped ?? 0} 筆，失敗 ${data.summary.failed} 筆`
         );
@@ -536,7 +595,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
           </button>
           <button
             onClick={() => handleGenerateEmails("payment")}
-            disabled={generatingEmails || orders.filter((o) => o.status === "新訂單").length === 0}
+            disabled={generatingEmails || getEligibleOrdersForEmail("payment").length === 0}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
           >
             {generatingEmails ? (
@@ -553,7 +612,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
           </button>
           <button
             onClick={() => handleGenerateEmails("shipment")}
-            disabled={generatingEmails || orders.filter((o) => o.status === "新訂單").length === 0}
+            disabled={generatingEmails || getEligibleOrdersForEmail("shipment").length === 0}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-purple-600 text-white transition hover:bg-purple-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
           >
             {generatingEmails ? (
@@ -580,6 +639,24 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
             {emailGenerationMessage}
           </div>
         )}
+        <button
+          onClick={handleCopyDispatchPrompt}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-taupe-800 text-white transition hover:bg-taupe-900"
+        >
+          <Copy className="h-4 w-4" />
+          寄送（複製指令給手機版 Claude 處理）
+        </button>
+        {copyPromptMessage && (
+          <div
+            className={`text-sm p-3 rounded-xl text-center ${
+              copyPromptMessage.startsWith("✅")
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-700"
+            }`}
+          >
+            {copyPromptMessage}
+          </div>
+        )}
         <div className="flex items-center gap-2 rounded-xl border border-taupe-200 px-4 py-2 bg-white">
           <Search className="h-4 w-4 text-taupe-400" />
           <input
@@ -592,7 +669,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {["全部", "新訂單", "已出貨", "已完成", "異常中", "已取消"].map((status) => (
+          {["全部", "新訂單", "已發付款通知", "已出貨", "已完成", "異常中", "已取消"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -678,6 +755,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
                         className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
                       >
                         <option value="新訂單">新訂單</option>
+                        <option value="已發付款通知">已發付款通知</option>
                         <option value="已出貨">已出貨</option>
                         <option value="已完成">已完成</option>
                         <option value="異常中">異常中</option>
