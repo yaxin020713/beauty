@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, MEMBERS_DB_ID } from "@/lib/notion";
+import { generateReferralCode } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
@@ -193,9 +194,16 @@ export async function POST(request: NextRequest) {
         properties,
       });
     } else {
-      // 建立新會員（預設銅級、消費金額 0）
+      // 建立新會員（預設銅級、消費金額 0）。推薦碼與建立日期一定要在這裡就寫入，
+      // 否則之後 /api/referral/generate 只會讀取既有推薦碼、不會補建，導致推薦連結變成 ?ref=null
       properties.Email = {
         title: [{ text: { content: email } }],
+      };
+      properties.推薦碼 = {
+        rich_text: [{ text: { content: generateReferralCode(email) } }],
+      };
+      properties.會員建立日期 = {
+        date: { start: new Date().toISOString().split("T")[0] },
       };
       properties.會員等級 = {
         select: { name: "銅級" },

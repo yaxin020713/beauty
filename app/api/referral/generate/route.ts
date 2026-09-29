@@ -68,6 +68,35 @@ export async function POST(request: NextRequest) {
           referralCode = codeProperty.rich_text[0].plain_text;
         }
       }
+
+      // 補救措施：某些會員記錄是透過「完成會員檔案」表單建立的，當時可能還沒有補上推薦碼，
+      // 導致推薦連結變成 ?ref=null。在這裡偵測到缺少推薦碼時，直接補生成並寫回 Notion。
+      if (!referralCode) {
+        referralCode = generateReferralCode(email);
+        console.log("[api/referral/generate] 既有會員缺少推薦碼，補生成:", referralCode);
+
+        const backfillProperties: Record<string, any> = {
+          推薦碼: {
+            rich_text: [{ text: { content: referralCode } }],
+          },
+        };
+
+        const hasCreationDate =
+          "properties" in memberPage &&
+          memberPage.properties.會員建立日期 &&
+          "date" in memberPage.properties.會員建立日期 &&
+          (memberPage.properties.會員建立日期 as any).date?.start;
+        if (!hasCreationDate) {
+          backfillProperties.會員建立日期 = {
+            date: { start: new Date().toISOString().split("T")[0] },
+          };
+        }
+
+        await notion.pages.update({
+          page_id: memberId,
+          properties: backfillProperties,
+        });
+      }
     } else {
       // 新會員：生成推薦碼並建立頁面
       referralCode = generateReferralCode(email);
