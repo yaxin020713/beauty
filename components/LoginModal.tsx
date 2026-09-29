@@ -81,7 +81,6 @@ export default function LoginModal() {
 
   const handleMemberProfileSubmit = async (data: {
     birthday: string;
-    address: string;
     store711Code?: string;
     recipientName?: string;
     contactPhone?: string;
@@ -95,7 +94,6 @@ export default function LoginModal() {
         body: JSON.stringify({
           email: pendingMemberEmail,
           birthday: data.birthday,
-          address: data.address,
           store711Code: data.store711Code,
           recipientName: data.recipientName,
           contactPhone: data.contactPhone,

@@ -35,7 +35,6 @@ type OrderItem = {
   status: string;
   paymentStatus: string;
   storeNumber: string;
-  faceToFace: string;
   shippingDate: string;
   createdTime: string;
 };

@@ -6,7 +6,6 @@ export const dynamic = "force-dynamic";
 type MemberData = {
   email: string;
   birthday?: string; // YYYY-MM-DD
-  address?: string;
   bankCode?: string;
   bankAccount?: string;
   store711Code?: string;
@@ -62,10 +61,6 @@ export async function GET(request: NextRequest) {
 
       if (props.生日 && "date" in props.生日) {
         memberData.birthday = (props.生日 as any).date?.start || null;
-      }
-
-      if (props.地址 && "rich_text" in props.地址) {
-        memberData.address = (props.地址 as any).rich_text?.[0]?.plain_text || null;
       }
 
       if (props.銀行代碼 && "rich_text" in props.銀行代碼) {
@@ -158,12 +153,6 @@ export async function POST(request: NextRequest) {
 
     if (body.birthday) {
       properties.生日 = { date: { start: body.birthday } };
-    }
-
-    if (body.address) {
-      properties.地址 = {
-        rich_text: [{ text: { content: body.address } }],
-      };
     }
 
     if (body.bankCode) {

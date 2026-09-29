@@ -14,7 +14,6 @@ type UserData = {
   availableCommission: number;
   pendingCommission: number;
   birthday?: string;
-  address?: string;
   bankCode?: string;
   bankAccount?: string;
   store711Code?: string;
@@ -50,7 +49,6 @@ export default function UserProfile() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [editBirthday, setEditBirthday] = useState("");
-  const [editAddress, setEditAddress] = useState("");
   const [editBankCode, setEditBankCode] = useState("");
   const [editBankAccount, setEditBankAccount] = useState("");
   const [editStore711Code, setEditStore711Code] = useState("");
@@ -96,7 +94,6 @@ export default function UserProfile() {
           availableCommission: data.availableCommission || 0,
           pendingCommission: data.pendingCommission || 0,
           birthday: data.birthday,
-          address: data.address,
           bankCode: data.bankCode,
           bankAccount: data.bankAccount,
           membershipLevel: data.membershipLevel || "銅級",
@@ -107,7 +104,6 @@ export default function UserProfile() {
         });
         // 初始化編輯表單
         setEditBirthday(data.birthday || "");
-        setEditAddress(data.address || "");
         setEditBankCode(data.bankCode || "");
         setEditBankAccount(data.bankAccount || "");
         setEditStore711Code(data.store711Code || "");
@@ -225,7 +221,6 @@ export default function UserProfile() {
         body: JSON.stringify({
           email: user.email,
           birthday: editBirthday,
-          address: editAddress,
           bankCode: editBankCode,
           bankAccount: editBankAccount,
           store711Code: editStore711Code,
@@ -240,7 +235,6 @@ export default function UserProfile() {
             ? {
                 ...prev,
                 birthday: editBirthday,
-                address: editAddress,
                 bankCode: editBankCode,
                 bankAccount: editBankAccount,
                 store711Code: editStore711Code,
@@ -422,20 +416,6 @@ export default function UserProfile() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-taupe-700 mb-1">
-                預設收件地址（結帳時可修改）
-              </label>
-              <textarea
-                value={editAddress}
-                onChange={(e) => setEditAddress(e.target.value)}
-                disabled={editLoading}
-                placeholder="請輸入完整地址"
-                rows={2}
-                className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
-              />
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-taupe-700 mb-1">
@@ -585,12 +565,6 @@ export default function UserProfile() {
               <span className="text-sm text-taupe-600">生日:</span>
               <span className="text-sm font-medium text-ink">
                 {userData.birthday || "未填寫"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-taupe-600">預設收件地址:</span>
-              <span className="text-sm font-medium text-ink">
-                {userData.address || "未填寫"}
               </span>
             </div>
             <div className="flex justify-between">

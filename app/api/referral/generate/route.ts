@@ -128,7 +128,6 @@ export async function POST(request: NextRequest) {
     let membershipLevel = "銅級";
     let totalSpending = 0;
     let birthday: string | null = null;
-    let address: string | null = null;
     let bankCode: string | null = null;
     let bankAccount: string | null = null;
     let store711Code: string | null = null;
@@ -156,9 +155,6 @@ export async function POST(request: NextRequest) {
       }
       if (props.生日 && "date" in props.生日) {
         birthday = (props.生日 as any).date?.start || null;
-      }
-      if (props.地址 && "rich_text" in props.地址) {
-        address = (props.地址 as any).rich_text?.[0]?.plain_text || null;
       }
       if (props.銀行代碼 && "rich_text" in props.銀行代碼) {
         bankCode = (props.銀行代碼 as any).rich_text?.[0]?.plain_text || null;
@@ -192,7 +188,6 @@ export async function POST(request: NextRequest) {
         membershipLevel,
         totalSpending,
         birthday,
-        address,
         bankCode,
         bankAccount,
         store711Code,
