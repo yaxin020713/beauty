@@ -59,6 +59,30 @@ async function getOrderData(orderId: string) {
   }
 }
 
+// 查詢該訂單是否已經生成過同類型（付款/出貨）的通知信，避免重複生成
+async function findExistingPendingEmail(orderId: string, templateType: string) {
+  try {
+    const response = await notion.databases.query({
+      database_id: PENDING_EMAILS_DB_ID!,
+      filter: {
+        and: [
+          { property: "Order_ID", title: { equals: orderId } },
+          { property: "Template_Type", select: { equals: templateType } },
+        ],
+      },
+      page_size: 1,
+    });
+
+    return response.results[0] ?? null;
+  } catch (error) {
+    console.error(
+      `[api/admin/generate-emails] 查詢既有待發送郵件失敗 (${orderId}):`,
+      error
+    );
+    return null;
+  }
+}
+
 async function savePendingEmail(
   orderId: string,
   customerName: string,
@@ -167,12 +191,22 @@ export async function POST(request: NextRequest) {
 
     const results: Array<{
       orderId: string;
-      status: "success" | "failed";
+      status: "success" | "failed" | "skipped";
       message?: string;
     }> = [];
 
     for (const orderId of orderIds) {
       try {
+        const existing = await findExistingPendingEmail(orderId, templateType);
+        if (existing) {
+          results.push({
+            orderId,
+            status: "skipped",
+            message: "此訂單已生成過同類型通知信，略過",
+          });
+          continue;
+        }
+
         const orderData = await getOrderData(orderId);
         if (!orderData) {
           results.push({
@@ -241,6 +275,7 @@ export async function POST(request: NextRequest) {
 
     const successCount = results.filter((r) => r.status === "success").length;
     const failedCount = results.filter((r) => r.status === "failed").length;
+    const skippedCount = results.filter((r) => r.status === "skipped").length;
 
     return NextResponse.json(
       {
@@ -249,6 +284,7 @@ export async function POST(request: NextRequest) {
           total: results.length,
           success: successCount,
           failed: failedCount,
+          skipped: skippedCount,
         },
         results,
       },

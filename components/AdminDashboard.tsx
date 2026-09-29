@@ -427,7 +427,7 @@ function OrdersTab({ orders }: { orders: OrderItem[] }) {
       if (res.ok) {
         const data = await res.json();
         setEmailGenerationMessage(
-          `✅ 成功生成 ${data.summary.success} 筆郵件，失敗 ${data.summary.failed} 筆`
+          `✅ 成功生成 ${data.summary.success} 筆郵件，已略過（先前已生成過）${data.summary.skipped ?? 0} 筆，失敗 ${data.summary.failed} 筆`
         );
       } else {
         const error = await res.json().catch(() => null);

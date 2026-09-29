@@ -6,6 +6,7 @@ import { BANK_INFO } from "@/lib/bank";
 
 const GMAIL_USER = process.env.GMAIL_USER;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+const PENDING_EMAILS_DB_ID = process.env.NOTION_PENDING_EMAILS_DB_ID;
 
 if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
   console.warn(
@@ -75,6 +76,39 @@ async function getOrderData(orderId: string) {
   } catch (error) {
     console.error(`[api/admin/send-email] 查詢訂單 ${orderId} 失敗:`, error);
     return null;
+  }
+}
+
+// 把「待發送郵件」資料庫中對應的紀錄標記為已寄送，避免下次生成通知信時被誤判為尚未處理
+async function markPendingEmailSent(orderId: string, templateType: string) {
+  if (!PENDING_EMAILS_DB_ID) return;
+
+  try {
+    const response = await notion.databases.query({
+      database_id: PENDING_EMAILS_DB_ID,
+      filter: {
+        and: [
+          { property: "Order_ID", title: { equals: orderId } },
+          { property: "Template_Type", select: { equals: templateType } },
+        ],
+      },
+      page_size: 1,
+    });
+
+    const pendingPage = response.results[0];
+    if (!pendingPage) return;
+
+    await notion.pages.update({
+      page_id: pendingPage.id,
+      properties: {
+        Status: { select: { name: "sent" } },
+      },
+    });
+  } catch (error) {
+    console.error(
+      `[api/admin/send-email] 更新待發送郵件狀態失敗 (${orderId}):`,
+      error
+    );
   }
 }
 
@@ -162,6 +196,8 @@ export async function POST(request: NextRequest) {
           subject,
           text: body,
         });
+
+        await markPendingEmailSent(orderId, templateType);
 
         results.push({
           orderId,
