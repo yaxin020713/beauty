@@ -392,6 +392,7 @@ export default function UserProfile() {
                 <div className="w-full overflow-hidden rounded-lg border border-taupe-200 focus-within:border-sapphire-500 focus-within:ring-1 focus-within:ring-sapphire-500">
                   <input
                     type="date"
+                    lang="en-US"
                     value={editBirthday}
                     onChange={(e) => setEditBirthday(e.target.value)}
                     disabled={editLoading}
