@@ -65,7 +65,7 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
   shipment: {
     id: "shipment",
     name: "出貨通知",
-    subject: "【美妙預訂】{{批次名稱}} - 預計於 {{預計出貨日}} 出貨",
+    subject: "【美妝預訂】{{批次名稱}} - 預計於 {{預計出貨日}} 出貨",
     body: `親愛的 {{客戶名稱}}，
 
 好消息！您的訂單已確認出貨。
@@ -76,9 +76,14 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
 應付金額：NT$ {{應付金額}}
 預計出貨日：{{預計出貨日}}
 
-📍 收貨方式
+📋 訂購品項
 ─────────────────────────
-詳見您的訂單詳情頁面
+{{訂單詳情}}
+
+🏪 收貨資訊
+─────────────────────────
+收貨人：{{客戶名稱}}
+7-11 門市編號：{{超商店號}}
 
 🔗 查看訂單
 ─────────────────────────

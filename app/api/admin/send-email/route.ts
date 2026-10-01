@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
           store7_11: orderData.store7_11,
           bankName: BANK_INFO.bankName,
           bankAccount: BANK_INFO.account,
+          bankCode: BANK_INFO.code,
         };
 
         // 生成郵件內容
