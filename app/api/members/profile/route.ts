@@ -4,6 +4,64 @@ import { generateReferralCode } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
+// 計算待實現分潤：已確認的訂單但未滿 8 天交付期限
+async function calculateUnrealizedCommission(referralCode: string): Promise<number> {
+  const ORDERS_DB_ID = process.env.NOTION_ORDERS_DB_ID;
+  if (!ORDERS_DB_ID || !referralCode) return 0;
+
+  try {
+    const eightDaysMs = 8 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // 查詢使用該推薦碼的所有訂單（推薦碼欄位）
+    const response = await notion.databases.query({
+      database_id: ORDERS_DB_ID,
+      filter: {
+        property: "推薦碼",
+        rich_text: { equals: referralCode },
+      },
+    });
+
+    let unrealizedTotal = 0;
+
+    for (const order of response.results) {
+      if (!("properties" in order)) continue;
+
+      const props = order.properties;
+
+      // 讀取訂單狀態
+      const statusProp = props.訂單狀態;
+      const status = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
+
+      // 跳過已完成的訂單（分潤已實現）
+      if (status === "已完成") continue;
+
+      // 讀取預計出貨日
+      const shipDateProp = props.預計出貨日;
+      const shipDateStr = shipDateProp && "date" in shipDateProp ? (shipDateProp as any).date?.start : null;
+
+      if (!shipDateStr) continue;
+
+      // 計算出貨日 + 8 天的時間戳
+      const shipDate = new Date(shipDateStr).getTime();
+      const deadlineTime = shipDate + eightDaysMs;
+
+      // 只計算未達期限的訂單的分潤
+      if (now < deadlineTime) {
+        const commissionProp = props.分潤;
+        if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
+          unrealizedTotal += commissionProp.number || 0;
+        }
+      }
+    }
+
+    return unrealizedTotal;
+  } catch (error) {
+    console.error("[api/members/profile] 計算待實現分潤失敗:", error);
+    return 0;
+  }
+}
+
 type MemberData = {
   email: string;
   birthday?: string; // YYYY-MM-DD
@@ -13,6 +71,7 @@ type MemberData = {
   recipientName?: string;
   contactPhone?: string;
   agreedToTerms?: boolean;
+  unrealizedCommission?: number; // 待實現分潤：已確認但未達條件的分潤
 };
 
 export async function GET(request: NextRequest) {
@@ -107,6 +166,14 @@ export async function GET(request: NextRequest) {
 
       if (props.條款同意時間 && "date" in props.條款同意時間) {
         memberData.agreedToTerms = !!((props.條款同意時間 as any).date?.start);
+      }
+
+      // 計算待實現分潤
+      if (props.推薦碼 && "rich_text" in props.推薦碼) {
+        const referralCode = (props.推薦碼 as any).rich_text?.[0]?.plain_text;
+        if (referralCode) {
+          memberData.unrealizedCommission = await calculateUnrealizedCommission(referralCode);
+        }
       }
     }
 

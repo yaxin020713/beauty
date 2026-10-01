@@ -13,6 +13,7 @@ type UserData = {
   totalCommission: number;
   availableCommission: number;
   pendingCommission: number;
+  unrealizedCommission?: number;
   birthday?: string;
   bankCode?: string;
   bankAccount?: string;
@@ -93,6 +94,7 @@ export default function UserProfile() {
           totalCommission: data.totalCommission || 0,
           availableCommission: data.availableCommission || 0,
           pendingCommission: data.pendingCommission || 0,
+          unrealizedCommission: data.unrealizedCommission || 0,
           birthday: data.birthday,
           bankCode: data.bankCode,
           bankAccount: data.bankAccount,
@@ -682,6 +684,15 @@ export default function UserProfile() {
               歷史累計 NT${userData.totalCommission}
             </p>
           </div>
+          <div className="rounded-lg bg-amber-50 p-4">
+            <p className="text-xs text-amber-600 mb-1">待實現分潤</p>
+            <p className="text-2xl font-bold text-amber-600">
+              NT${userData.unrealizedCommission || 0}
+            </p>
+            <p className="text-xs text-taupe-400 mt-1">
+              訂單未滿 8 天
+            </p>
+          </div>
           {userData.pendingCommission > 0 && (
             <div className="rounded-lg bg-sapphire-50 p-4">
               <p className="text-xs text-sapphire-600 mb-1">撥款處理中</p>
@@ -835,13 +846,15 @@ export default function UserProfile() {
 
       {/* 說明 */}
       <div className="rounded-lg bg-taupe-50 p-4 text-sm text-taupe-700">
-        <p className="font-medium">💡 如何獲得分潤</p>
+        <p className="font-medium">💡 分潤流程說明</p>
         <ul className="mt-2 space-y-1 text-taupe-600">
           <li>✓ 分享您的推薦鏈接給朋友 (或分享推薦碼)</li>
           <li>✓ 朋友點擊鏈接或輸入推薦碼購買商品</li>
           <li>✓ <strong>每次購買</strong>都能獲得該商品的分潤金額</li>
           <li>✓ 無購買次數限制，完全可以當團購主！</li>
-          <li>✓ 分潤累積顯示在上方「累計獲得分潤」</li>
+          <li>✓ 分潤狀態：訂單確認後進入「待實現分潤」</li>
+          <li>✓ 訂單出貨滿 8 天後，分潤轉為「待提現分潤」</li>
+          <li>✓ 累計滿 NT$500 即可提現到銀行帳號</li>
         </ul>
       </div>
     </div>
