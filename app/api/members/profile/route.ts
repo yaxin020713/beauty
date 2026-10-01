@@ -9,57 +9,70 @@ async function calculateUnrealizedCommission(referralCode: string): Promise<numb
   const ORDERS_DB_ID = process.env.NOTION_ORDERS_DB_ID;
   if (!ORDERS_DB_ID || !referralCode) return 0;
 
-  try {
-    const eightDaysMs = 8 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
+  // 設置 5 秒超時，防止慢查詢阻塞會員資料加載
+  const timeoutPromise = new Promise<number>((resolve) => {
+    setTimeout(() => {
+      console.warn("[api/members/profile] 待實現分潤計算超時，返回 0");
+      resolve(0);
+    }, 5000);
+  });
 
-    // 查詢使用該推薦碼的所有訂單（推薦碼欄位）
-    const response = await notion.databases.query({
-      database_id: ORDERS_DB_ID,
-      filter: {
-        property: "推薦碼",
-        rich_text: { equals: referralCode },
-      },
-    });
+  const calculationPromise = (async () => {
+    try {
+      const eightDaysMs = 8 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
 
-    let unrealizedTotal = 0;
+      // 查詢使用該推薦碼的所有訂單（推薦碼欄位）
+      const response = await notion.databases.query({
+        database_id: ORDERS_DB_ID,
+        filter: {
+          property: "推薦碼",
+          rich_text: { equals: referralCode },
+        },
+      });
 
-    for (const order of response.results) {
-      if (!("properties" in order)) continue;
+      let unrealizedTotal = 0;
 
-      const props = order.properties;
+      for (const order of response.results) {
+        if (!("properties" in order)) continue;
 
-      // 讀取訂單狀態
-      const statusProp = props.訂單狀態;
-      const status = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
+        const props = order.properties;
 
-      // 跳過已完成的訂單（分潤已實現）
-      if (status === "已完成") continue;
+        // 讀取訂單狀態
+        const statusProp = props.訂單狀態;
+        const status = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
 
-      // 讀取預計出貨日
-      const shipDateProp = props.預計出貨日;
-      const shipDateStr = shipDateProp && "date" in shipDateProp ? (shipDateProp as any).date?.start : null;
+        // 跳過已完成的訂單（分潤已實現）
+        if (status === "已完成") continue;
 
-      if (!shipDateStr) continue;
+        // 讀取預計出貨日
+        const shipDateProp = props.預計出貨日;
+        const shipDateStr = shipDateProp && "date" in shipDateProp ? (shipDateProp as any).date?.start : null;
 
-      // 計算出貨日 + 8 天的時間戳
-      const shipDate = new Date(shipDateStr).getTime();
-      const deadlineTime = shipDate + eightDaysMs;
+        if (!shipDateStr) continue;
 
-      // 只計算未達期限的訂單的分潤
-      if (now < deadlineTime) {
-        const commissionProp = props.分潤;
-        if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
-          unrealizedTotal += commissionProp.number || 0;
+        // 計算出貨日 + 8 天的時間戳
+        const shipDate = new Date(shipDateStr).getTime();
+        const deadlineTime = shipDate + eightDaysMs;
+
+        // 只計算未達期限的訂單的分潤
+        if (now < deadlineTime) {
+          const commissionProp = props.分潤;
+          if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
+            unrealizedTotal += commissionProp.number || 0;
+          }
         }
       }
-    }
 
-    return unrealizedTotal;
-  } catch (error) {
-    console.error("[api/members/profile] 計算待實現分潤失敗:", error);
-    return 0;
-  }
+      return unrealizedTotal;
+    } catch (error) {
+      console.error("[api/members/profile] 計算待實現分潤失敗:", error);
+      return 0;
+    }
+  })();
+
+  // 返回先完成的結果（超時或計算完成）
+  return Promise.race([calculationPromise, timeoutPromise]);
 }
 
 type MemberData = {
