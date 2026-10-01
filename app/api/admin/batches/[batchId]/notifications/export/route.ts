@@ -83,7 +83,7 @@ async function getOrdersForBatch(batchPageId: string): Promise<OrderData[]> {
     });
 
     return ordersQuery.results
-      .map((result) => {
+      .map((result: any) => {
         if (!("properties" in result)) return null;
         const props = result.properties as Record<string, any>;
 
