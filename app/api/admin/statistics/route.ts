@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    const statistics = response.results.map((page) => {
+    const statistics = response.results.map((page: any) => {
       if (!("properties" in page)) return null;
 
       const props = page.properties;

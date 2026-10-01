@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     });
 
     const records = response.results
-      .map((page) => {
+      .map((page: any) => {
         if (!("properties" in page)) return null;
         const props = page.properties;
 

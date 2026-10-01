@@ -51,7 +51,7 @@ export async function GET(
     console.log(`[variants API] 查詢結果數量: ${query.results.length}`);
 
     const variants: ProductVariant[] = query.results
-      .map((page) => {
+      .map((page: any) => {
         if (!("properties" in page)) return null;
 
         const props = page.properties as Record<string, any>;
