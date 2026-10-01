@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    let orders = response.results.map((page) => {
+    let orders = response.results.map((page: any) => {
       if (!("properties" in page)) return null;
 
       const props = page.properties;
