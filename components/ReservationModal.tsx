@@ -36,6 +36,7 @@ export default function ReservationModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [reservationResult, setReservationResult] = useState<ReservationResult | null>(null);
+  const [needsTermsAgreement, setNeedsTermsAgreement] = useState(true);
 
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const shippingFee = calculateShippingFee(totalQuantity, shippingMethod);
@@ -68,13 +69,39 @@ export default function ReservationModal({
               if (data.recipientName) setCustomerName(data.recipientName);
               if (data.contactPhone) setCustomerPhone(data.contactPhone);
               if (data.store711Code) setStore7_11(data.store711Code);
+
+              // 如果已同意過條款，不需要再勾選
+              if (data.agreedToTerms) {
+                setNeedsTermsAgreement(false);
+                setAgreedToTerms(true);
+              }
             }
           } catch (error) {
             console.warn("載入會員資料失敗:", error);
           }
         };
 
+        // 檢查是否有訂單歷史
+        const checkOrderHistory = async () => {
+          try {
+            const response = await fetch(
+              `/api/orders/my-orders?email=${encodeURIComponent(user.email)}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              // 如果有訂單記錄，表示已許可過條款
+              if (Array.isArray(data) && data.length > 0) {
+                setNeedsTermsAgreement(false);
+                setAgreedToTerms(true);
+              }
+            }
+          } catch (error) {
+            console.warn("檢查訂單歷史失敗:", error);
+          }
+        };
+
         loadMemberProfile();
+        checkOrderHistory();
       }
     }
   }, [open, user, referralCode]);
@@ -85,7 +112,7 @@ export default function ReservationModal({
     customerPhone &&
     customerEmail &&
     store7_11 &&
-    agreedToTerms;
+    (needsTermsAgreement ? agreedToTerms : true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,26 +380,33 @@ export default function ReservationModal({
                     )}
                   </div>
 
-                  {/* 條款同意 */}
-                  <div className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      id="reservation-terms-agree"
-                      checked={agreedToTerms}
-                      onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-taupe-300 text-sapphire-600 focus:ring-sapphire-500"
-                    />
-                    <label htmlFor="reservation-terms-agree" className="text-xs text-taupe-600">
-                      我已閱讀並同意{" "}
-                      <button
-                        type="button"
-                        onClick={() => setShowTerms(true)}
-                        className="text-sapphire-600 underline hover:text-sapphire-700"
-                      >
-                        《會員資料使用條款》
-                      </button>
-                    </label>
+                  {/* 提示：結帳後自動成為會員 */}
+                  <div className="rounded-lg bg-sapphire-50 px-4 py-3 text-xs text-sapphire-700">
+                    ℹ️ 完成結帳後，您將自動成為會員，享受推薦分潤等會員福利。
                   </div>
+
+                  {/* 條款同意 - 僅在需要時顯示 */}
+                  {needsTermsAgreement && (
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        id="reservation-terms-agree"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-taupe-300 text-sapphire-600 focus:ring-sapphire-500"
+                      />
+                      <label htmlFor="reservation-terms-agree" className="text-xs text-taupe-600">
+                        我已閱讀並同意{" "}
+                        <button
+                          type="button"
+                          onClick={() => setShowTerms(true)}
+                          className="text-sapphire-600 underline hover:text-sapphire-700"
+                        >
+                          《會員資料使用條款》
+                        </button>
+                      </label>
+                    </div>
+                  )}
 
                   {/* 錯誤訊息 */}
                   {error && (

@@ -104,6 +104,10 @@ export async function GET(request: NextRequest) {
       if (props.聯絡電話 && "rich_text" in props.聯絡電話) {
         memberData.contactPhone = (props.聯絡電話 as any).rich_text?.[0]?.plain_text || null;
       }
+
+      if (props.條款同意時間 && "date" in props.條款同意時間) {
+        memberData.agreedToTerms = !!((props.條款同意時間 as any).date?.start);
+      }
     }
 
     return NextResponse.json(memberData, { status: 200 });
