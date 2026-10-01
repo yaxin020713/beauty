@@ -36,6 +36,9 @@ if (!batchesDbId) {
   );
 }
 
+import { retry, isRetryableError } from "./retry";
+import { logger } from "./logger";
+
 // Wrapper around Notion API using fetch instead of SDK
 class NotionClient {
   private apiKey: string;
@@ -46,26 +49,42 @@ class NotionClient {
   }
 
   private async request(method: string, path: string, body?: any) {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json",
+    return retry(
+      async () => {
+        const response = await fetch(`${this.baseUrl}${path}`, {
+          method,
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const error = new Error(data.message || "Notion API error");
+          (error as any).code = data.code;
+          (error as any).status = data.status;
+          throw error;
+        }
+
+        return data;
       },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      const error = new Error(data.message || "Notion API error");
-      (error as any).code = data.code;
-      (error as any).status = data.status;
-      throw error;
-    }
-
-    return data;
+      {
+        maxRetries: 3,
+        initialDelayMs: 1000,
+        maxDelayMs: 10000,
+        onRetry: (attempt, error, delayMs) => {
+          logger.warn(`Notion API 重試 (${attempt}/${3})`, {
+            path,
+            error: error.message,
+            delayMs,
+          });
+        },
+      }
+    );
   }
 
   databases = {
