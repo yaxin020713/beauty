@@ -921,9 +921,25 @@ export default function UserProfile() {
           <li>✓ 朋友點擊鏈接或輸入推薦碼購買商品</li>
           <li>✓ <strong>每次購買</strong>都能獲得該商品的分潤金額</li>
           <li>✓ 無購買次數限制，完全可以當團購主！</li>
-          <li>✓ 分潤狀態：訂單確認後進入「待實現分潤」</li>
-          <li>✓ 訂單出貨滿 8 天後，分潤轉為「待提現分潤」</li>
+        </ul>
+
+        <p className="font-medium mt-4 mb-2">📊 分潤狀態說明：</p>
+        <ul className="space-y-1 text-taupe-600">
+          <li>
+            <strong className="text-amber-600">待實現分潤</strong> — 被推薦人已完成下單，但訂單尚未出貨完成，無法提領的部分
+          </li>
+          <li>
+            <strong className="text-emerald-600">待提現分潤</strong> — 訂單出貨滿 8 天後確認完成，可以提現的部分
+          </li>
+          <li>
+            <strong className="text-sapphire-600">撥款處理中</strong> — 已申請提現，正在處理中的部分（1-3 個工作天內匯入）
+          </li>
+        </ul>
+
+        <p className="font-medium mt-4 mb-2">✅ 提現流程：</p>
+        <ul className="space-y-1 text-taupe-600">
           <li>✓ 累計滿 NT$500 即可提現到銀行帳號</li>
+          <li>✓ 提現後於 1-3 個工作天內匯入銀行帳戶</li>
         </ul>
       </div>
     </div>
