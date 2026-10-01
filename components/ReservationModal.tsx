@@ -59,31 +59,7 @@ export default function ReservationModal({
       if (user?.email) {
         setCustomerEmail(user.email);
 
-        // Load member profile from Notion
-        const loadMemberProfile = async () => {
-          try {
-            const response = await fetch(
-              `/api/members/profile?email=${encodeURIComponent(user.email)}`
-            );
-            if (response.ok) {
-              const data = await response.json();
-              if (data.recipientName) setCustomerName(data.recipientName);
-              if (data.contactPhone) setCustomerPhone(data.contactPhone);
-              if (data.store711Code) setStore7_11(data.store711Code);
-
-              // 如果已同意過條款，不需要再勾選
-              if (data.agreedToTerms) {
-                setNeedsTermsAgreement(false);
-                setAgreedToTerms(true);
-                setIsFirstTimeBuyer(false);
-              }
-            }
-          } catch (error) {
-            console.warn("載入會員資料失敗:", error);
-          }
-        };
-
-        // 檢查是否有訂單歷史
+        // 先檢查訂單歷史，確定是否首次購買
         const checkOrderHistory = async () => {
           try {
             const response = await fetch(
@@ -91,8 +67,8 @@ export default function ReservationModal({
             );
             if (response.ok) {
               const data = await response.json();
-              // 如果有訂單記錄，表示已許可過條款，不是首次購買者
               if (Array.isArray(data) && data.length > 0) {
+                // 有訂單 = 已許可過條款，不是首次購買
                 setNeedsTermsAgreement(false);
                 setAgreedToTerms(true);
                 setIsFirstTimeBuyer(false);
@@ -106,8 +82,31 @@ export default function ReservationModal({
           }
         };
 
-        loadMemberProfile();
+        // 再加載會員資料，檢查是否已同意過條款
+        const loadMemberProfile = async () => {
+          try {
+            const response = await fetch(
+              `/api/members/profile?email=${encodeURIComponent(user.email)}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              if (data.recipientName) setCustomerName(data.recipientName);
+              if (data.contactPhone) setCustomerPhone(data.contactPhone);
+              if (data.store711Code) setStore7_11(data.store711Code);
+
+              // 如果已同意過條款（登入時），不需要在結帳時再勾選
+              if (data.agreedToTerms) {
+                setNeedsTermsAgreement(false);
+                setAgreedToTerms(true);
+              }
+            }
+          } catch (error) {
+            console.warn("載入會員資料失敗:", error);
+          }
+        };
+
         checkOrderHistory();
+        loadMemberProfile();
       }
     }
   }, [open, user, referralCode]);
