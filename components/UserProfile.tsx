@@ -320,6 +320,25 @@ export default function UserProfile() {
     window.open(lineUrl, "_blank");
   };
 
+  const shareToInstagram = () => {
+    const fullText = `這是我的專屬推薦連結 快來跟我一起團購吧！\n${userData.referralLink}`;
+    navigator.clipboard.writeText(fullText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      alert(
+        "✅ 已複製分享文本！\n\n" +
+        "📱 接下來的步驟：\n" +
+        "1️⃣ 開啟 Instagram 限時動態\n" +
+        "2️⃣ 點擊左下角「貼圖」→ 選「連結」\n" +
+        "3️⃣ 在連結輸入框貼上複製的文本\n" +
+        "4️⃣ 按發佈即可！\n\n" +
+        "💡 這樣你的粉絲就能直接點擊進入網站！"
+      );
+    }).catch(() => {
+      alert("複製失敗，請手動複製連結");
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* 帳戶和會員信息 */}
@@ -667,21 +686,50 @@ export default function UserProfile() {
         </div>
 
         {/* 分享按鈕 */}
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid grid-cols-3 gap-3">
           <button
             onClick={shareToWhatsApp}
             className="rounded-lg bg-sapphire-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-sapphire-700"
           >
             <Share2 className="mr-2 inline h-4 w-4" />
-            分享到 WhatsApp
+            WhatsApp
           </button>
           <button
             onClick={shareLine}
             className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-700"
           >
             <Share2 className="mr-2 inline h-4 w-4" />
-            分享到 LINE
+            LINE
           </button>
+          <button
+            onClick={shareToInstagram}
+            className="rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 px-4 py-3 text-sm font-medium text-white transition hover:from-purple-700 hover:to-pink-700"
+          >
+            <Share2 className="mr-2 inline h-4 w-4" />
+            Instagram
+          </button>
+        </div>
+
+        {/* Instagram Story 連結說明 */}
+        <div className="mt-4 rounded-lg bg-purple-50 border border-purple-200 p-4">
+          <p className="text-xs font-medium text-purple-900 mb-2">
+            💡 Instagram Story 連結分享最強大！
+          </p>
+          <div className="space-y-2 text-xs text-purple-800">
+            <p>
+              ✅ <span className="font-medium">為什麼用 Story 連結？</span> — 粉絲可以直接點擊進入，無需掃 QR code，轉換率最高！
+            </p>
+            <p>
+              📱 <span className="font-medium">操作步驟：</span>
+            </p>
+            <ol className="ml-4 space-y-1">
+              <li>1. 點擊上方 Instagram 按鈕（會複製連結）</li>
+              <li>2. 開啟 Instagram → 建立新限時動態</li>
+              <li>3. 點擊左下角「貼圖」→ 選擇「連結」貼圖</li>
+              <li>4. 在連結欄貼上複製的推薦連結</li>
+              <li>5. 發佈！你的粉絲就能直接點擊進網站 🚀</li>
+            </ol>
+          </div>
         </div>
       </div>
 
