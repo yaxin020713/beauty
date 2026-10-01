@@ -35,16 +35,38 @@ export async function POST(request: NextRequest) {
     console.log("[api/referral/generate] 開始處理 email:", email);
     console.log("[api/referral/generate] MEMBERS_DB_ID:", MEMBERS_DB_ID);
 
-    // 查詢會員是否已存在
-    const queryResponse = await notion.databases.query({
-      database_id: MEMBERS_DB_ID,
-      filter: {
-        property: "Email",
-        title: {
-          equals: email,
-        },
-      },
-    });
+    // 查詢會員是否已存在（加入重試機制）
+    let queryResponse;
+    let retryCount = 0;
+    const maxRetries = 2;
+
+    while (retryCount <= maxRetries) {
+      try {
+        queryResponse = await notion.databases.query({
+          database_id: MEMBERS_DB_ID,
+          filter: {
+            property: "Email",
+            title: {
+              equals: email,
+            },
+          },
+        });
+        break;
+      } catch (err: any) {
+        retryCount++;
+        console.warn(`[api/referral/generate] 查詢失敗 (第 ${retryCount} 次)`, err?.message);
+
+        if (retryCount > maxRetries) {
+          throw err;
+        }
+        // 等待後重試
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      }
+    }
+
+    if (!queryResponse) {
+      throw new Error("無法查詢會員資料庫（重試失敗）");
+    }
 
     console.log("[api/referral/generate] 查詢結果:", queryResponse.results.length, "個記錄");
 
