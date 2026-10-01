@@ -1,5 +1,3 @@
-import { Client } from "@notionhq/client";
-
 const apiKey = process.env.NOTION_API_KEY;
 const productsDbId = process.env.NOTION_PRODUCTS_DB_ID;
 const ordersDbId = process.env.NOTION_ORDERS_DB_ID;
@@ -38,8 +36,67 @@ if (!batchesDbId) {
   );
 }
 
-// 全域共用單一 Notion client
-export const notion = new Client({ auth: apiKey });
+// Wrapper around Notion API using fetch instead of SDK
+class NotionClient {
+  private apiKey: string;
+  private baseUrl = "https://api.notion.com/v1";
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+  }
+
+  private async request(method: string, path: string, body?: any) {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.message || "Notion API error");
+      (error as any).code = data.code;
+      (error as any).status = data.status;
+      throw error;
+    }
+
+    return data;
+  }
+
+  databases = {
+    query: async (params: any) => {
+      return this.request("POST", `/databases/${params.database_id}/query`, {
+        page_size: params.page_size,
+        filter: params.filter,
+        sorts: params.sorts,
+      });
+    },
+    retrieve: async (params: any) => {
+      return this.request("GET", `/databases/${params.database_id}`);
+    },
+  };
+
+  pages = {
+    retrieve: async (params: any) => {
+      return this.request("GET", `/pages/${params.page_id}`);
+    },
+    create: async (params: any) => {
+      return this.request("POST", "/pages", params);
+    },
+    update: async (params: any) => {
+      return this.request("PATCH", `/pages/${params.page_id}`, {
+        properties: params.properties,
+      });
+    },
+  };
+}
+
+export const notion = new NotionClient(apiKey!);
 
 export const PRODUCTS_DB_ID = productsDbId;
 export const ORDERS_DB_ID = ordersDbId;
