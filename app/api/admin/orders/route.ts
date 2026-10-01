@@ -94,12 +94,12 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const validOrders = orders.filter((order): order is NonNullable<typeof order> => order !== null);
+    const validOrders = orders.filter((order: any): order is NonNullable<typeof order> => order !== null);
 
     // 過濾訂單狀態
     let filteredOrders = validOrders;
     if (status) {
-      filteredOrders = filteredOrders.filter((order) => order.status === status);
+      filteredOrders = filteredOrders.filter((order: any) => order.status === status);
     }
 
     // 限制返回數量

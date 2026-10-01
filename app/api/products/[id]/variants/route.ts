@@ -82,7 +82,7 @@ export async function GET(
           stock,
         };
       })
-      .filter((v) => v !== null) as ProductVariant[];
+      .filter((v: any) => v !== null) as ProductVariant[];
 
     return NextResponse.json({ variants }, { status: 200 });
   } catch (error) {

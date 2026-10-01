@@ -274,9 +274,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const successCount = results.filter((r) => r.status === "success").length;
-    const failedCount = results.filter((r) => r.status === "failed").length;
-    const skippedCount = results.filter((r) => r.status === "skipped").length;
+    const successCount = results.filter((r: any) => r.status === "success").length;
+    const failedCount = results.filter((r: any) => r.status === "failed").length;
+    const skippedCount = results.filter((r: any) => r.status === "skipped").length;
 
     return NextResponse.json(
       {

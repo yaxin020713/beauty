@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const filteredStats = statistics.filter((stat) => stat !== null);
+    const filteredStats = statistics.filter((stat: any) => stat !== null);
 
     // 計算總銷售額和總銷售量
     const totalRevenue = filteredStats.reduce((sum: number, product: any) => {

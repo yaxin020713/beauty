@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
           resolvedDate,
         };
       })
-      .filter((w): w is NonNullable<typeof w> => w !== null);
+      .filter((w: any): w is NonNullable<typeof w> => w !== null);
 
     return NextResponse.json({ success: true, withdrawals });
   } catch (error) {

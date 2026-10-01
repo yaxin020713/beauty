@@ -82,7 +82,7 @@ export async function fetchProducts(): Promise<Product[]> {
   console.log("[fetchProducts] 從 Notion 獲取", response.results.length, "個商品頁面");
 
   return response.results
-    .map((page, idx) => {
+    .map((page: any, idx: number) => {
       if (!("properties" in page)) return null;
       const props = page.properties as Record<string, unknown>;
 
@@ -122,7 +122,7 @@ export async function fetchProducts(): Promise<Product[]> {
 
       return product.name ? product : null;
     })
-    .filter((p): p is Product => p !== null);
+    .filter((p: any): p is Product => p !== null);
 }
 
 /** 在 Notion 上架新商品 */

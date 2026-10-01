@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
         return { requestDate, payoutAmount, status, note };
       })
-      .filter((r): r is NonNullable<typeof r> => r !== null);
+      .filter((r: any): r is NonNullable<typeof r> => r !== null);
 
     return NextResponse.json({ success: true, records });
   } catch (error) {
