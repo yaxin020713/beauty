@@ -369,6 +369,9 @@ export default function UserProfile() {
                   placeholder="請輸入姓名"
                   className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
                 />
+                <p className="text-xs text-amber-600 mt-1 font-medium">
+                  ⚠️ 請填寫證件姓名，取貨時須向超商出示證件
+                </p>
               </div>
 
               <div>
@@ -577,6 +580,24 @@ export default function UserProfile() {
                   ? `${userData.bankCode}-${userData.bankAccount}`
                   : "未填寫"}
               </span>
+            </div>
+
+            {/* 7-11 超商編號 */}
+            <div className="flex justify-between">
+              <span className="text-sm text-taupe-600">預設取貨店號:</span>
+              <span className="text-sm font-medium text-ink">
+                {userData.store711Code || "未填寫"}
+              </span>
+            </div>
+
+            {/* 收件資訊提示 */}
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 mt-2">
+              <p className="text-xs text-amber-800 font-medium">
+                📍 7-11 取貨提醒
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                收件人姓名需與證件相符，取貨時須向超商出示證件。
+              </p>
             </div>
           </div>
         )}

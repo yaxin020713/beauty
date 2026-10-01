@@ -307,8 +307,12 @@ export default function ReservationModal({
                       required
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="請填寫證件姓名"
                       className="w-full rounded-xl border border-taupe-200 px-4 py-3 text-base outline-none focus:border-sapphire-500 focus:ring-2 focus:ring-sapphire-500/20 bg-white"
                     />
+                    <p className="text-xs text-amber-600 font-medium">
+                      ⚠️ 請填寫證件姓名，取貨時須向超商出示證件
+                    </p>
                   </div>
 
                   {/* 電話 */}
