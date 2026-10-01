@@ -37,6 +37,7 @@ export default function ReservationModal({
   const [error, setError] = useState("");
   const [reservationResult, setReservationResult] = useState<ReservationResult | null>(null);
   const [needsTermsAgreement, setNeedsTermsAgreement] = useState(true);
+  const [isFirstTimeBuyer, setIsFirstTimeBuyer] = useState(true);
 
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const shippingFee = calculateShippingFee(totalQuantity, shippingMethod);
@@ -74,6 +75,7 @@ export default function ReservationModal({
               if (data.agreedToTerms) {
                 setNeedsTermsAgreement(false);
                 setAgreedToTerms(true);
+                setIsFirstTimeBuyer(false);
               }
             }
           } catch (error) {
@@ -89,10 +91,14 @@ export default function ReservationModal({
             );
             if (response.ok) {
               const data = await response.json();
-              // 如果有訂單記錄，表示已許可過條款
+              // 如果有訂單記錄，表示已許可過條款，不是首次購買者
               if (Array.isArray(data) && data.length > 0) {
                 setNeedsTermsAgreement(false);
                 setAgreedToTerms(true);
+                setIsFirstTimeBuyer(false);
+              } else {
+                // 沒有訂單 = 首次購買者
+                setIsFirstTimeBuyer(true);
               }
             }
           } catch (error) {
@@ -380,10 +386,16 @@ export default function ReservationModal({
                     )}
                   </div>
 
-                  {/* 提示：結帳後自動成為會員 */}
-                  <div className="rounded-lg bg-sapphire-50 px-4 py-3 text-xs text-sapphire-700">
-                    ℹ️ 完成結帳後，您將自動成為會員，享受推薦分潤等會員福利。
-                  </div>
+                  {/* 提示：首次購買或回客 */}
+                  {needsTermsAgreement && isFirstTimeBuyer ? (
+                    <div className="rounded-lg bg-sapphire-50 px-4 py-3 text-xs text-sapphire-700">
+                      ℹ️ 完成該帳號的<span className="font-semibold">第一次結帳</span>後，您將自動成為會員，享受推薦分潤等會員福利。
+                    </div>
+                  ) : !needsTermsAgreement ? (
+                    <div className="rounded-lg bg-emerald-50 px-4 py-3 text-xs text-emerald-700">
+                      ✓ 您已是會員，感謝支持！
+                    </div>
+                  ) : null}
 
                   {/* 條款同意 - 僅在需要時顯示 */}
                   {needsTermsAgreement && (
