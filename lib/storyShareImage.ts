@@ -74,25 +74,47 @@ function samplePixelColor(img: HTMLImageElement, sampleX: number, sampleY: numbe
   }
 }
 
+// 換行規則：中文可以逐字換行，但英文單字與數字＋單位（如 LA、MER、60ml、NT$9,900）
+// 視為一個整體不拆開；只有單一字詞本身就比整行還寬時才逐字切斷。
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
   maxWidth: number
 ): string[] {
-  const chars = Array.from(text);
+  const tokens = text.match(/[A-Za-z0-9À-ɏ$.,%&'’+\-/]+|\s+|[^\s]/g) ?? [];
   const lines: string[] = [];
   let current = "";
 
-  for (const char of chars) {
-    const candidate = current + char;
-    if (ctx.measureText(candidate).width > maxWidth && current) {
-      lines.push(current);
-      current = char;
-    } else {
+  const pushLine = () => {
+    const trimmed = current.trimEnd();
+    if (trimmed) lines.push(trimmed);
+    current = "";
+  };
+
+  for (const token of tokens) {
+    // 行首不放空白
+    if (!current && /^\s+$/.test(token)) continue;
+
+    const candidate = current + token;
+    if (ctx.measureText(candidate).width <= maxWidth) {
       current = candidate;
+      continue;
+    }
+
+    if (current) pushLine();
+    if (/^\s+$/.test(token)) continue;
+
+    if (ctx.measureText(token).width <= maxWidth) {
+      current = token;
+    } else {
+      // 單一字詞比整行還寬，只能逐字切斷
+      for (const char of Array.from(token)) {
+        if (current && ctx.measureText(current + char).width > maxWidth) pushLine();
+        current += char;
+      }
     }
   }
-  if (current) lines.push(current);
+  pushLine();
   return lines;
 }
 
