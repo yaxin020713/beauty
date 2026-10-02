@@ -96,6 +96,7 @@ class NotionClient {
         page_size: params.page_size,
         filter: params.filter,
         sorts: params.sorts,
+        start_cursor: params.start_cursor,
       });
     },
     retrieve: async (params: any) => {

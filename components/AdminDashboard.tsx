@@ -1135,24 +1135,20 @@ function ProductsTab({
   useEffect(() => {
     const loadVariantCounts = async () => {
       setLoadingVariants(true);
-      const updated = await Promise.all(
-        products.map(async (product) => {
-          try {
-            const res = await fetch(`/api/products/${product.id}/variants`);
-            if (res.ok) {
-              const data = await res.json();
-              return {
-                ...product,
-                variantCount: data.variants?.length || 0,
-              };
-            }
-          } catch (err) {
-            console.error("載入變體失敗:", err);
-          }
-          return { ...product, variantCount: 0 };
-        })
+      // 一次取得所有商品的選項數量；逐一查詢每個商品會對 Notion 發出上百個請求而被限流
+      let counts: Record<string, number> = {};
+      try {
+        const res = await fetch("/api/admin/variant-counts");
+        if (res.ok) {
+          const data = await res.json();
+          counts = data.counts || {};
+        }
+      } catch (err) {
+        console.error("載入選項數量失敗:", err);
+      }
+      setProductsWithVariants(
+        products.map((product) => ({ ...product, variantCount: counts[product.id] || 0 }))
       );
-      setProductsWithVariants(updated);
       setLoadingVariants(false);
     };
 
