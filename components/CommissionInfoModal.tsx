@@ -46,8 +46,12 @@ export default function CommissionInfoModal({ isOpen, onClose }: CommissionInfoM
           </section>
 
           <section>
-            <h3 className="mb-2 font-medium text-ink">分潤成果的三個數字</h3>
+            <h3 className="mb-2 font-medium text-ink">分潤成果的四個數字</h3>
             <ul className="space-y-2">
+              <li className="rounded-lg bg-amber-50 p-3">
+                <span className="font-medium text-amber-700">待實現分潤：</span>
+                被推薦人已完成下單，但訂單尚未出貨滿 8 天、還沒轉為「已完成」，暫時無法提領的分潤金額。
+              </li>
               <li className="rounded-lg bg-emerald-50 p-3">
                 <span className="font-medium text-emerald-700">待提現分潤：</span>
                 目前可提現的餘額，訂單完成時增加、按下提現時扣減。

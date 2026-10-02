@@ -816,14 +816,12 @@ export default function UserProfile() {
               訂單未滿 8 天
             </p>
           </div>
-          {userData.pendingCommission > 0 && (
-            <div className="rounded-lg bg-sapphire-50 p-4">
-              <p className="text-xs text-sapphire-600 mb-1">撥款處理中</p>
-              <p className="text-2xl font-bold text-sapphire-600">
-                NT${userData.pendingCommission}
-              </p>
-            </div>
-          )}
+          <div className="rounded-lg bg-sapphire-50 p-4">
+            <p className="text-xs text-sapphire-600 mb-1">撥款處理中</p>
+            <p className="text-2xl font-bold text-sapphire-600">
+              NT${userData.pendingCommission}
+            </p>
+          </div>
         </div>
 
         {userData.availableCommission >= 500 && (
@@ -993,7 +991,7 @@ export default function UserProfile() {
         <p className="font-medium mt-4 mb-2">✅ 提現流程：</p>
         <ul className="space-y-1 text-taupe-600">
           <li>✓ 累計滿 NT$500 即可提現到銀行帳號</li>
-          <li>✓ 提現後於 1-3 個工作天內匯入銀行帳戶</li>
+          <li>✓ 提現後於 5 個工作天內匯入銀行帳戶</li>
         </ul>
       </div>
     </div>
