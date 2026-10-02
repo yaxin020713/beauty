@@ -32,6 +32,7 @@ export default function ReservationModal({
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("convenience_711");
   const [manualReferralCode, setManualReferralCode] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -150,6 +151,7 @@ export default function ReservationModal({
           urlReferralCode: referralCode,
           manualReferralCode: manualReferralCode || undefined,
           agreedToTerms,
+          marketingOptIn: needsTermsAgreement && marketingOptIn,
         }),
       });
 
@@ -419,6 +421,22 @@ export default function ReservationModal({
                         >
                           《會員資料使用條款》
                         </button>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* 行銷訂閱 - 與條款同意放在同一處，選填、預設不勾選 */}
+                  {needsTermsAgreement && (
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        id="reservation-marketing-opt-in"
+                        checked={marketingOptIn}
+                        onChange={(e) => setMarketingOptIn(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-taupe-300 text-sapphire-600 focus:ring-sapphire-500"
+                      />
+                      <label htmlFor="reservation-marketing-opt-in" className="text-xs text-taupe-600">
+                        我願意收到團購檔期、新品上架與會員優惠通知（選填，可隨時取消）
                       </label>
                     </div>
                   )}

@@ -42,6 +42,13 @@ export default function MemberTermsModal({ isOpen, onClose }: MemberTermsModalPr
           </section>
 
           <section>
+            <h3 className="mb-2 font-medium text-ink">行銷通知</h3>
+            <p>
+              團購檔期、新品上架與優惠活動等行銷通知，僅寄送給另行勾選「願意收到通知」的會員，並記錄您勾選的時間。您可隨時於「會員專區 → 通知設定」取消訂閱，取消後我們將停止寄送。訂單、出貨、取貨與分潤撥款等交易相關通知不受此設定影響。
+            </p>
+          </section>
+
+          <section>
             <h3 className="mb-2 font-medium text-ink">資料保存方式</h3>
             <p>
               您的資料儲存於本站的內部資料庫，僅供本站營運與客服使用，不會提供第三方作為行銷用途。銀行帳戶資訊僅用於提現撥款作業。

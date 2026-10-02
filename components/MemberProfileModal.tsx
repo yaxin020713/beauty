@@ -14,6 +14,7 @@ type MemberProfileModalProps = {
     recipientName?: string;
     contactPhone?: string;
     agreedToTerms: boolean;
+    marketingOptIn: boolean;
   }) => Promise<void>;
 };
 
@@ -28,6 +29,7 @@ export default function MemberProfileModal({
   const [recipientName, setRecipientName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -48,7 +50,7 @@ export default function MemberProfileModal({
 
     setLoading(true);
     try {
-      await onSubmit({ birthday, store711Code, recipientName, contactPhone, agreedToTerms });
+      await onSubmit({ birthday, store711Code, recipientName, contactPhone, agreedToTerms, marketingOptIn });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失敗，請稍後再試");
@@ -183,6 +185,20 @@ export default function MemberProfileModal({
               >
                 《會員資料使用條款》
               </button>
+            </label>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="member-marketing-opt-in"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+              disabled={loading}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-taupe-300 text-sapphire-600 focus:ring-sapphire-500"
+            />
+            <label htmlFor="member-marketing-opt-in" className="text-xs text-taupe-600">
+              我願意收到團購檔期、新品上架與會員優惠通知（選填，可隨時取消）
             </label>
           </div>
 

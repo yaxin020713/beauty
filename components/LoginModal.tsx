@@ -85,6 +85,7 @@ export default function LoginModal() {
     recipientName?: string;
     contactPhone?: string;
     agreedToTerms: boolean;
+    marketingOptIn: boolean;
   }) => {
     if (!pendingMemberEmail) return;
 
@@ -99,6 +100,7 @@ export default function LoginModal() {
           recipientName: data.recipientName,
           contactPhone: data.contactPhone,
           agreedToTerms: data.agreedToTerms,
+          marketingOptIn: data.marketingOptIn,
         }),
       });
 

@@ -184,6 +184,8 @@ export async function POST(request: NextRequest) {
     let store711Code: string | null = null;
     let recipientName: string | null = null;
     let contactPhone: string | null = null;
+    let marketingOptIn = false;
+    let marketingOptInAt: string | null = null;
 
     const memberResponse = await notion.pages.retrieve({ page_id: memberId! });
     if ("properties" in memberResponse) {
@@ -222,6 +224,12 @@ export async function POST(request: NextRequest) {
       if (props.聯絡電話 && "rich_text" in props.聯絡電話) {
         contactPhone = (props.聯絡電話 as any).rich_text?.[0]?.plain_text || null;
       }
+      if (props.行銷訂閱 && "checkbox" in props.行銷訂閱) {
+        marketingOptIn = !!(props.行銷訂閱 as any).checkbox;
+      }
+      if (props.行銷訂閱時間 && "date" in props.行銷訂閱時間) {
+        marketingOptInAt = (props.行銷訂閱時間 as any).date?.start || null;
+      }
     }
 
     console.log("[api/referral/generate] 分潤金額:", totalCommission);
@@ -244,6 +252,8 @@ export async function POST(request: NextRequest) {
         store711Code,
         recipientName,
         contactPhone,
+        marketingOptIn,
+        marketingOptInAt,
         referralLink: `${siteUrl}?ref=${referralCode}`,
       },
       { status: 200 }

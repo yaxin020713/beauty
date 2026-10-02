@@ -26,6 +26,8 @@ type UserData = {
   store711Code?: string;
   recipientName?: string;
   contactPhone?: string;
+  marketingOptIn: boolean;
+  marketingOptInAt?: string;
   membershipLevel: string;
   totalSpending: number;
 };
@@ -72,6 +74,8 @@ export default function UserProfile() {
   const [withdrawalRecords, setWithdrawalRecords] = useState<WithdrawalRecord[]>([]);
   const [showWithdrawalHistory, setShowWithdrawalHistory] = useState(false);
   const [withdrawalHistoryError, setWithdrawalHistoryError] = useState("");
+  const [marketingSaving, setMarketingSaving] = useState(false);
+  const [marketingMsg, setMarketingMsg] = useState("");
 
   const generateCode = async () => {
     if (!user?.email) return;
@@ -109,6 +113,8 @@ export default function UserProfile() {
           store711Code: data.store711Code,
           recipientName: data.recipientName,
           contactPhone: data.contactPhone,
+          marketingOptIn: !!data.marketingOptIn,
+          marketingOptInAt: data.marketingOptInAt || undefined,
         });
         // 初始化編輯表單
         setEditBirthday(data.birthday || "");
@@ -260,6 +266,48 @@ export default function UserProfile() {
       alert(err instanceof Error ? err.message : "保存失敗");
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const updateMarketingOptIn = async (optIn: boolean) => {
+    if (!user?.email) return;
+
+    if (
+      !optIn &&
+      !window.confirm("確定要取消訂閱嗎？\n取消後將不再收到團購檔期、新品上架與會員優惠通知。")
+    ) {
+      return;
+    }
+
+    setMarketingSaving(true);
+    setMarketingMsg("");
+    try {
+      const response = await fetch("/api/members/marketing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, optIn }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setMarketingMsg(data.error || "更新失敗，請稍後再試");
+        return;
+      }
+
+      setUserData((prev) =>
+        prev
+          ? {
+              ...prev,
+              marketingOptIn: optIn,
+              marketingOptInAt: data.marketingOptInAt || prev.marketingOptInAt,
+            }
+          : null
+      );
+      setMarketingMsg(optIn ? "✓ 已訂閱優惠通知" : "✓ 已取消訂閱");
+    } catch (err) {
+      setMarketingMsg(err instanceof Error ? err.message : "更新失敗，請稍後再試");
+    } finally {
+      setMarketingSaving(false);
     }
   };
 
@@ -668,6 +716,59 @@ export default function UserProfile() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* 通知設定（行銷訂閱） */}
+      <div className="rounded-lg border border-taupe-200 bg-white p-6">
+        <h3 className="mb-4 font-serif text-lg font-normal text-ink">通知設定</h3>
+
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-ink">團購檔期與優惠通知</p>
+            <p className="mt-1 text-xs text-taupe-600">
+              團購檔期、新品上架與會員優惠活動
+            </p>
+            <p className="mt-2 text-xs">
+              {userData.marketingOptIn ? (
+                <span className="text-emerald-600">
+                  ✓ 已訂閱
+                  {userData.marketingOptInAt &&
+                    `（${new Date(userData.marketingOptInAt).toLocaleDateString("zh-TW", {
+                      timeZone: "Asia/Taipei",
+                    })} 起）`}
+                </span>
+              ) : (
+                <span className="text-taupe-500">未訂閱</span>
+              )}
+            </p>
+          </div>
+
+          {userData.marketingOptIn ? (
+            <button
+              onClick={() => updateMarketingOptIn(false)}
+              disabled={marketingSaving}
+              className="flex-shrink-0 rounded-lg border border-taupe-200 px-3 py-1 text-sm font-medium text-taupe-700 transition hover:bg-taupe-50 disabled:opacity-50"
+            >
+              {marketingSaving ? "處理中..." : "取消訂閱"}
+            </button>
+          ) : (
+            <button
+              onClick={() => updateMarketingOptIn(true)}
+              disabled={marketingSaving}
+              className="flex-shrink-0 rounded-lg bg-sapphire-600 px-3 py-1 text-sm font-medium text-white transition hover:bg-sapphire-700 disabled:opacity-50"
+            >
+              {marketingSaving ? "處理中..." : "訂閱"}
+            </button>
+          )}
+        </div>
+
+        {marketingMsg && (
+          <p className="mt-3 text-xs text-taupe-600">{marketingMsg}</p>
+        )}
+
+        <p className="mt-4 border-t border-taupe-100 pt-3 text-xs text-taupe-500">
+          訂單、出貨、取貨與分潤撥款等交易通知不受此設定影響，仍會照常寄送。
+        </p>
       </div>
 
       {/* 會員等級詳情彈窗 */}

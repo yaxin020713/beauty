@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID, PRODUCTS_DB_ID, MEMBERS_DB_ID, updateProductReservedQuantity } from "@/lib/notion";
-import { recordTermsAgreementIfNeeded } from "@/lib/referral";
+import { recordTermsAgreementIfNeeded, recordMarketingOptIn } from "@/lib/referral";
 
 interface ReservationItem {
   productId: string;
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       urlReferralCode,
       manualReferralCode,
       agreedToTerms,
+      marketingOptIn,
     } = body;
 
     // 验证必填字段
@@ -311,6 +312,11 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.warn("[api/reservations] 無法更新客戶的訂單數/上次預定日期:", err);
       }
+    }
+
+    // 會員在結帳頁同意條款時一併勾選了行銷訂閱（放在會員紀錄建立之後，確保新會員也能寫入）
+    if (marketingOptIn) {
+      await recordMarketingOptIn(customerEmail);
     }
 
     // 为每个商品更新 Reserved_Quantity

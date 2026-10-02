@@ -111,6 +111,47 @@ export async function recordTermsAgreementIfNeeded(email: string): Promise<void>
   }
 }
 
+// 更新會員的行銷訂閱狀態。
+// 訂閱：勾選「行銷訂閱」並把「行銷訂閱時間」更新為本次勾選的時間。
+// 取消：只取消勾選，保留最後一次的訂閱時間作為紀錄。
+// 回傳是否寫入成功；找不到會員或 Notion 寫入失敗都回傳 false，不拋出例外。
+export async function setMarketingOptIn(email: string, optIn: boolean): Promise<boolean> {
+  if (!email || !MEMBERS_DB_ID) return false;
+
+  try {
+    const memberQuery = await notion.databases.query({
+      database_id: MEMBERS_DB_ID,
+      filter: {
+        property: "Email",
+        title: { equals: email.toLowerCase() },
+      },
+    });
+
+    if (memberQuery.results.length === 0) return false;
+
+    const properties: Record<string, any> = {
+      行銷訂閱: { checkbox: optIn },
+    };
+    if (optIn) {
+      properties.行銷訂閱時間 = { date: { start: new Date().toISOString() } };
+    }
+
+    await notion.pages.update({
+      page_id: memberQuery.results[0].id,
+      properties,
+    });
+    return true;
+  } catch (err) {
+    console.warn(`[setMarketingOptIn] 更新行銷訂閱失敗 (${email}, optIn=${optIn}):`, err);
+    return false;
+  }
+}
+
+// 註冊／結帳時會員主動勾選行銷訂閱。獨立於其他欄位寫入，失敗也不影響會員資料或訂單的儲存。
+export async function recordMarketingOptIn(email: string): Promise<void> {
+  await setMarketingOptIn(email, true);
+}
+
 // 生成唯一的推荐码（8位字符，易于分享）
 export function generateReferralCode(email: string): string {
   // 使用邮箱 hash + 随机数生成唯一码

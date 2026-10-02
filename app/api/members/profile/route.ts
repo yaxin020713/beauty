@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, MEMBERS_DB_ID } from "@/lib/notion";
-import { generateReferralCode } from "@/lib/referral";
+import { generateReferralCode, recordMarketingOptIn } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +84,7 @@ type MemberData = {
   recipientName?: string;
   contactPhone?: string;
   agreedToTerms?: boolean;
+  marketingOptIn?: boolean;
   unrealizedCommission?: number; // 待實現分潤：已確認但未達條件的分潤
 };
 
@@ -179,6 +180,10 @@ export async function GET(request: NextRequest) {
 
       if (props.條款同意時間 && "date" in props.條款同意時間) {
         memberData.agreedToTerms = !!((props.條款同意時間 as any).date?.start);
+      }
+
+      if (props.行銷訂閱 && "checkbox" in props.行銷訂閱) {
+        memberData.marketingOptIn = !!(props.行銷訂閱 as any).checkbox;
       }
 
       // 計算待實現分潤
@@ -316,6 +321,11 @@ export async function POST(request: NextRequest) {
         parent: { database_id: MEMBERS_DB_ID },
         properties,
       });
+    }
+
+    // 只在會員主動勾選時寫入；未勾選不覆蓋既有的訂閱狀態
+    if (body.marketingOptIn) {
+      await recordMarketingOptIn(email);
     }
 
     return NextResponse.json(
