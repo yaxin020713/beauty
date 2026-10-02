@@ -141,7 +141,7 @@ export default function UserProfile() {
     }
 
     const confirmed = window.confirm(
-      `確認提現 NT$${withdrawAmount} 到銀行帳號 ${userData.bankCode}-${userData.bankAccount}？\n(將於 1-3 個工作天內匯入)`
+      `確認提現 NT$${withdrawAmount} 到銀行帳號 ${userData.bankCode}-${userData.bankAccount}？\n(將於 5 個工作天內匯入)`
     );
 
     if (!confirmed) return;
@@ -803,9 +803,6 @@ export default function UserProfile() {
             <p className="text-2xl font-bold text-emerald-600">
               NT${userData.availableCommission}
             </p>
-            <p className="text-xs text-taupe-400 mt-1">
-              歷史累計 NT${userData.totalCommission}
-            </p>
           </div>
           <div className="rounded-lg bg-amber-50 p-4">
             <p className="text-xs text-amber-600 mb-1">待實現分潤</p>
@@ -820,6 +817,12 @@ export default function UserProfile() {
             <p className="text-xs text-sapphire-600 mb-1">撥款處理中</p>
             <p className="text-2xl font-bold text-sapphire-600">
               NT${userData.pendingCommission}
+            </p>
+          </div>
+          <div className="rounded-lg bg-taupe-100 p-4">
+            <p className="text-xs text-taupe-600 mb-1">歷史累積分潤</p>
+            <p className="text-2xl font-bold text-ink">
+              NT${userData.totalCommission}
             </p>
           </div>
         </div>
@@ -984,7 +987,7 @@ export default function UserProfile() {
             <strong className="text-emerald-600">待提現分潤</strong> — 訂單出貨滿 8 天後確認完成，可以提現的部分
           </li>
           <li>
-            <strong className="text-sapphire-600">撥款處理中</strong> — 已申請提現，正在處理中的部分（1-3 個工作天內匯入）
+            <strong className="text-sapphire-600">撥款處理中</strong> — 已申請提現，正在處理中的部分（5 個工作天內匯入）
           </li>
         </ul>
 

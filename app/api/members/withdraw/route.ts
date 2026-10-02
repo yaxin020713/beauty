@@ -177,8 +177,8 @@ export async function POST(request: NextRequest) {
         payoutAmount,
         message:
           fee > 0
-            ? `成功提現 NT$${amount}，非永豐銀行帳戶收取 NT$${fee} 手續費，實際將匯入 NT$${payoutAmount}（1-3 個工作天內）`
-            : `成功提現 NT$${amount}，將於 1-3 個工作天內匯入您的帳戶`,
+            ? `成功提現 NT$${amount}，非永豐銀行帳戶收取 NT$${fee} 手續費，實際將匯入 NT$${payoutAmount}（5 個工作天內）`
+            : `成功提現 NT$${amount}，將於 5 個工作天內匯入您的帳戶`,
       },
       { status: 200 }
     );
