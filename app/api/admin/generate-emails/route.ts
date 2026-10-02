@@ -54,6 +54,10 @@ async function getOrderData(orderId: string) {
         props["7-11取貨店號"]?.type === "rich_text" && Array.isArray(props["7-11取貨店號"].rich_text)
           ? props["7-11取貨店號"].rich_text[0]?.plain_text || ""
           : "",
+      shippingDate:
+        props["出貨日期"]?.type === "date" && props["出貨日期"].date
+          ? props["出貨日期"].date.start || ""
+          : "",
     };
   } catch (error) {
     console.error(`[api/admin/generate-emails] 查詢訂單 ${orderId} 失敗:`, error);
@@ -228,6 +232,7 @@ export async function POST(request: NextRequest) {
           estimatedShipDate,
           itemsDetail: orderData.itemsDetail,
           store7_11: orderData.store7_11,
+          shippingDate: orderData.shippingDate,
           bankName: BANK_INFO.bankName,
           bankAccount: BANK_INFO.account,
           bankCode: BANK_INFO.code,

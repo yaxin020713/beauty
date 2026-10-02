@@ -17,6 +17,13 @@ export interface NotificationData {
   estimatedShipDate: string;
   itemsDetail?: string;
   store7_11?: string;
+  shippingDate?: string; // 訂單的實際出貨日期（YYYY-MM-DD），未填時以台灣今天為出貨日
+}
+
+// 出貨通知是在出貨當天生成，訂單尚未記錄出貨日期時就以今天為準
+function formatShippingDate(shippingDate?: string): string {
+  const date = shippingDate ? new Date(`${shippingDate}T00:00:00+08:00`) : new Date();
+  return date.toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" });
 }
 
 // 預設模板（後續會改為從 Notion 讀取）
@@ -65,7 +72,7 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
   shipment: {
     id: "shipment",
     name: "出貨通知",
-    subject: "【美妝預訂】{{批次名稱}} - 預計於 {{預計出貨日}} 出貨",
+    subject: "【美妝預訂】{{批次名稱}} - 已出貨",
     body: `親愛的 {{客戶名稱}}，
 
 好消息！您的訂單已確認出貨。
@@ -74,7 +81,7 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
 ─────────────────────────
 批次名稱：{{批次名稱}}
 已付金額：NT$ {{應付金額}}
-預計出貨日：{{預計出貨日}}
+出貨日期：{{出貨日期}}
 
 📋 訂購品項
 ─────────────────────────
@@ -107,6 +114,7 @@ export function renderTemplate(
     .replace(/{{應付金額}}/g, data.totalPrice.toString())
     .replace(/{{截止日期}}/g, data.paymentDeadline)
     .replace(/{{預計出貨日}}/g, data.estimatedShipDate)
+    .replace(/{{出貨日期}}/g, formatShippingDate(data.shippingDate))
     .replace(/{{銀行名稱}}/g, data.bankName)
     .replace(/{{銀行代碼}}/g, data.bankCode || "")
     .replace(/{{銀行帳號}}/g, data.bankAccount)
