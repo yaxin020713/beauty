@@ -59,6 +59,9 @@ class NotionClient {
             "Content-Type": "application/json",
           },
           body: body ? JSON.stringify(body) : undefined,
+          // Next.js 14 預設會把 fetch 結果存進 Data Cache（連 POST 查詢也會），
+          // 導致後台看到的是舊的 Notion 資料。Notion 是即時資料來源，一律不快取。
+          cache: "no-store",
         });
 
         const data = await response.json();
