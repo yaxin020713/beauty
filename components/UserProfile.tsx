@@ -5,7 +5,7 @@ import { Copy, Share2, Check, ChevronDown, Info } from "lucide-react";
 import { useAuth } from "./CartContext";
 import MembershipLevelModal from "./MembershipLevelModal";
 import CommissionInfoModal from "./CommissionInfoModal";
-import { downloadStoryShareImage } from "@/lib/storyShareImage";
+import { shareOrDownloadStoryImage } from "@/lib/storyShareImage";
 
 type UserData = {
   email: string;
@@ -322,6 +322,18 @@ export default function UserProfile() {
   };
 
   const shareToInstagram = async () => {
+    // 先複製連結——手機瀏覽器（尤其 iOS Safari）對 clipboard API 的使用者操作時效很敏感，
+    // 等圖片產生完（要載入多張圖片）才複製常常會因為已經超過操作時效而失敗，所以要搶第一時間做
+    let linkCopied = false;
+    try {
+      await navigator.clipboard.writeText(userData.referralLink);
+      linkCopied = true;
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.warn("複製連結失敗:", err);
+    }
+
     let featuredProduct: { name: string; price: number; imageUrl: string } | null = null;
     try {
       const res = await fetch("/api/products");
@@ -343,28 +355,39 @@ export default function UserProfile() {
       console.warn("載入主打商品失敗:", err);
     }
 
-    const imageDownloaded = await downloadStoryShareImage({
+    const result = await shareOrDownloadStoryImage({
       referralCode: userData.referralCode,
       product: featuredProduct,
-    }).catch(() => false);
+    }).catch(() => "failed" as const);
 
-    navigator.clipboard.writeText(userData.referralLink).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    if (result === "share-cancelled") return;
+
+    const linkStatus = linkCopied ? "也複製了你的專屬連結" : "但連結複製失敗，請手動複製";
+
+    if (result === "shared") {
       alert(
-        (imageDownloaded
-          ? "✅ 已下載限動分享圖，也複製了你的專屬連結！\n\n"
-          : "⚠️ 分享圖下載失敗，但已複製你的專屬連結！\n\n") +
+        `✅ 已開啟分享面板，${linkStatus}！\n\n` +
+        "📱 接下來的步驟：\n" +
+        "1️⃣ 在剛剛的分享面板選「儲存影像」存到相簿\n" +
+        "2️⃣ 開啟 Instagram → 建立新限時動態\n" +
+        "3️⃣ 選擇剛剛儲存的分享圖\n" +
+        "4️⃣ 點擊貼圖 → 選「連結」貼圖\n" +
+        "5️⃣ 貼上你複製的專屬連結\n" +
+        "6️⃣ 發佈！朋友就能直接點擊進站 🚀"
+      );
+    } else if (result === "downloaded") {
+      alert(
+        `✅ 已下載限動分享圖，${linkStatus}！\n\n` +
         "📱 接下來的步驟：\n" +
         "1️⃣ 開啟 Instagram → 建立新限時動態\n" +
-        (imageDownloaded ? "2️⃣ 選擇剛剛下載的分享圖\n" : "2️⃣ 選一張你喜歡的照片\n") +
+        "2️⃣ 選擇剛剛下載的分享圖\n" +
         "3️⃣ 點擊貼圖 → 選「連結」貼圖\n" +
         "4️⃣ 貼上你複製的專屬連結\n" +
         "5️⃣ 發佈！朋友就能直接點擊進站 🚀"
       );
-    }).catch(() => {
-      alert(imageDownloaded ? "分享圖已下載，但連結複製失敗，請手動複製連結" : "複製失敗，請手動複製連結");
-    });
+    } else {
+      alert(linkCopied ? "分享圖產生失敗，但已複製你的專屬連結，請手動分享" : "分享圖產生失敗，連結複製也失敗，請重試");
+    }
   };
 
   return (

@@ -222,7 +222,8 @@ async function drawStoryCanvas(
   );
 }
 
-async function generateStoryShareImageBlob(options: {
+/** 產生分享圖，回傳圖片 Blob（失敗則回傳 null） */
+export async function generateStoryShareImageBlob(options: {
   referralCode?: string;
   product?: FeaturedProductInfo | null;
 }): Promise<Blob | null> {
@@ -243,14 +244,7 @@ async function generateStoryShareImageBlob(options: {
   });
 }
 
-/** 產生分享圖並觸發瀏覽器下載；成功回傳 true，產生失敗回傳 false */
-export async function downloadStoryShareImage(options: {
-  referralCode?: string;
-  product?: FeaturedProductInfo | null;
-}): Promise<boolean> {
-  const blob = await generateStoryShareImageBlob(options);
-  if (!blob) return false;
-
+function triggerBlobDownload(blob: Blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -259,6 +253,41 @@ export async function downloadStoryShareImage(options: {
   link.click();
   document.body.removeChild(link);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
-  return true;
+/**
+ * 產生分享圖，並盡量用手機原生的分享面板（可直接「儲存影像」到相簿）分享出去；
+ * 不支援分享面板的瀏覽器（多半是桌機）才退回用 <a download> 觸發檔案下載。
+ * 手機瀏覽器的 <a download> 大多只會存到「檔案」App 的下載資料夾，不會進相簿，
+ * 所以能用原生分享面板時一定優先用它。
+ */
+export async function shareOrDownloadStoryImage(options: {
+  referralCode?: string;
+  product?: FeaturedProductInfo | null;
+}): Promise<"shared" | "downloaded" | "share-cancelled" | "failed"> {
+  const blob = await generateStoryShareImageBlob(options);
+  if (!blob) return "failed";
+
+  const file = new File([blob], "vespers-vanity-story.png", { type: "image/png" });
+
+  const nav = navigator as Navigator & {
+    canShare?: (data?: ShareData) => boolean;
+    share?: (data: ShareData) => Promise<void>;
+  };
+
+  if (nav.canShare?.({ files: [file] }) && nav.share) {
+    try {
+      await nav.share({ files: [file] });
+      return "shared";
+    } catch (err) {
+      // 使用者在分享面板按了取消，不算失敗，但也不要再退回下載（避免多跳出一次存檔動作）
+      if (err instanceof Error && err.name === "AbortError") {
+        return "share-cancelled";
+      }
+      // 其他分享錯誤才退回下載
+    }
+  }
+
+  triggerBlobDownload(blob);
+  return "downloaded";
 }
