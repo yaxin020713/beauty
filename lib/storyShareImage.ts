@@ -215,11 +215,21 @@ async function drawStoryCanvas(
   ctx.font = `500 34px ${fonts.sans}`;
   ctx.fillText("本次檔期：", textLeft, cardTop + 75);
 
+  // 商品名稱從 50px 開始，放不進兩行就逐步縮小（最小 40px），避免容量等字樣單獨掉到第三行
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = `700 50px ${fonts.serif}`;
-  const nameLines = wrapText(ctx, product.name, textMaxWidth).slice(0, 3);
+  let nameFontSize = 50;
+  let nameLines: string[] = [];
+  for (; nameFontSize >= 40; nameFontSize -= 2) {
+    ctx.font = `700 ${nameFontSize}px ${fonts.serif}`;
+    nameLines = wrapText(ctx, product.name, textMaxWidth);
+    if (nameLines.length <= 2) break;
+  }
+  nameFontSize = Math.max(nameFontSize, 40);
+  ctx.font = `700 ${nameFontSize}px ${fonts.serif}`;
+  nameLines = nameLines.slice(0, 3);
+  const nameLineHeight = Math.round(nameFontSize * 1.28);
   nameLines.forEach((line, idx) => {
-    ctx.fillText(line, textLeft, cardTop + 150 + idx * 64);
+    ctx.fillText(line, textLeft, cardTop + 150 + idx * nameLineHeight);
   });
 
   ctx.fillStyle = "#FFFFFF";
@@ -227,7 +237,7 @@ async function drawStoryCanvas(
   ctx.fillText(
     `NT$${product.price.toLocaleString()}`,
     textLeft,
-    cardTop + 150 + nameLines.length * 64 + 75
+    cardTop + 150 + nameLines.length * nameLineHeight + 75
   );
 
   ctx.textAlign = "center";
