@@ -126,7 +126,7 @@ async function drawStoryCanvas(
   const boxWidth = 580;
   const boxHeight = 90;
   const boxLeft = (WIDTH - boxWidth) / 2;
-  const boxTop = logoY + logoSize + 150;
+  const boxTop = logoY + logoSize + 270;
   const boxTextColor = "#5F5846";
 
   ctx.fillStyle = "rgba(255,255,255,0.18)";
@@ -148,8 +148,8 @@ async function drawStoryCanvas(
   ctx.fillStyle = "#FFFFFF";
   ctx.font = `italic 700 60px ${fonts.serif}`;
   const headlineY = boxTop + boxHeight + 130;
-  ctx.fillText("這是我的專屬推薦連結", WIDTH / 2, headlineY);
-  ctx.fillText("快來一起下單最優惠商品", WIDTH / 2, headlineY + 80);
+  ctx.fillText("這是我的專屬團購連結", WIDTH / 2, headlineY);
+  ctx.fillText("快來一起下單吧", WIDTH / 2, headlineY + 80);
 
   // 主打商品卡片
   let productImageFailed = false;
