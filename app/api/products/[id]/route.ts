@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchProductByProductId, updateProduct } from "@/lib/products";
+import { fetchProductByProductId, updateProduct, clearOtherFeaturedProducts } from "@/lib/products";
 
 export async function GET(
   _request: Request,
@@ -62,6 +62,11 @@ export async function PUT(
     }
 
     const notionPageId = productQuery.results[0].id;
+
+    // 同時間只能有一個「主打商品」，設為主打時先把其他商品的主打標記取消
+    if (productData.isFeatured === true) {
+      await clearOtherFeaturedProducts(notionPageId);
+    }
 
     await updateProduct(notionPageId, productData);
 

@@ -322,7 +322,31 @@ export default function UserProfile() {
   };
 
   const shareToInstagram = async () => {
-    const imageDownloaded = await downloadStoryShareImage().catch(() => false);
+    let featuredProduct: { name: string; price: number; imageUrl: string } | null = null;
+    try {
+      const res = await fetch("/api/products");
+      if (res.ok) {
+        const data = await res.json();
+        const products = (data.products ?? []) as Array<{
+          name: string;
+          price: number;
+          image: string;
+          isActive: boolean;
+          isFeatured: boolean;
+        }>;
+        const match = products.find((p) => p.isActive && p.isFeatured);
+        if (match) {
+          featuredProduct = { name: match.name, price: match.price, imageUrl: match.image };
+        }
+      }
+    } catch (err) {
+      console.warn("載入主打商品失敗:", err);
+    }
+
+    const imageDownloaded = await downloadStoryShareImage({
+      referralCode: userData.referralCode,
+      product: featuredProduct,
+    }).catch(() => false);
 
     navigator.clipboard.writeText(userData.referralLink).then(() => {
       setCopied(true);

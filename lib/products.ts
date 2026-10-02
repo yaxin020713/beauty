@@ -118,6 +118,7 @@ export async function fetchProducts(): Promise<Product[]> {
         description: asRichText(props["Description"]),
         totalSold: asNumber(props["Total_Sold"]),
         isActive: !asCheckbox(props["下架"]),
+        isFeatured: asCheckbox(props["主打商品"]),
       };
 
       return product.name ? product : null;
@@ -192,6 +193,7 @@ export async function updateProduct(
     image?: string;
     description?: string;
     isActive?: boolean;
+    isFeatured?: boolean;
   }
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,6 +251,11 @@ export async function updateProduct(
       checkbox: !productData.isActive,
     };
   }
+  if (productData.isFeatured !== undefined) {
+    properties["主打商品"] = {
+      checkbox: productData.isFeatured,
+    };
+  }
 
   const response = await notion.pages.update({
     page_id: pageId,
@@ -256,6 +263,28 @@ export async function updateProduct(
   });
 
   return response;
+}
+
+/** 把其他商品的「主打商品」取消勾選，確保同一時間只有一個商品是主打（分享圖會抓這個） */
+export async function clearOtherFeaturedProducts(exceptPageId: string): Promise<void> {
+  const response = await notion.databases.query({
+    database_id: PRODUCTS_DB_ID,
+    filter: {
+      property: "主打商品",
+      checkbox: { equals: true },
+    },
+  });
+
+  await Promise.all(
+    response.results
+      .filter((page: { id: string }) => page.id !== exceptPageId)
+      .map((page: { id: string }) =>
+        notion.pages.update({
+          page_id: page.id,
+          properties: { "主打商品": { checkbox: false } },
+        })
+      )
+  );
 }
 
 /** 按 product_id 查詢單個商品 */
@@ -296,6 +325,7 @@ export async function fetchProductByProductId(productId: string): Promise<Produc
     description: asRichText(props["Description"]),
     totalSold: asNumber(props["Total_Sold"]),
     isActive: !asCheckbox(props["下架"]),
+    isFeatured: asCheckbox(props["主打商品"]),
   };
 
   return product.name ? product : null;

@@ -1022,6 +1022,28 @@ function ProductsTab({
     }
   };
 
+  const [togglingFeaturedId, setTogglingFeaturedId] = useState<string | null>(null);
+
+  // 設為本次檔期主打商品：同時間只能有一個，後端會自動把其他商品的主打標記取消
+  const handleToggleFeatured = async (product: Product) => {
+    if (!user?.email || togglingFeaturedId) return;
+    setTogglingFeaturedId(product.id);
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, isFeatured: !product.isFeatured }),
+      });
+      if (res.ok) {
+        onToggled();
+      }
+    } catch (err) {
+      console.error("切換主打商品失敗:", err);
+    } finally {
+      setTogglingFeaturedId(null);
+    }
+  };
+
   const handleBulkSetActive = async (active: boolean, targets: Product[]) => {
     if (!user?.email || bulkLoading || targets.length === 0) return;
     const label = active ? "上架" : "下架";
@@ -1171,6 +1193,11 @@ function ProductsTab({
                     >
                       {product.isActive ? "上架中" : "已下架"}
                     </span>
+                    {product.isFeatured && (
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-champagne-200 text-champagne-900">
+                        ⭐ 本次檔期主打
+                      </span>
+                    )}
                     <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
                       {product.category}
                     </span>
@@ -1205,6 +1232,23 @@ function ProductsTab({
                       "下架"
                     ) : (
                       "上架"
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleToggleFeatured(product)}
+                    disabled={togglingFeaturedId === product.id}
+                    className={`flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap disabled:opacity-50 ${
+                      product.isFeatured
+                        ? "bg-champagne-200 text-champagne-900 hover:bg-champagne-300"
+                        : "bg-taupe-100 text-taupe-700 hover:bg-taupe-200"
+                    }`}
+                  >
+                    {togglingFeaturedId === product.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : product.isFeatured ? (
+                      "取消主打"
+                    ) : (
+                      "設為主打"
                     )}
                   </button>
                   <button

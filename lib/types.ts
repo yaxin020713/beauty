@@ -12,6 +12,7 @@ export type Product = {
   description: string;
   totalSold: number;
   isActive: boolean;
+  isFeatured: boolean;
 };
 
 // 商品變體型別（對應 Notion ProductVariants 資料庫）
