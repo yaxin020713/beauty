@@ -1079,7 +1079,10 @@ function ProductsTab({
       });
 
       if (!res.ok) {
-        setShareImageMessage("❌ 分享圖已產生，但寫入商品記錄失敗，請重試");
+        const errData = await res.json().catch(() => null);
+        setShareImageMessage(
+          `❌ 分享圖已產生，但寫入商品記錄失敗：${errData?.error ?? "未知錯誤"}`
+        );
         return;
       }
 

@@ -73,8 +73,9 @@ export async function PUT(
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("[api/products/:id PUT] 編輯商品失敗:", error);
+    const detail = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "編輯商品失敗，請稍後再試" },
+      { error: `編輯商品失敗，請稍後再試（${detail}）` },
       { status: 500 }
     );
   }
