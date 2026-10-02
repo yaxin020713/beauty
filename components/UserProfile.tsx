@@ -5,6 +5,7 @@ import { Copy, Share2, Check, ChevronDown, Info } from "lucide-react";
 import { useAuth } from "./CartContext";
 import MembershipLevelModal from "./MembershipLevelModal";
 import CommissionInfoModal from "./CommissionInfoModal";
+import { downloadStoryShareImage } from "@/lib/storyShareImage";
 
 type UserData = {
   email: string;
@@ -320,22 +321,25 @@ export default function UserProfile() {
     window.open(lineUrl, "_blank");
   };
 
-  const shareToInstagram = () => {
-    const fullText = `這是我的專屬推薦連結 快來跟我一起團購吧！\n${userData.referralLink}`;
-    navigator.clipboard.writeText(fullText).then(() => {
+  const shareToInstagram = async () => {
+    const imageDownloaded = await downloadStoryShareImage().catch(() => false);
+
+    navigator.clipboard.writeText(userData.referralLink).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       alert(
-        "✅ 已複製分享文本！\n\n" +
+        (imageDownloaded
+          ? "✅ 已下載限動分享圖，也複製了你的專屬連結！\n\n"
+          : "⚠️ 分享圖下載失敗，但已複製你的專屬連結！\n\n") +
         "📱 接下來的步驟：\n" +
-        "1️⃣ 開啟 Instagram 限時動態\n" +
-        "2️⃣ 點擊左下角「貼圖」→ 選「連結」\n" +
-        "3️⃣ 在連結輸入框貼上複製的文本\n" +
-        "4️⃣ 按發佈即可！\n\n" +
-        "💡 這樣你的粉絲就能直接點擊進入網站！"
+        "1️⃣ 開啟 Instagram → 建立新限時動態\n" +
+        (imageDownloaded ? "2️⃣ 選擇剛剛下載的分享圖\n" : "2️⃣ 選一張你喜歡的照片\n") +
+        "3️⃣ 點擊貼圖 → 選「連結」貼圖\n" +
+        "4️⃣ 貼上你複製的專屬連結\n" +
+        "5️⃣ 發佈！朋友就能直接點擊進站 🚀"
       );
     }).catch(() => {
-      alert("複製失敗，請手動複製連結");
+      alert(imageDownloaded ? "分享圖已下載，但連結複製失敗，請手動複製連結" : "複製失敗，請手動複製連結");
     });
   };
 
@@ -723,11 +727,12 @@ export default function UserProfile() {
               📱 <span className="font-medium">操作步驟：</span>
             </p>
             <ol className="ml-4 space-y-1">
-              <li>1. 點擊上方 Instagram 按鈕（會複製連結）</li>
-              <li>2. 開啟 Instagram → 建立新限時動態</li>
-              <li>3. 點擊左下角「貼圖」→ 選擇「連結」貼圖</li>
-              <li>4. 在連結欄貼上複製的推薦連結</li>
-              <li>5. 發佈！你的粉絲就能直接點擊進網站 🚀</li>
+              <li>1. 點擊上方 Instagram 按鈕（會下載限動分享圖、並複製你的專屬連結）</li>
+              <li>2. 開啟 Instagram App → 建立新限時動態</li>
+              <li>3. 選擇剛剛下載的分享圖</li>
+              <li>4. 點擊貼圖 → 選擇「連結」貼圖</li>
+              <li>5. 在連結欄貼上複製的專屬連結</li>
+              <li>6. 發佈！你的粉絲就能直接點擊進網站 🚀</li>
             </ol>
           </div>
         </div>
