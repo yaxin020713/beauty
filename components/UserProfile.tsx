@@ -981,13 +981,16 @@ export default function UserProfile() {
         <p className="font-medium mt-4 mb-2">📊 分潤狀態說明：</p>
         <ul className="space-y-1 text-taupe-600">
           <li>
-            <strong className="text-amber-600">待實現分潤</strong> — 被推薦人已完成下單，但訂單尚未出貨完成，無法提領的部分
-          </li>
-          <li>
             <strong className="text-emerald-600">待提現分潤</strong> — 訂單出貨滿 8 天後確認完成，可以提現的部分
           </li>
           <li>
+            <strong className="text-amber-600">待實現分潤</strong> — 被推薦人已完成下單，但訂單尚未出貨完成，無法提領的部分
+          </li>
+          <li>
             <strong className="text-sapphire-600">撥款處理中</strong> — 已申請提現，正在處理中的部分（5 個工作天內匯入）
+          </li>
+          <li>
+            <strong className="text-sapphire-600">歷史累積分潤</strong> — 從加入以來累積賺取的分潤總額，用來記錄總成果
           </li>
         </ul>
 
