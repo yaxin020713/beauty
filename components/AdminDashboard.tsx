@@ -385,10 +385,18 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
   ) => {
     setSaveError("");
     try {
+      const payload: any = { status };
+
+      // 改為「已出貨」時自動設置當天為出貨日期
+      if (status === "已出貨") {
+        const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
+        payload.shippingDate = today;
+      }
+
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setEditingOrderId(null);
@@ -404,14 +412,14 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
   };
 
 
-  // 付款通知：抓「新訂單」；已核帳通知：抓「已付款」；出貨通知：抓已發過付款通知、尚未出貨的訂單
+  // 付款通知：抓「新訂單」；已核帳通知：抓「已付款」；出貨通知：抓「已發付款通知」或「已出貨」的訂單
   const getEligibleOrdersForEmail = (templateType: "payment" | "已核帳" | "shipment") =>
     orders.filter((order) =>
       templateType === "payment"
         ? order.status === "新訂單"
         : templateType === "已核帳"
         ? order.status === "已付款"
-        : order.status === "已發付款通知"
+        : order.status === "已發付款通知" || order.status === "已出貨"
     );
 
   const handleGenerateEmails = async (templateType: "payment" | "已核帳" | "shipment") => {
@@ -452,19 +460,28 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
         if (ordersToUpdate.length > 0) {
           const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
           await Promise.all(
-            ordersToUpdate.map((order) =>
-              fetch(`/api/admin/orders/${order.id}`, {
+            ordersToUpdate.map((order) => {
+              let updatePayload: any;
+
+              if (templateType === "payment") {
+                updatePayload = { status: "已發付款通知" };
+              } else if (templateType === "已核帳") {
+                updatePayload = { status: "已發核帳通知" };
+              } else {
+                // shipment: 若已是「已出貨」就只設置 shippingDate；若是「已發付款通知」則改狀態並設置 shippingDate
+                if (order.status === "已出貨") {
+                  updatePayload = { shippingDate: today };
+                } else {
+                  updatePayload = { status: "已出貨", shippingDate: today };
+                }
+              }
+
+              return fetch(`/api/admin/orders/${order.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(
-                  templateType === "payment"
-                    ? { status: "已發付款通知" }
-                    : templateType === "已核帳"
-                    ? { status: "已發核帳通知" }
-                    : { status: "已出貨", shippingDate: today }
-                ),
-              }).catch((err) => console.error(`更新訂單 ${order.orderId} 狀態失敗:`, err))
-            )
+                body: JSON.stringify(updatePayload),
+              }).catch((err) => console.error(`更新訂單 ${order.orderId} 狀態失敗:`, err));
+            })
           );
           onUpdated();
         }
