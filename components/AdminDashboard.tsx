@@ -404,13 +404,17 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
   };
 
 
-  // 付款通知：抓「新訂單」；出貨通知：抓已發過付款通知、尚未出貨的訂單
-  const getEligibleOrdersForEmail = (templateType: "payment" | "shipment") =>
+  // 付款通知：抓「新訂單」；核帳完成通知：抓「核帳中」；出貨通知：抓已發過付款通知、尚未出貨的訂單
+  const getEligibleOrdersForEmail = (templateType: "payment" | "verification" | "shipment") =>
     orders.filter((order) =>
-      templateType === "payment" ? order.status === "新訂單" : order.status === "已發付款通知"
+      templateType === "payment"
+        ? order.status === "新訂單"
+        : templateType === "verification"
+        ? order.status === "核帳中"
+        : order.status === "已發付款通知"
     );
 
-  const handleGenerateEmails = async (templateType: "payment" | "shipment") => {
+  const handleGenerateEmails = async (templateType: "payment" | "verification" | "shipment") => {
     const pendingOrders = getEligibleOrdersForEmail(templateType);
 
     if (pendingOrders.length === 0) {
@@ -455,6 +459,8 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
                 body: JSON.stringify(
                   templateType === "payment"
                     ? { status: "已發付款通知" }
+                    : templateType === "verification"
+                    ? { status: "已付款" }
                     : { status: "已出貨", shippingDate: today }
                 ),
               }).catch((err) => console.error(`更新訂單 ${order.orderId} 狀態失敗:`, err))
@@ -567,11 +573,11 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
   return (
     <div className="space-y-4">
       <div className="space-y-3 flex flex-col">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={exportToExcel}
             disabled={orders.length === 0}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
+            className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
           >
             <Download className="h-4 w-4" />
             匯出Excel報表
@@ -579,7 +585,7 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
           <button
             onClick={() => handleGenerateEmails("payment")}
             disabled={generatingEmails || getEligibleOrdersForEmail("payment").length === 0}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
+            className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
           >
             {generatingEmails ? (
               <>
@@ -594,9 +600,26 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
             )}
           </button>
           <button
+            onClick={() => handleGenerateEmails("verification")}
+            disabled={generatingEmails || getEligibleOrdersForEmail("verification").length === 0}
+            className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-cyan-600 text-white transition hover:bg-cyan-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
+          >
+            {generatingEmails ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <Mail className="h-4 w-4" />
+                生成核帳郵件
+              </>
+            )}
+          </button>
+          <button
             onClick={() => handleGenerateEmails("shipment")}
             disabled={generatingEmails || getEligibleOrdersForEmail("shipment").length === 0}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-purple-600 text-white transition hover:bg-purple-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
+            className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-purple-600 text-white transition hover:bg-purple-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
           >
             {generatingEmails ? (
               <>

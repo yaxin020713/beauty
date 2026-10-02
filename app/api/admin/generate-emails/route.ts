@@ -7,7 +7,7 @@ const PENDING_EMAILS_DB_ID = process.env.NOTION_PENDING_EMAILS_DB_ID;
 
 type GenerateEmailsRequest = {
   orderIds: string[];
-  templateType: "payment" | "shipment";
+  templateType: "payment" | "verification" | "shipment";
   batchName?: string;
   paymentDeadline?: string;
   estimatedShipDate?: string;
@@ -180,9 +180,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["payment", "shipment"].includes(templateType)) {
+    if (!["payment", "verification", "shipment"].includes(templateType)) {
       return NextResponse.json(
-        { error: "無效的模板類型，應為 'payment' 或 'shipment'" },
+        { error: "無效的模板類型，應為 'payment'、'verification' 或 'shipment'" },
         { status: 400 }
       );
     }
