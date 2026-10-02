@@ -30,6 +30,11 @@ type OrderRequestBody = {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function calculateShippingFee(totalQuantity: number): number {
+  if (totalQuantity === 1) return 100;
+  return 0;
+}
+
 export const dynamic = "force-dynamic";
 
 // 查詢推薦碼對應的推薦人 Email；找不到、或推薦碼持有人與下單者是同一人（自我推薦）時回傳 null
