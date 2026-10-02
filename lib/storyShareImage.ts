@@ -153,19 +153,19 @@ async function drawStoryCanvas(
 
   // 主打商品卡片
   let productImageFailed = false;
-  const cardTop = headlineY + 160;
-  const cardSize = 380;
-  const cardLeft = 120;
+  const cardTop = headlineY + 230;
+  const cardSize = 470;
+  const cardLeft = 90;
 
   // 白底圖片卡
   ctx.fillStyle = "#FFFFFF";
-  roundRect(ctx, cardLeft, cardTop, cardSize, cardSize, 28);
+  roundRect(ctx, cardLeft, cardTop, cardSize, cardSize, 32);
   ctx.fill();
 
   if (product.imageUrl) {
     try {
       const productImg = await loadImage(product.imageUrl);
-      const padding = 24;
+      const padding = 28;
       const innerSize = cardSize - padding * 2;
       const scale = Math.min(
         innerSize / productImg.naturalWidth,
@@ -185,27 +185,27 @@ async function drawStoryCanvas(
   }
 
   // 右側文字
-  const textLeft = cardLeft + cardSize + 50;
-  const textMaxWidth = WIDTH - 120 - textLeft;
+  const textLeft = cardLeft + cardSize + 45;
+  const textMaxWidth = WIDTH - 90 - textLeft;
   ctx.textAlign = "left";
 
   ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.font = `500 28px ${fonts.sans}`;
-  ctx.fillText("本次檔期：", textLeft, cardTop + 60);
+  ctx.font = `500 34px ${fonts.sans}`;
+  ctx.fillText("本次檔期：", textLeft, cardTop + 75);
 
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = `700 42px ${fonts.serif}`;
+  ctx.font = `700 50px ${fonts.serif}`;
   const nameLines = wrapText(ctx, product.name, textMaxWidth).slice(0, 3);
   nameLines.forEach((line, idx) => {
-    ctx.fillText(line, textLeft, cardTop + 120 + idx * 54);
+    ctx.fillText(line, textLeft, cardTop + 150 + idx * 64);
   });
 
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = `700 46px ${fonts.serif}`;
+  ctx.font = `700 58px ${fonts.serif}`;
   ctx.fillText(
     `NT$${product.price.toLocaleString()}`,
     textLeft,
-    cardTop + 120 + nameLines.length * 54 + 60
+    cardTop + 150 + nameLines.length * 64 + 75
   );
 
   ctx.textAlign = "center";
