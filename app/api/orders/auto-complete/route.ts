@@ -1,8 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
-import { notion, ORDERS_DB_ID } from "@/lib/notion";
+import { notion, ORDERS_DB_ID, MEMBERS_DB_ID } from "@/lib/notion";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5分鐘超時
+
+// 將推薦人的待實現分潇轉到待提現分潇
+async function moveUnrealizedToAvailable(email: string, amount: number): Promise<void> {
+  if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
+
+  const referrerQuery = await notion.databases.query({
+    database_id: MEMBERS_DB_ID,
+    filter: {
+      property: "Email",
+      title: { equals: email },
+    },
+  });
+
+  if (referrerQuery.results.length === 0) return;
+
+  const referrerPage = referrerQuery.results[0];
+  let currentUnrealizedCommission = 0;
+  let currentAvailableCommission = 0;
+  let currentTotalCommission = 0;
+
+  if ("properties" in referrerPage) {
+    const unrealizedProp = referrerPage.properties.待實現分潇;
+    if (unrealizedProp && "number" in unrealizedProp && typeof unrealizedProp.number === "number") {
+      currentUnrealizedCommission = unrealizedProp.number || 0;
+    }
+
+    const availableProp = referrerPage.properties.尚未提現分潇;
+    if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
+      currentAvailableCommission = availableProp.number || 0;
+    }
+
+    const totalProp = referrerPage.properties.累積分潇;
+    if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
+      currentTotalCommission = totalProp.number || 0;
+    }
+  }
+
+  // 將分潇從待實現轉到待提現，並更新累積分潇（只計一次）
+  await notion.pages.update({
+    page_id: referrerPage.id,
+    properties: {
+      待實現分潇: { number: Math.max(0, currentUnrealizedCommission - amount) },
+      尚未提現分潇: { number: currentAvailableCommission + amount },
+      累積分潇: { number: currentTotalCommission + amount },
+    },
+  });
+}
 
 export async function POST(request: NextRequest) {
   // 驗證請求來自信任的來源（可選，建議加上 API Key 驗證）
@@ -61,7 +108,7 @@ export async function POST(request: NextRequest) {
       const deadlineTime = shipDate + eightDaysMs;
 
       if (now >= deadlineTime) {
-        // 達到期限，更新狀態為「已完成」
+        // 達到期限，更新狀態為「已完成」，並將待實現分潇轉到待提現分潇
         try {
           await notion.pages.update({
             page_id: page.id,
@@ -69,6 +116,20 @@ export async function POST(request: NextRequest) {
               訂單狀態: { select: { name: "已完成" } },
             },
           });
+
+          // 將推薦人的待實現分潇轉到待提現分潇
+          const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
+          const primaryCommission = props.分潇 && "number" in props.分潇 ? props.分潇.number || 0 : 0;
+          const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
+          const secondaryCommission = props.分潇2 && "number" in props.分潇2 ? props.分潇2.number || 0 : 0;
+
+          // 優先轉移次推薦人，其次轉移主推薦人
+          if (secondaryEmail && secondaryCommission > 0) {
+            await moveUnrealizedToAvailable(secondaryEmail, secondaryCommission);
+          } else if (primaryEmail && primaryCommission > 0) {
+            await moveUnrealizedToAvailable(primaryEmail, primaryCommission);
+          }
+
           completedCount++;
         } catch (err) {
           const orderId = props.Order_ID?.title?.[0]?.plain_text || page.id;

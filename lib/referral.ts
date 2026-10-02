@@ -50,6 +50,38 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   });
 }
 
+// 把分潤加入待實現分潇（下單當下）：
+// - 待實現分潇：已下單但訂單未完成的分潇，訂單完成 8 天後轉入尚未提現分潇
+export async function creditUnrealizedCommission(email: string, amount: number): Promise<void> {
+  if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
+
+  const referrerQuery = await notion.databases.query({
+    database_id: MEMBERS_DB_ID,
+    filter: {
+      property: "Email",
+      title: { equals: email },
+    },
+  });
+
+  if (referrerQuery.results.length === 0) return;
+
+  const referrerPage = referrerQuery.results[0];
+  let currentUnrealizedCommission = 0;
+  if ("properties" in referrerPage) {
+    const unrealizedProp = referrerPage.properties.待實現分潇;
+    if (unrealizedProp && "number" in unrealizedProp && typeof unrealizedProp.number === "number") {
+      currentUnrealizedCommission = unrealizedProp.number || 0;
+    }
+  }
+
+  await notion.pages.update({
+    page_id: referrerPage.id,
+    properties: {
+      待實現分潇: { number: currentUnrealizedCommission + amount },
+    },
+  });
+}
+
 // 讀取訂單頁面上的分潤資訊，入帳給推薦人。
 // 優先次推薦人與對應分潤金（手動修改或官方連結手動填寫），次之推薦人與對應分潤金（推薦連結自動帶入）。
 // 呼叫時機：訂單狀態轉為「已完成」時（管理員手動操作或每日自動排程），

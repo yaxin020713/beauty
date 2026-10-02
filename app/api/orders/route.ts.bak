@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID, MEMBERS_DB_ID, PRODUCTS_DB_ID } from "@/lib/notion";
-import { generateReferralCode, recordMarketingOptIn, creditUnrealizedCommission } from "@/lib/referral";
+import { calculateShippingFee, type ShippingMethod } from "@/lib/shipping";
 import { calculateMembershipLevel } from "@/lib/membership";
 
 // 前台購物車單一項目的型別
@@ -330,22 +330,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. 推薦人的待實現分潇：下單當下立即加入推薦人的「待實現分潇」
-    //    訂單狀態轉為「已完成」時（出貨滿 8 天），自動轉入「尚未提現分潇」
-    if (referrer1 && referrer1Commission > 0) {
-      try {
-        await creditUnrealizedCommission(referrer1.email, referrer1Commission);
-      } catch (error) {
-        console.warn(`[api/orders] 為推薦人 ${referrer1.email} 添加待實現分潇失敗:`, error instanceof Error ? error.message : error);
-      }
-    }
-    if (referrer2 && referrer2Commission > 0) {
-      try {
-        await creditUnrealizedCommission(referrer2.email, referrer2Commission);
-      } catch (error) {
-        console.warn(`[api/orders] 為推薦人 ${referrer2.email} 添加待實現分潇失敗:`, error instanceof Error ? error.message : error);
-      }
-    }
+    // 3. 推薦人的累積分潤：不在下單當下發放，而是待訂單狀態轉為「已完成」時
+    //    才由管理面板手動操作或每日自動排程呼叫 applyReferralCommission() 入帳
+    //    （分潤金額與推薦人信箱已於上方寫入訂單頁面的 分潤 / 推薦人信箱 屬性）
 
     // 4. 更新購物者（客戶）的消費金額和會員等級
     if (customerEmail) {
