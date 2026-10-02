@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest) {
           number: Number(paymentLast5.replace(/\D/g, "").slice(-5)),
         },
         "訂單狀態": {
-          select: { name: "已付款" },
+          select: { name: "核帳中" },
         },
       },
     });

@@ -208,10 +208,18 @@ export default function OrdersPage() {
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                           order.orderStatus === "新訂單"
                             ? "bg-blue-100 text-blue-700"
+                            : order.orderStatus === "核帳中"
+                            ? "bg-amber-100 text-amber-700"
+                            : order.orderStatus === "已付款"
+                            ? "bg-amber-50 text-amber-600"
                             : order.orderStatus === "已發貨"
                             ? "bg-emerald-100 text-emerald-700"
                             : order.orderStatus === "已完成"
                             ? "bg-emerald-200 text-emerald-800"
+                            : order.orderStatus === "異常中"
+                            ? "bg-red-100 text-red-700"
+                            : order.orderStatus === "已取消"
+                            ? "bg-gray-100 text-gray-700"
                             : "bg-taupe-100 text-taupe-700"
                         }`}>
                           {order.orderStatus}
@@ -281,8 +289,11 @@ export default function OrdersPage() {
                       {!order.paymentLast5 ? (
                         <div className="bg-blue-50 rounded-lg p-4 space-y-4">
                           <div>
-                            <p className="text-sm font-semibold text-blue-900 mb-3">
+                            <p className="text-sm font-semibold text-blue-900 mb-2">
                               💳 請填寫付款資訊
+                            </p>
+                            <p className="text-xs text-blue-700 mb-3">
+                              填寫匯款末5碼後，訂單狀態會變為「核帳中」，我們會儘快核帳並更新訂單狀態。
                             </p>
                             <input
                               type="text"

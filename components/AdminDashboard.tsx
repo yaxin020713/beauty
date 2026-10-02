@@ -382,15 +382,14 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
 
   const handleUpdateOrder = async (
     orderId: string,
-    status: string,
-    paymentStatus: string
+    status: string
   ) => {
     setSaveError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, paymentStatus }),
+        body: JSON.stringify({ status }),
       });
       if (res.ok) {
         setEditingOrderId(null);
@@ -524,7 +523,6 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
       "7-11 取貨店號": order.storeNumber || "",
       "匯款末五碼": order.paymentLast5 || "未提供",
       "訂單狀態": order.status,
-      "付款狀態": order.paymentStatus,
       "訂單時間": new Date(order.createdTime).toLocaleString(),
     }));
 
@@ -676,7 +674,7 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {["全部", "新訂單", "已發付款通知", "已出貨", "已完成", "異常中", "已取消"].map((status) => (
+          {["全部", "新訂單", "核帳中", "已付款", "已發付款通知", "已出貨", "已完成", "異常中", "已取消"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -719,9 +717,6 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
                     <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
                       {order.status}
                     </span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">
-                      {order.paymentStatus}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -762,20 +757,13 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
                         className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
                       >
                         <option value="新訂單">新訂單</option>
+                        <option value="核帳中">核帳中</option>
+                        <option value="已付款">已付款</option>
                         <option value="已發付款通知">已發付款通知</option>
                         <option value="已出貨">已出貨</option>
                         <option value="已完成">已完成</option>
                         <option value="異常中">異常中</option>
                         <option value="已取消">已取消</option>
-                      </select>
-                      <select
-                        defaultValue={order.paymentStatus}
-                        id={`payment-${order.id}`}
-                        className="w-full px-2 py-1.5 text-xs rounded border border-taupe-200"
-                      >
-                        <option value="待核帳">待核帳</option>
-                        <option value="已核帳">已核帳</option>
-                        <option value="已退款">已退款</option>
                       </select>
                       <div className="flex gap-2">
                         <button
@@ -783,13 +771,9 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
                             const statusSel = document.getElementById(
                               `status-${order.id}`
                             ) as HTMLSelectElement;
-                            const paymentSel = document.getElementById(
-                              `payment-${order.id}`
-                            ) as HTMLSelectElement;
                             handleUpdateOrder(
                               order.id,
-                              statusSel.value,
-                              paymentSel.value
+                              statusSel.value
                             );
                           }}
                           className="flex-1 px-2 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700"
