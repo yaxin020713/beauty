@@ -73,7 +73,7 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
 📦 出貨資訊
 ─────────────────────────
 批次名稱：{{批次名稱}}
-應付金額：NT$ {{應付金額}}
+已付金額：NT$ {{應付金額}}
 預計出貨日：{{預計出貨日}}
 
 📋 訂購品項
