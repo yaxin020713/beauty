@@ -990,7 +990,7 @@ export default function UserProfile() {
             <strong className="text-sapphire-600">撥款處理中</strong> — 已申請提現，正在處理中的部分（5 個工作天內匯入）
           </li>
           <li>
-            <strong className="text-sapphire-600">歷史累積分潤</strong> — 從加入以來累積賺取的分潤總額，用來記錄總成果
+            <strong className="text-taupe-600">歷史累積分潤</strong> — 從加入以來累積賺取的分潤總額，用來記錄總成果
           </li>
         </ul>
 
