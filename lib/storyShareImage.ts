@@ -113,27 +113,32 @@ async function drawStoryCanvas(
   const logoY = 90;
   ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
 
-  // 品牌字
+  // 品牌字（手動加空白模擬字距，避免 Safari 不支援 ctx.letterSpacing）
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = `700 54px ${fonts.serif}`;
-  ctx.fillText("VESPER'S VANITY", WIDTH / 2, logoY + logoSize + 90);
+  ctx.font = `500 50px ${fonts.serif}`;
+  ctx.fillText("VESPER'S  VANITY".split("").join(" "), WIDTH / 2, logoY + logoSize + 90);
 
-  // 連結貼圖提示框（故意做窄一點，避免蓋不滿 IG 連結貼圖時露出邊框）
-  const boxWidth = 560;
-  const boxHeight = 110;
+  // 連結貼圖提示框：淺色底、深色虛線框與文字（貼上連結貼圖前的占位提示）
+  const boxWidth = 580;
+  const boxHeight = 90;
   const boxLeft = (WIDTH - boxWidth) / 2;
   const boxTop = logoY + logoSize + 150;
+  const boxTextColor = "#5F5846";
 
-  ctx.setLineDash([10, 8]);
-  ctx.strokeStyle = "rgba(255,255,255,0.75)";
-  ctx.lineWidth = 2.5;
-  roundRect(ctx, boxLeft, boxTop, boxWidth, boxHeight, 18);
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  roundRect(ctx, boxLeft, boxTop, boxWidth, boxHeight, 16);
+  ctx.fill();
+
+  ctx.setLineDash([8, 6]);
+  ctx.strokeStyle = boxTextColor;
+  ctx.lineWidth = 2;
+  roundRect(ctx, boxLeft, boxTop, boxWidth, boxHeight, 16);
   ctx.stroke();
   ctx.setLineDash([]);
 
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.fillStyle = boxTextColor;
   ctx.font = `500 26px ${fonts.sans}`;
-  ctx.fillText("👆 在這裡新增連結貼圖", WIDTH / 2, boxTop + boxHeight / 2 + 9);
+  ctx.fillText("請複製您的專屬連結 並新增連結貼圖放置在此", WIDTH / 2, boxTop + boxHeight / 2 + 9);
 
   // 標語（兩行）
   ctx.fillStyle = "#FFFFFF";
