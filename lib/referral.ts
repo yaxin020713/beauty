@@ -71,8 +71,13 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   // 其次使用推薦人與對應分潤金（推薦連結自動帶入）
   const primaryEmail = readRichText(props["推薦人信箱"]);
   const primaryCommission = readNumber(props["分潤"]);
+  // 確保推薦人信箱存在，才進行分潤（防止孤立的分潤金額）
   if (primaryEmail && primaryCommission > 0) {
     await creditMemberCommission(primaryEmail, primaryCommission);
+  } else if (!primaryEmail && primaryCommission > 0) {
+    console.warn(
+      `[applyReferralCommission] 訂單有分潤金額 ${primaryCommission} 但缺少推薦人信箱，無法入帳。訂單ID: ${props.Order_ID?.title?.[0]?.plain_text}`
+    );
   }
 }
 
