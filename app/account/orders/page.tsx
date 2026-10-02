@@ -210,11 +210,7 @@ export default function OrdersPage() {
                             ? "bg-blue-100 text-blue-700"
                             : order.orderStatus === "核帳中"
                             ? "bg-amber-100 text-amber-700"
-                            : order.orderStatus === "已付款"
-                            ? "bg-amber-50 text-amber-600"
-                            : order.orderStatus === "已發核帳通知"
-                            ? "bg-amber-50 text-amber-600"
-                            : order.orderStatus === "已發付款通知"
+                            : order.orderStatus === "已付款" || order.orderStatus === "已發核帳通知" || order.orderStatus === "已發付款通知"
                             ? "bg-amber-50 text-amber-600"
                             : order.orderStatus === "已發貨"
                             ? "bg-emerald-100 text-emerald-700"
@@ -226,7 +222,7 @@ export default function OrdersPage() {
                             ? "bg-gray-100 text-gray-700"
                             : "bg-taupe-100 text-taupe-700"
                         }`}>
-                          {order.orderStatus}
+                          {order.orderStatus === "已發核帳通知" || order.orderStatus === "已發付款通知" ? "已付款" : order.orderStatus}
                         </span>
                       </div>
                     </div>
