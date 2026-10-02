@@ -14,6 +14,8 @@ type CartItem = {
   quantity: number;
 };
 
+type ShippingMethod = "convenience_711" | "in_person";
+
 type OrderRequestBody = {
   customerName?: string;
   customerPhone?: string;
