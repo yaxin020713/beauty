@@ -12,7 +12,6 @@ import {
   Download,
   Search,
   Edit2,
-  CheckCircle2,
   Wallet,
   Boxes,
   Mail,
@@ -404,27 +403,6 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
     }
   };
 
-  // 標記已出貨：登錄當日日期到「出貨日期」，並自動將訂單狀態改為「已出貨」
-  const handleMarkShipped = async (orderId: string) => {
-    setSaveError("");
-    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
-    try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "已出貨", shippingDate: today }),
-      });
-      if (res.ok) {
-        window.location.reload();
-      } else {
-        const data = await res.json().catch(() => null);
-        setSaveError(data?.error ?? "更新失敗，請稍後再試");
-      }
-    } catch (error) {
-      console.error("標記已出貨失敗:", error);
-      setSaveError("網路連線異常，請再試一次");
-    }
-  };
 
   // 付款通知：抓「新訂單」；出貨通知：抓已發過付款通知、尚未出貨的訂單
   const getEligibleOrdersForEmail = (templateType: "payment" | "shipment") =>
@@ -735,16 +713,6 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
                   )}
                   <p><span className="font-medium text-ink">出貨日期:</span> {order.shippingDate || "尚未出貨"}</p>
                   <p><span className="font-medium text-ink">時間:</span> {new Date(order.createdTime).toLocaleString()}</p>
-
-                  {order.status !== "已出貨" && order.status !== "已完成" && (
-                    <button
-                      onClick={() => handleMarkShipped(order.id)}
-                      className="mt-1 w-full flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                      標記已出貨（登錄今日出貨日期）
-                    </button>
-                  )}
 
                   {editingOrderId === order.id ? (
                     <div className="mt-3 space-y-2">
