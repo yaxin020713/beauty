@@ -1005,6 +1005,7 @@ function ProductsTab({
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("全部");
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [productsWithVariants, setProductsWithVariants] = useState<ProductWithVariants[]>([]);
   const [loadingVariants, setLoadingVariants] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -1166,10 +1167,20 @@ function ProductsTab({
       product.brand.includes(searchTerm) ||
       product.category.includes(searchTerm);
     const matchesCategory = categoryFilter === "全部" || product.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesActive =
+      activeFilter === "all" ||
+      (activeFilter === "active" ? product.isActive : !product.isActive);
+    return matchesSearch && matchesCategory && matchesActive;
   });
 
   const categories = ["全部", ...Array.from(new Set(products.map((p) => p.category)))];
+
+  const activeCount = products.filter((p) => p.isActive).length;
+  const activeFilterOptions = [
+    { key: "all" as const, label: `全部 (${products.length})` },
+    { key: "active" as const, label: `上架中 (${activeCount})` },
+    { key: "inactive" as const, label: `已下架 (${products.length - activeCount})` },
+  ];
 
   return (
     <div className="space-y-4">
@@ -1203,9 +1214,29 @@ function ProductsTab({
           />
         </div>
 
+        {/* 上下架狀態篩選 */}
+        <div className="grid grid-cols-3 gap-1 rounded-xl bg-taupe-100 p-1">
+          {activeFilterOptions.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => setActiveFilter(option.key)}
+              className={`rounded-lg py-2 text-xs font-medium transition ${
+                activeFilter === option.key
+                  ? option.key === "active"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "bg-taupe-900 text-white shadow-sm"
+                  : "text-taupe-700 hover:bg-taupe-200"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-xs text-taupe-500">
-            以下批次操作僅套用於「目前顯示（搜尋／分類篩選後）」的 {filteredProducts.length} 項商品
+            以下批次操作僅套用於「目前顯示（搜尋／狀態／分類篩選後）」的 {filteredProducts.length} 項商品
           </p>
           <div className="flex gap-2">
             <button
@@ -1247,7 +1278,13 @@ function ProductsTab({
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {filteredProducts.length === 0 ? (
           <p className="text-center text-sm text-taupe-500 py-8">
-            {products.length === 0 ? "暫無商品" : "未找到匹配的商品"}
+            {products.length === 0
+              ? "暫無商品"
+              : activeFilter === "active"
+              ? "目前沒有上架中的商品"
+              : activeFilter === "inactive"
+              ? "目前沒有已下架的商品"
+              : "未找到匹配的商品"}
           </p>
         ) : (
           filteredProducts.map((product) => (
