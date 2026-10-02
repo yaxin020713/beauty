@@ -1,6 +1,7 @@
 "use client";
 
 import { X, TrendingUp } from "lucide-react";
+import { MEMBERSHIP_THRESHOLDS, MEMBERSHIP_BENEFITS } from "@/lib/membership";
 
 type MembershipLevelModalProps = {
   isOpen: boolean;
@@ -10,28 +11,13 @@ type MembershipLevelModalProps = {
   currentYear: number;
 };
 
-const LEVELS = [
-  {
-    name: "銅級",
-    threshold: 0,
-    description: "新會員等級",
-  },
-  {
-    name: "銀級",
-    threshold: 3000,
-    description: "一年內消費滿 NT$3,000",
-  },
-  {
-    name: "金級",
-    threshold: 5000,
-    description: "一年內消費滿 NT$5,000",
-  },
-  {
-    name: "白金級",
-    threshold: 10000,
-    description: "一年內消費滿 NT$10,000",
-  },
-];
+const LEVELS = (Object.keys(MEMBERSHIP_THRESHOLDS) as Array<keyof typeof MEMBERSHIP_THRESHOLDS>).map(
+  (name) => ({
+    name,
+    threshold: MEMBERSHIP_THRESHOLDS[name],
+    description: MEMBERSHIP_BENEFITS[name],
+  })
+);
 
 export default function MembershipLevelModal({
   isOpen,
@@ -80,7 +66,7 @@ export default function MembershipLevelModal({
               style={{
                 width: `${Math.min(
                   100,
-                  (currentSpending / (nextLevel?.threshold || 10000)) * 100
+                  (currentSpending / (nextLevel?.threshold || MEMBERSHIP_THRESHOLDS.白金級)) * 100
                 )}%`,
               }}
             />

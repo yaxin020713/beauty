@@ -6,6 +6,11 @@ import { useAuth } from "./CartContext";
 import MembershipLevelModal from "./MembershipLevelModal";
 import CommissionInfoModal from "./CommissionInfoModal";
 import { shareOrDownloadImageFromUrl } from "@/lib/storyShareImage";
+import { MEMBERSHIP_THRESHOLDS } from "@/lib/membership";
+
+const MEMBERSHIP_TIERS = (
+  Object.keys(MEMBERSHIP_THRESHOLDS) as Array<keyof typeof MEMBERSHIP_THRESHOLDS>
+).map((name) => ({ name, threshold: MEMBERSHIP_THRESHOLDS[name] }));
 
 type UserData = {
   email: string;
@@ -597,15 +602,10 @@ export default function UserProfile() {
               {/* 進度條 */}
               <div className="h-2 overflow-hidden rounded-full bg-taupe-100 mb-2">
                 {(() => {
-                  const tiers = [
-                    { name: "銅級", threshold: 0 },
-                    { name: "銀級", threshold: 3000 },
-                    { name: "金級", threshold: 5000 },
-                    { name: "白金級", threshold: 10000 },
-                  ];
+                  const tiers = MEMBERSHIP_TIERS;
                   const currentTierIdx = tiers.findIndex((t) => t.name === userData.membershipLevel);
                   const nextTier = currentTierIdx < tiers.length - 1 ? tiers[currentTierIdx + 1] : null;
-                  const maxThreshold = nextTier?.threshold || 10000;
+                  const maxThreshold = nextTier?.threshold || MEMBERSHIP_THRESHOLDS.白金級;
                   const percentage = Math.min(100, (userData.totalSpending / maxThreshold) * 100);
                   return (
                     <div
@@ -618,12 +618,7 @@ export default function UserProfile() {
 
               {/* 升級說明 */}
               {(() => {
-                const tiers = [
-                  { name: "銅級", threshold: 0 },
-                  { name: "銀級", threshold: 3000 },
-                  { name: "金級", threshold: 5000 },
-                  { name: "白金級", threshold: 10000 },
-                ];
+                const tiers = MEMBERSHIP_TIERS;
                 const currentTierIdx = tiers.findIndex((t) => t.name === userData.membershipLevel);
                 const nextTier = currentTierIdx < tiers.length - 1 ? tiers[currentTierIdx + 1] : null;
                 const remaining = nextTier ? Math.max(0, nextTier.threshold - userData.totalSpending) : 0;
