@@ -35,11 +35,12 @@ type SendEmailRequest = {
 
 async function getOrderData(orderId: string) {
   try {
+    // Order_ID 是訂單資料庫的標題欄位，必須用 title 篩選
     const response = await notion.databases.query({
       database_id: ORDERS_DB_ID,
       filter: {
         property: "Order_ID",
-        rich_text: { equals: orderId },
+        title: { equals: orderId },
       },
       page_size: 1,
     });

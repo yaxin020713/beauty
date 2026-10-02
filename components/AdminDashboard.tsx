@@ -486,8 +486,14 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
           onUpdated();
         }
 
+        // 有失敗時列出每筆失敗的原因，方便直接判斷是 Notion 欄位還是資料問題
+        const failureLines = (data.results as Array<{ orderId: string; status: string; message?: string }>)
+          .filter((r) => r.status === "failed")
+          .map((r) => `・${r.orderId}：${r.message ?? "未知錯誤"}`);
+
         setEmailGenerationMessage(
-          `✅ 成功生成 ${data.summary.success} 筆郵件，已略過（先前已生成過）${data.summary.skipped ?? 0} 筆，失敗 ${data.summary.failed} 筆`
+          `${failureLines.length > 0 ? "⚠️" : "✅"} 成功生成 ${data.summary.success} 筆郵件，已略過（先前已生成過）${data.summary.skipped ?? 0} 筆，失敗 ${data.summary.failed} 筆` +
+            (failureLines.length > 0 ? `\n${failureLines.join("\n")}` : "")
         );
       } else {
         const error = await res.json().catch(() => null);
@@ -631,7 +637,7 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
         </div>
         {emailGenerationMessage && (
           <div
-            className={`text-sm p-3 rounded-xl text-center ${
+            className={`text-sm p-3 rounded-xl text-center whitespace-pre-line ${
               emailGenerationMessage.startsWith("✅")
                 ? "bg-emerald-50 text-emerald-700"
                 : "bg-red-50 text-red-700"

@@ -13,13 +13,15 @@ type GenerateEmailsRequest = {
   estimatedShipDate?: string;
 };
 
+// 找不到訂單時回傳 null；Notion 查詢本身失敗則拋出錯誤，讓呼叫端能顯示實際原因
 async function getOrderData(orderId: string) {
   try {
+    // Order_ID 是訂單資料庫的標題欄位，必須用 title 篩選
     const response = await notion.databases.query({
       database_id: ORDERS_DB_ID,
       filter: {
         property: "Order_ID",
-        rich_text: { equals: orderId },
+        title: { equals: orderId },
       },
       page_size: 1,
     });
@@ -55,7 +57,8 @@ async function getOrderData(orderId: string) {
     };
   } catch (error) {
     console.error(`[api/admin/generate-emails] 查詢訂單 ${orderId} 失敗:`, error);
-    return null;
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`查詢訂單失敗（${detail}）`);
   }
 }
 
@@ -90,7 +93,7 @@ async function savePendingEmail(
   subject: string,
   body: string,
   templateType: string
-) {
+): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     await notion.pages.create({
       parent: { database_id: PENDING_EMAILS_DB_ID! },
@@ -109,8 +112,9 @@ async function savePendingEmail(
             },
           ],
         },
+        // Notion 的 email 欄位不接受空字串，沒有 Email 時寫入 null
         Customer_Email: {
-          email: customerEmail,
+          email: customerEmail || null,
         },
         Email_Subject: {
           rich_text: [
@@ -135,13 +139,11 @@ async function savePendingEmail(
       },
     });
 
-    return true;
+    return { ok: true };
   } catch (error) {
-    console.error(
-      `[api/admin/generate-emails] 保存待發送郵件失敗 (${orderId}):`,
-      error instanceof Error ? error.message : JSON.stringify(error)
-    );
-    return false;
+    const detail = error instanceof Error ? error.message : JSON.stringify(error);
+    console.error(`[api/admin/generate-emails] 保存待發送郵件失敗 (${orderId}):`, detail);
+    return { ok: false, error: detail };
   }
 }
 
@@ -212,7 +214,7 @@ export async function POST(request: NextRequest) {
           results.push({
             orderId,
             status: "failed",
-            message: "訂單不存在或無法讀取",
+            message: "在訂單資料庫找不到此訂單編號",
           });
           continue;
         }
@@ -243,7 +245,7 @@ export async function POST(request: NextRequest) {
           templateType
         );
 
-        if (saved) {
+        if (saved.ok) {
           results.push({
             orderId,
             status: "success",
@@ -257,7 +259,7 @@ export async function POST(request: NextRequest) {
           results.push({
             orderId,
             status: "failed",
-            message: "保存到 Notion 失敗",
+            message: `保存到 Notion 失敗（${saved.error}）`,
           });
         }
       } catch (error) {
