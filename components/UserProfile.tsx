@@ -5,7 +5,7 @@ import { Copy, Share2, Check, ChevronDown, Info } from "lucide-react";
 import { useAuth } from "./CartContext";
 import MembershipLevelModal from "./MembershipLevelModal";
 import CommissionInfoModal from "./CommissionInfoModal";
-import { shareOrDownloadStoryImage } from "@/lib/storyShareImage";
+import { shareOrDownloadImageFromUrl } from "@/lib/storyShareImage";
 
 type UserData = {
   email: string;
@@ -334,31 +334,33 @@ export default function UserProfile() {
       console.warn("複製連結失敗:", err);
     }
 
-    let featuredProduct: { name: string; price: number; imageUrl: string } | null = null;
+    let shareImageUrl = "";
     try {
       const res = await fetch("/api/products");
       if (res.ok) {
         const data = await res.json();
         const products = (data.products ?? []) as Array<{
-          name: string;
-          price: number;
-          image: string;
           isActive: boolean;
           isFeatured: boolean;
+          shareImageUrl: string;
         }>;
-        const match = products.find((p) => p.isActive && p.isFeatured);
-        if (match) {
-          featuredProduct = { name: match.name, price: match.price, imageUrl: match.image };
-        }
+        const match = products.find((p) => p.isActive && p.isFeatured && p.shareImageUrl);
+        if (match) shareImageUrl = match.shareImageUrl;
       }
     } catch (err) {
-      console.warn("載入主打商品失敗:", err);
+      console.warn("載入分享圖失敗:", err);
     }
 
-    const result = await shareOrDownloadStoryImage({
-      referralCode: userData.referralCode,
-      product: featuredProduct,
-    }).catch(() => "failed" as const);
+    if (!shareImageUrl) {
+      alert(
+        linkCopied
+          ? "已複製你的專屬連結！目前還沒有準備好的分享圖，請直接把連結分享給朋友，或請管理員到後台產生分享圖"
+          : "連結複製失敗，請手動複製；目前也還沒有準備好的分享圖"
+      );
+      return;
+    }
+
+    const result = await shareOrDownloadImageFromUrl(shareImageUrl).catch(() => "failed" as const);
 
     if (result === "share-cancelled") return;
 

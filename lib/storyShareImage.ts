@@ -1,10 +1,14 @@
-// 產生並下載一張適合 IG 限時動態（9:16）的品牌分享圖。
-// 會自動帶入「本次檔期主打商品」的圖片／名稱／價格，以及會員自己的推薦碼（當作連結貼圖的備用文字）。
-// 連結本身不會印在圖片上——使用者要在 IG 裡另外貼上「連結」貼圖，所以圖片上只留一個提示框。
+// IG 限時動態分享圖：管理員在後台針對「本次檔期主打商品」產生一次、上傳到 Cloudinary 存成固定網址，
+// 之後每位會員點分享都是直接拿這張現成的圖，不用每次都在顧客的瀏覽器裡重新產生
+// （避免每個顧客裝置的字體/跨網域圖片限制造成生成失敗或效果不一致）。
+//
+// 圖片本身不含連結文字——使用者要在 IG 裡另外貼上「連結」貼圖，所以圖片上只留一個提示框。
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
 const LOGO_SRC = encodeURI("/images/Vesper's Vanity logo.png");
+const CLOUDINARY_CLOUD_NAME = "ugcd0jm5";
+const CLOUDINARY_UPLOAD_PRESET = "beauty_products";
 
 export type FeaturedProductInfo = {
   name: string;
@@ -94,8 +98,8 @@ function wrapText(
 
 async function drawStoryCanvas(
   ctx: CanvasRenderingContext2D,
-  options: { referralCode?: string; product?: FeaturedProductInfo | null }
-) {
+  product: FeaturedProductInfo
+): Promise<{ productImageFailed: boolean }> {
   const fonts = getBrandFontStacks();
   const logo = await loadImage(LOGO_SRC);
 
@@ -116,7 +120,7 @@ async function drawStoryCanvas(
   // 品牌字（手動加空白模擬字距，避免 Safari 不支援 ctx.letterSpacing）
   ctx.fillStyle = "#FFFFFF";
   ctx.font = `500 50px ${fonts.serif}`;
-  ctx.fillText("VESPER'S  VANITY".split("").join(" "), WIDTH / 2, logoY + logoSize + 90);
+  ctx.fillText("VESPER'S  VANITY".split("").join(" "), WIDTH / 2, logoY + logoSize + 90);
 
   // 連結貼圖提示框：淺色底、深色虛線框與文字（貼上連結貼圖前的占位提示）
   const boxWidth = 580;
@@ -148,69 +152,63 @@ async function drawStoryCanvas(
   ctx.fillText("快來一起下單最優惠商品", WIDTH / 2, headlineY + 80);
 
   // 主打商品卡片
-  const product = options.product;
-  if (product) {
-    const cardTop = headlineY + 160;
-    const cardSize = 380;
-    const cardLeft = 120;
+  let productImageFailed = false;
+  const cardTop = headlineY + 160;
+  const cardSize = 380;
+  const cardLeft = 120;
 
-    // 白底圖片卡
-    ctx.fillStyle = "#FFFFFF";
-    roundRect(ctx, cardLeft, cardTop, cardSize, cardSize, 28);
-    ctx.fill();
+  // 白底圖片卡
+  ctx.fillStyle = "#FFFFFF";
+  roundRect(ctx, cardLeft, cardTop, cardSize, cardSize, 28);
+  ctx.fill();
 
-    if (product.imageUrl) {
-      try {
-        const productImg = await loadImage(product.imageUrl);
-        const padding = 24;
-        const innerSize = cardSize - padding * 2;
-        const scale = Math.min(
-          innerSize / productImg.naturalWidth,
-          innerSize / productImg.naturalHeight
-        );
-        const drawWidth = productImg.naturalWidth * scale;
-        const drawHeight = productImg.naturalHeight * scale;
-        const drawX = cardLeft + (cardSize - drawWidth) / 2;
-        const drawY = cardTop + (cardSize - drawHeight) / 2;
-        ctx.drawImage(productImg, drawX, drawY, drawWidth, drawHeight);
-      } catch {
-        // 圖片載入失敗就留白卡片，不影響其餘內容產生
-      }
+  if (product.imageUrl) {
+    try {
+      const productImg = await loadImage(product.imageUrl);
+      const padding = 24;
+      const innerSize = cardSize - padding * 2;
+      const scale = Math.min(
+        innerSize / productImg.naturalWidth,
+        innerSize / productImg.naturalHeight
+      );
+      const drawWidth = productImg.naturalWidth * scale;
+      const drawHeight = productImg.naturalHeight * scale;
+      const drawX = cardLeft + (cardSize - drawWidth) / 2;
+      const drawY = cardTop + (cardSize - drawHeight) / 2;
+      ctx.drawImage(productImg, drawX, drawY, drawWidth, drawHeight);
+    } catch (err) {
+      console.warn("[storyShareImage] 商品圖片載入失敗（可能是跨網域限制）:", err);
+      productImageFailed = true;
     }
-
-    // 右側文字
-    const textLeft = cardLeft + cardSize + 50;
-    const textMaxWidth = WIDTH - 120 - textLeft;
-    ctx.textAlign = "left";
-
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.font = `500 28px ${fonts.sans}`;
-    ctx.fillText("本次檔期：", textLeft, cardTop + 60);
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = `700 42px ${fonts.serif}`;
-    const nameLines = wrapText(ctx, product.name, textMaxWidth).slice(0, 3);
-    nameLines.forEach((line, idx) => {
-      ctx.fillText(line, textLeft, cardTop + 120 + idx * 54);
-    });
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = `700 46px ${fonts.serif}`;
-    ctx.fillText(
-      `NT$${product.price.toLocaleString()}`,
-      textLeft,
-      cardTop + 120 + nameLines.length * 54 + 60
-    );
-
-    ctx.textAlign = "center";
+  } else {
+    productImageFailed = true;
   }
 
-  // 推薦碼備用文字（連結貼圖萬一沒對好、或朋友截圖保存時仍看得到）
-  if (options.referralCode) {
-    ctx.fillStyle = "rgba(255,255,255,0.7)";
-    ctx.font = `500 30px ${fonts.sans}`;
-    ctx.fillText(`輸入我的推薦碼：${options.referralCode}`, WIDTH / 2, HEIGHT - 170);
-  }
+  // 右側文字
+  const textLeft = cardLeft + cardSize + 50;
+  const textMaxWidth = WIDTH - 120 - textLeft;
+  ctx.textAlign = "left";
+
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = `500 28px ${fonts.sans}`;
+  ctx.fillText("本次檔期：", textLeft, cardTop + 60);
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = `700 42px ${fonts.serif}`;
+  const nameLines = wrapText(ctx, product.name, textMaxWidth).slice(0, 3);
+  nameLines.forEach((line, idx) => {
+    ctx.fillText(line, textLeft, cardTop + 120 + idx * 54);
+  });
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = `700 46px ${fonts.serif}`;
+  ctx.fillText(
+    `NT$${product.price.toLocaleString()}`,
+    textLeft,
+    cardTop + 120 + nameLines.length * 54 + 60
+  );
+
+  ctx.textAlign = "center";
 
   // 底部標語
   ctx.fillStyle = "rgba(255,255,255,0.55)";
@@ -220,74 +218,115 @@ async function drawStoryCanvas(
     WIDTH / 2,
     HEIGHT - 80
   );
+
+  return { productImageFailed };
 }
 
-/** 產生分享圖，回傳圖片 Blob（失敗則回傳 null） */
-export async function generateStoryShareImageBlob(options: {
-  referralCode?: string;
-  product?: FeaturedProductInfo | null;
-}): Promise<Blob | null> {
+/** （管理員用）產生主打商品的分享圖，回傳圖片 Blob 與「商品圖片是否嵌入失敗」 */
+export async function generateFeaturedShareImageBlob(
+  product: FeaturedProductInfo
+): Promise<{ blob: Blob | null; productImageFailed: boolean }> {
   const canvas = document.createElement("canvas");
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
+  if (!ctx) return { blob: null, productImageFailed: true };
 
   if (document.fonts?.ready) {
     await document.fonts.ready.catch(() => {});
   }
 
-  await drawStoryCanvas(ctx, options);
+  const { productImageFailed } = await drawStoryCanvas(ctx, product);
 
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/png");
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((b) => resolve(b), "image/png");
   });
+
+  return { blob, productImageFailed };
 }
 
-function triggerBlobDownload(blob: Blob) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "vespers-vanity-story.png";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+/** （管理員用）把分享圖上傳到 Cloudinary，回傳公開網址 */
+export async function uploadShareImageToCloudinary(blob: Blob): Promise<string | null> {
+  try {
+    const formData = new FormData();
+    formData.append("file", blob, "vespers-vanity-story.png");
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    formData.append("cloud_name", CLOUDINARY_CLOUD_NAME);
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      { method: "POST", body: formData }
+    );
+    const data = await res.json();
+    if (!res.ok || !data.secure_url) return null;
+    return data.secure_url as string;
+  } catch (err) {
+    console.error("[storyShareImage] 上傳分享圖失敗:", err);
+    return null;
+  }
+}
+
+/** （管理員用）產生主打商品分享圖並上傳，回傳網址與「商品圖片是否嵌入失敗」 */
+export async function generateAndUploadFeaturedShareImage(
+  product: FeaturedProductInfo
+): Promise<{ url: string | null; productImageFailed: boolean }> {
+  const { blob, productImageFailed } = await generateFeaturedShareImageBlob(product);
+  if (!blob) return { url: null, productImageFailed: true };
+
+  const url = await uploadShareImageToCloudinary(blob);
+  return { url, productImageFailed };
 }
 
 /**
- * 產生分享圖，並盡量用手機原生的分享面板（可直接「儲存影像」到相簿）分享出去；
- * 不支援分享面板的瀏覽器（多半是桌機）才退回用 <a download> 觸發檔案下載。
- * 手機瀏覽器的 <a download> 大多只會存到「檔案」App 的下載資料夾，不會進相簿，
- * 所以能用原生分享面板時一定優先用它。
+ * （會員用）分享一張已經產生好、存在固定網址上的分享圖。
+ * 優先用手機原生的分享面板（可直接「儲存影像」到相簿）；不支援分享面板的瀏覽器
+ * （多半是桌機）才退回用 <a href download> 直接下載真實網址（不是 blob: 網址，
+ * 避免某些手機瀏覽器對 blob: 網址支援不一致、直接把原頁面導覽掉的問題）。
  */
-export async function shareOrDownloadStoryImage(options: {
-  referralCode?: string;
-  product?: FeaturedProductInfo | null;
-}): Promise<"shared" | "downloaded" | "share-cancelled" | "failed"> {
-  const blob = await generateStoryShareImageBlob(options);
-  if (!blob) return "failed";
-
-  const file = new File([blob], "vespers-vanity-story.png", { type: "image/png" });
-
+export async function shareOrDownloadImageFromUrl(
+  imageUrl: string
+): Promise<"shared" | "downloaded" | "share-cancelled" | "failed"> {
   const nav = navigator as Navigator & {
     canShare?: (data?: ShareData) => boolean;
     share?: (data: ShareData) => Promise<void>;
   };
 
-  if (nav.canShare?.({ files: [file] }) && nav.share) {
+  // 嘗試走原生分享面板：需要先把圖片抓成 File 物件
+  if (nav.share) {
     try {
-      await nav.share({ files: [file] });
-      return "shared";
-    } catch (err) {
-      // 使用者在分享面板按了取消，不算失敗，但也不要再退回下載（避免多跳出一次存檔動作）
-      if (err instanceof Error && err.name === "AbortError") {
-        return "share-cancelled";
+      const res = await fetch(imageUrl);
+      const blob = await res.blob();
+      const file = new File([blob], "vespers-vanity-story.png", { type: blob.type || "image/png" });
+
+      if (nav.canShare?.({ files: [file] })) {
+        try {
+          await nav.share({ files: [file] });
+          return "shared";
+        } catch (err) {
+          if (err instanceof Error && err.name === "AbortError") {
+            return "share-cancelled";
+          }
+          // 其他分享錯誤才退回下載
+        }
       }
-      // 其他分享錯誤才退回下載
+    } catch (err) {
+      console.warn("[storyShareImage] 抓取分享圖以供分享面板使用失敗，改用直接下載:", err);
     }
   }
 
-  triggerBlobDownload(blob);
-  return "downloaded";
+  // 退回：用真實網址觸發瀏覽器下載，不經過 JS fetch，不受跨網域限制
+  try {
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = "vespers-vanity-story.png";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return "downloaded";
+  } catch (err) {
+    console.error("[storyShareImage] 下載分享圖失敗:", err);
+    return "failed";
+  }
 }

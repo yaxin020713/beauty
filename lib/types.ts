@@ -13,6 +13,7 @@ export type Product = {
   totalSold: number;
   isActive: boolean;
   isFeatured: boolean;
+  shareImageUrl: string;
 };
 
 // 商品變體型別（對應 Notion ProductVariants 資料庫）

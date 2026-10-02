@@ -119,6 +119,7 @@ export async function fetchProducts(): Promise<Product[]> {
         totalSold: asNumber(props["Total_Sold"]),
         isActive: !asCheckbox(props["下架"]),
         isFeatured: asCheckbox(props["主打商品"]),
+        shareImageUrl: asUrl(props["分享圖網址"]),
       };
 
       return product.name ? product : null;
@@ -194,6 +195,7 @@ export async function updateProduct(
     description?: string;
     isActive?: boolean;
     isFeatured?: boolean;
+    shareImageUrl?: string;
   }
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -254,6 +256,13 @@ export async function updateProduct(
   if (productData.isFeatured !== undefined) {
     properties["主打商品"] = {
       checkbox: productData.isFeatured,
+    };
+  }
+  if (productData.shareImageUrl !== undefined) {
+    properties["分享圖網址"] = {
+      url: productData.shareImageUrl && productData.shareImageUrl.trim() !== ""
+        ? productData.shareImageUrl.trim()
+        : null,
     };
   }
 
@@ -326,6 +335,7 @@ export async function fetchProductByProductId(productId: string): Promise<Produc
     totalSold: asNumber(props["Total_Sold"]),
     isActive: !asCheckbox(props["下架"]),
     isFeatured: asCheckbox(props["主打商品"]),
+    shareImageUrl: asUrl(props["分享圖網址"]),
   };
 
   return product.name ? product : null;

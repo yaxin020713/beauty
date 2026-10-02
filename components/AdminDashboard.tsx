@@ -22,6 +22,7 @@ import * as XLSX from "xlsx";
 import type { Product } from "@/lib/types";
 import { useAuth } from "./CartContext";
 import AdminProductEditModal from "./AdminProductEditModal";
+import { generateAndUploadFeaturedShareImage } from "@/lib/storyShareImage";
 
 type OrderItem = {
   id: string;
@@ -1044,6 +1045,58 @@ function ProductsTab({
     }
   };
 
+  const [generatingShareImage, setGeneratingShareImage] = useState(false);
+  const [shareImageMessage, setShareImageMessage] = useState("");
+
+  // 針對目前的「主打商品」產生限動分享圖並上傳，網址存回該商品記錄；
+  // 之後所有會員點分享都是直接拿這張現成的圖，不用每人各自在瀏覽器裡重新產生
+  const handleGenerateShareImage = async () => {
+    const featured = products.find((p) => p.isFeatured);
+    if (!featured) {
+      setShareImageMessage("❌ 請先設定一個「本次檔期主打」商品");
+      return;
+    }
+    if (!user?.email) return;
+
+    setGeneratingShareImage(true);
+    setShareImageMessage("");
+    try {
+      const { url, productImageFailed } = await generateAndUploadFeaturedShareImage({
+        name: featured.name,
+        price: featured.price,
+        imageUrl: featured.image,
+      });
+
+      if (!url) {
+        setShareImageMessage("❌ 產生或上傳分享圖失敗，請稍後再試");
+        return;
+      }
+
+      const res = await fetch(`/api/products/${featured.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, shareImageUrl: url }),
+      });
+
+      if (!res.ok) {
+        setShareImageMessage("❌ 分享圖已產生，但寫入商品記錄失敗，請重試");
+        return;
+      }
+
+      setShareImageMessage(
+        productImageFailed
+          ? "⚠️ 分享圖已產生並上傳，但商品圖片嵌入失敗（可能是圖片來源跨網域限制），畫面上商品圖那塊會是空的，建議改用商品編輯中上傳的圖片"
+          : "✅ 分享圖已產生並上傳，會員點分享時就會用這張圖"
+      );
+      onToggled();
+    } catch (err) {
+      console.error("產生分享圖失敗:", err);
+      setShareImageMessage("❌ 產生分享圖失敗，請稍後再試");
+    } finally {
+      setGeneratingShareImage(false);
+    }
+  };
+
   const handleBulkSetActive = async (active: boolean, targets: Product[]) => {
     if (!user?.email || bulkLoading || targets.length === 0) return;
     const label = active ? "上架" : "下架";
@@ -1111,6 +1164,24 @@ function ProductsTab({
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-champagne-300 bg-champagne-50 p-4 space-y-2">
+        <p className="text-sm font-medium text-ink">IG 限動分享圖</p>
+        <p className="text-xs text-taupe-600">
+          針對目前標記「⭐ 本次檔期主打」的商品產生一張分享圖並上傳，之後所有會員點「分享到 Instagram」都會直接使用這張圖，不用每人各自重新產生。
+        </p>
+        <button
+          type="button"
+          disabled={generatingShareImage}
+          onClick={handleGenerateShareImage}
+          className="px-4 py-2 text-xs font-medium rounded-lg bg-champagne-600 text-white hover:bg-champagne-700 disabled:opacity-50"
+        >
+          {generatingShareImage ? "產生中..." : "產生本次檔期分享圖"}
+        </button>
+        {shareImageMessage && (
+          <p className="text-xs text-taupe-700">{shareImageMessage}</p>
+        )}
+      </div>
+
       <div className="space-y-3 flex flex-col">
         <div className="flex items-center gap-2 rounded-xl border border-taupe-200 px-4 py-2 bg-white">
           <Search className="h-4 w-4 text-taupe-400" />
