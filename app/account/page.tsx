@@ -48,13 +48,13 @@ export default function AccountPage() {
           {user ? (
             <div className="space-y-8">
               {/* 功能選單 */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="w-full">
                 <button
                   onClick={() => router.push("/account/orders")}
-                  className="rounded-xl border-2 border-taupe-200 p-6 text-left transition hover:border-sapphire-500 hover:bg-sapphire-50"
+                  className="w-full rounded-xl border-2 border-sapphire-300 bg-sapphire-50 p-6 text-left transition hover:border-sapphire-500 hover:bg-sapphire-100"
                 >
-                  <h3 className="text-lg font-semibold text-ink mb-1">我的訂單</h3>
-                  <p className="text-sm text-taupe-600">查看你的所有預訂單</p>
+                  <h3 className="text-lg font-semibold text-sapphire-900 mb-1">📋 我的訂單</h3>
+                  <p className="text-sm text-sapphire-700">查看你的所有預訂單、付款狀態與出貨進度</p>
                 </button>
               </div>
 

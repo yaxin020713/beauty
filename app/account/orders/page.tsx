@@ -278,7 +278,7 @@ export default function OrdersPage() {
                       </div>
 
                       {/* 付款欄位 */}
-                      {order.orderStatus === "新訂單" && !order.paymentLast5 ? (
+                      {!order.paymentLast5 ? (
                         <div className="bg-blue-50 rounded-lg p-4 space-y-4">
                           <div>
                             <p className="text-sm font-semibold text-blue-900 mb-3">
@@ -313,7 +313,7 @@ export default function OrdersPage() {
                             {submittingPayment[order.id] ? "更新中..." : "確認已付款"}
                           </button>
                         </div>
-                      ) : order.paymentLast5 ? (
+                      ) : (
                         <div className="bg-emerald-50 rounded-lg p-4">
                           <p className="text-xs uppercase tracking-wider text-emerald-700 mb-1">
                             付款末5碼
@@ -322,7 +322,7 @@ export default function OrdersPage() {
                             {String(order.paymentLast5).padStart(5, "0")}
                           </p>
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                 </div>
