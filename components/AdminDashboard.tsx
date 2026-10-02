@@ -412,14 +412,14 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
   };
 
 
-  // 付款通知：抓「新訂單」；已核帳通知：抓「已付款」；出貨通知：抓「已發付款通知」或「已出貨」的訂單
+  // 付款通知：抓「新訂單」；已核帳通知：抓「已付款」；出貨通知：抓「已出貨」的訂單
   const getEligibleOrdersForEmail = (templateType: "payment" | "已核帳" | "shipment") =>
     orders.filter((order) =>
       templateType === "payment"
         ? order.status === "新訂單"
         : templateType === "已核帳"
         ? order.status === "已付款"
-        : order.status === "已發付款通知" || order.status === "已出貨"
+        : order.status === "已出貨"
     );
 
   const handleGenerateEmails = async (templateType: "payment" | "已核帳" | "shipment") => {
