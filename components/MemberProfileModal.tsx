@@ -98,6 +98,14 @@ export default function MemberProfileModal({
               placeholder="請輸入姓名"
               className="w-full rounded-lg border border-taupe-200 px-3 py-2 text-sm focus:border-sapphire-500 focus:ring-1 focus:ring-sapphire-500"
             />
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 mt-2">
+              <p className="text-xs text-amber-800 font-medium">
+                📍 7-11 取貨提醒
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                收件人姓名需與證件相符，取貨時須向超商出示證件。
+              </p>
+            </div>
           </div>
 
           <div>
