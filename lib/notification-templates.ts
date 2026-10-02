@@ -71,8 +71,8 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
 祝您購物愉快！`,
     enabled: true,
   },
-  verification: {
-    id: "verification",
+  已核帳: {
+    id: "已核帳",
     name: "核帳完成通知",
     subject: "【美妝預訂】{{批次名稱}} - 付款已核帳完成",
     body: `親愛的 {{客戶名稱}}，

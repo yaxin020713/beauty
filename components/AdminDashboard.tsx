@@ -404,17 +404,17 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
   };
 
 
-  // 付款通知：抓「新訂單」；核帳完成通知：抓「核帳中」；出貨通知：抓已發過付款通知、尚未出貨的訂單
-  const getEligibleOrdersForEmail = (templateType: "payment" | "verification" | "shipment") =>
+  // 付款通知：抓「新訂單」；已核帳通知：抓「已付款」；出貨通知：抓已發過付款通知、尚未出貨的訂單
+  const getEligibleOrdersForEmail = (templateType: "payment" | "已核帳" | "shipment") =>
     orders.filter((order) =>
       templateType === "payment"
         ? order.status === "新訂單"
-        : templateType === "verification"
-        ? order.status === "核帳中"
+        : templateType === "已核帳"
+        ? order.status === "已付款"
         : order.status === "已發付款通知"
     );
 
-  const handleGenerateEmails = async (templateType: "payment" | "verification" | "shipment") => {
+  const handleGenerateEmails = async (templateType: "payment" | "已核帳" | "shipment") => {
     const pendingOrders = getEligibleOrdersForEmail(templateType);
 
     if (pendingOrders.length === 0) {
@@ -459,8 +459,8 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
                 body: JSON.stringify(
                   templateType === "payment"
                     ? { status: "已發付款通知" }
-                    : templateType === "verification"
-                    ? { status: "已付款" }
+                    : templateType === "已核帳"
+                    ? { status: "已發核帳通知" }
                     : { status: "已出貨", shippingDate: today }
                 ),
               }).catch((err) => console.error(`更新訂單 ${order.orderId} 狀態失敗:`, err))
@@ -600,8 +600,8 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
             )}
           </button>
           <button
-            onClick={() => handleGenerateEmails("verification")}
-            disabled={generatingEmails || getEligibleOrdersForEmail("verification").length === 0}
+            onClick={() => handleGenerateEmails("已核帳")}
+            disabled={generatingEmails || getEligibleOrdersForEmail("已核帳").length === 0}
             className="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-cyan-600 text-white transition hover:bg-cyan-700 disabled:bg-taupe-300 disabled:cursor-not-allowed"
           >
             {generatingEmails ? (
@@ -612,7 +612,7 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
             ) : (
               <>
                 <Mail className="h-4 w-4" />
-                生成核帳郵件
+                生成已核帳郵件
               </>
             )}
           </button>
@@ -675,7 +675,7 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {["全部", "新訂單", "核帳中", "已付款", "已發付款通知", "已出貨", "已完成", "異常中", "已取消"].map((status) => (
+          {["全部", "新訂單", "核帳中", "已付款", "已發核帳通知", "已發付款通知", "已出貨", "已完成", "異常中", "已取消"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -750,6 +750,7 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
                         <option value="新訂單">新訂單</option>
                         <option value="核帳中">核帳中</option>
                         <option value="已付款">已付款</option>
+                        <option value="已發核帳通知">已發核帳通知</option>
                         <option value="已發付款通知">已發付款通知</option>
                         <option value="已出貨">已出貨</option>
                         <option value="已完成">已完成</option>
