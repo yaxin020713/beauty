@@ -187,9 +187,9 @@ export default function OrdersPage() {
                   {/* 訂單頭部 */}
                   <div className="bg-taupe-50 px-6 py-4 border-b border-taupe-200">
                     <div className="flex items-start justify-between gap-4">
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm text-taupe-600">訂單編號</p>
-                        <p className="font-mono font-semibold text-ink">
+                        <p className="font-mono font-semibold text-ink text-sm break-all">
                           {order.orderId}
                         </p>
                       </div>
@@ -203,8 +203,8 @@ export default function OrdersPage() {
                           })}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-taupe-600">狀態</p>
+                      <div className="flex flex-col items-end">
+                        <p className="text-sm text-taupe-600 mb-1">狀態</p>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                           order.orderStatus === "新訂單"
                             ? "bg-blue-100 text-blue-700"
