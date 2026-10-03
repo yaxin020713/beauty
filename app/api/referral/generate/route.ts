@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
           待實現分潮: {
             number: 0,
           },
-          處理中分潮: {
+          撥款處理中: {
             number: 0,
           },
         },
@@ -204,8 +204,8 @@ export async function POST(request: NextRequest) {
       if (props.待實現分潮 && "number" in props.待實現分潮) {
         unrealizedCommission = (props.待實現分潮 as any).number || 0;
       }
-      if (props.處理中分潮 && "number" in props.處理中分潮) {
-        pendingCommission = (props.處理中分潮 as any).number || 0;
+      if (props.撥款處理中 && "number" in props.撥款處理中) {
+        pendingCommission = (props.撥款處理中 as any).number || 0;
       }
       if (props.會員等級 && "select" in props.會員等級) {
         membershipLevel = (props.會員等級 as any).select?.name || "銅級";
