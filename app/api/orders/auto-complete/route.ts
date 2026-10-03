@@ -123,11 +123,12 @@ export async function POST(request: NextRequest) {
           const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
           const secondaryCommission = props.分潇2 && "number" in props.分潇2 ? props.分潇2.number || 0 : 0;
 
-          // 優先轉移次推薦人，其次轉移主推薦人
+          // 轉移推薦人分潇：同時轉移主推薦人與次推薦人（如果存在）
+          if (primaryEmail && primaryCommission > 0) {
+            await moveUnrealizedToAvailable(primaryEmail, primaryCommission);
+          }
           if (secondaryEmail && secondaryCommission > 0) {
             await moveUnrealizedToAvailable(secondaryEmail, secondaryCommission);
-          } else if (primaryEmail && primaryCommission > 0) {
-            await moveUnrealizedToAvailable(primaryEmail, primaryCommission);
           }
 
           completedCount++;
