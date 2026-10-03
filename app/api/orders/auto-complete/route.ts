@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
-import { moveUnrealizedCommissionToAvailable } from "@/lib/referral";
+import { applyReferralCommission } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5分鐘超時
@@ -71,19 +71,15 @@ export async function POST(request: NextRequest) {
             },
           });
 
-          // 將推薦人的待實現分潤轉到待提現分潤
-          const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
-          const primaryCommission = props.分潤 && "number" in props.分潤 ? props.分潤.number || 0 : 0;
-          const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
-          const secondaryCommission = props.分潤2 && "number" in props.分潤2 ? props.分潤2.number || 0 : 0;
-
-          // 轉移推薦人分潤：同時轉移主推薦人與次推薦人（如果存在）
-          if (primaryEmail && primaryCommission > 0) {
-            await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);
-          }
-          if (secondaryEmail && secondaryCommission > 0) {
-            await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
-          }
+          // 更新 page 物件的狀態欄位，以便 applyReferralCommission 能正確檢查
+          const updatedPage = {
+            ...page,
+            properties: {
+              ...page.properties,
+              訂單狀態: { select: { name: "已完成" } },
+            },
+          };
+          await applyReferralCommission(updatedPage);
 
           completedCount++;
         } catch (err) {

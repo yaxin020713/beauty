@@ -62,7 +62,15 @@ export async function GET(request: NextRequest) {
         });
 
         try {
-          await applyReferralCommission(page);
+          // 更新 page 物件的狀態欄位，以便 applyReferralCommission 能正確檢查
+          const updatedPage = {
+            ...page,
+            properties: {
+              ...page.properties,
+              訂單狀態: { select: { name: "已完成" } },
+            },
+          };
+          await applyReferralCommission(updatedPage);
         } catch (err) {
           console.error(`[api/cron/complete-orders] 訂單 ${page.id} 分潤入帳失敗:`, err);
         }
