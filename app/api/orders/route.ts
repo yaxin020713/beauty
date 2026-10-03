@@ -406,13 +406,16 @@ export async function POST(request: NextRequest) {
               一年內累計消費金額: {
                 number: totalPrice,
               },
-              累積分潤: {
+              待實現分潤: {
                 number: 0,
               },
               待提現分潤: {
                 number: 0,
               },
-              處理中分潤: {
+              歷史累積分潤: {
+                number: 0,
+              },
+              撥款處理中: {
                 number: 0,
               },
             },
