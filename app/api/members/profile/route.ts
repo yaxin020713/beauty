@@ -167,8 +167,8 @@ export async function GET(request: NextRequest) {
         memberData.totalSpending = (props.一年內累計消費金額 as any).number || 0;
       }
 
-      if (props.累積分潤 && "number" in props.累積分潤) {
-        memberData.totalCommission = (props.累積分潤 as any).number || 0;
+      if (props.歷史累積分潤 && "number" in props.歷史累積分潤) {
+        memberData.totalCommission = (props.歷史累積分潤 as any).number || 0;
       }
 
       if (props.待提現分潤 && "number" in props.待提現分潤) {
@@ -320,7 +320,7 @@ export async function POST(request: NextRequest) {
       properties.一年內累計消費金額 = {
         number: 0,
       };
-      properties.累積分潤 = {
+      properties.歷史累積分潤 = {
         number: 0,
       };
       properties.待提現分潤 = {
