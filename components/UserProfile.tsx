@@ -911,9 +911,6 @@ export default function UserProfile() {
                   .reduce((sum, r) => sum + r.commission, 0) || 0
               }
             </p>
-            <p className="text-xs text-taupe-400 mt-1">
-              訂單未滿 8 天
-            </p>
           </div>
           <div className="rounded-lg bg-sapphire-50 p-4">
             <p className="text-xs text-sapphire-600 mb-1">撥款處理中</p>
