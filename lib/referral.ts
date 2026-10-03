@@ -58,7 +58,7 @@ export async function moveUnrealizedCommissionToAvailable(email: string, amount:
 }
 
 // 把分潤加入待實現分潤（下單當下）：
-// - 待實現分潤：已下單但訂單未完成的分潤，訂單完成 8 天後轉入待提現分潮
+// - 待實現分潤：已下單但訂單未完成的分潤，訂單完成 8 天後轉入待提現分潤
 export async function creditUnrealizedCommission(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 
@@ -92,13 +92,13 @@ export async function creditUnrealizedCommission(email: string, amount: number):
           一年內累計消費金額: {
             number: 0,
           },
-          待實現分潮: {
+          待實現分潤: {
             number: amount,
           },
-          待提現分潮: {
+          待提現分潤: {
             number: 0,
           },
-          歷史累積分潮: {
+          歷史累積分潤: {
             number: 0,
           },
           撥款處理中: {
@@ -106,7 +106,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
           },
         },
       });
-      console.log(`[creditUnrealizedCommission] 為推薦人 ${normalizedEmail} 建立會員記錄成功，待實現分潮: ${amount}`);
+      console.log(`[creditUnrealizedCommission] 為推薦人 ${normalizedEmail} 建立會員記錄成功，待實現分潤: ${amount}`);
     } catch (err) {
       console.error(`[creditUnrealizedCommission] 為推薦人 ${normalizedEmail} 建立會員記錄失敗:`, err instanceof Error ? err.message : err);
     }
@@ -116,7 +116,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
   const referrerPage = referrerQuery.results[0];
   let currentUnrealizedCommission = 0;
   if ("properties" in referrerPage) {
-    const unrealizedProp = referrerPage.properties.待實現分潮;
+    const unrealizedProp = referrerPage.properties.待實現分潤;
     if (unrealizedProp && "number" in unrealizedProp && typeof unrealizedProp.number === "number") {
       currentUnrealizedCommission = unrealizedProp.number || 0;
     }
@@ -125,43 +125,43 @@ export async function creditUnrealizedCommission(email: string, amount: number):
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      待實現分潮: { number: currentUnrealizedCommission + amount },
+      待實現分潤: { number: currentUnrealizedCommission + amount },
     },
   });
 }
 
-// 檢查訂單狀態並將待實現分潮轉為待提現分潮。
-// 只有當訂單狀態為「已完成」時才會執行分潮轉移。
-// 優先次推薦人與對應分潮金（手動修改或官方連結手動填寫），次之推薦人與對應分潮金（推薦連結自動帶入）。
+// 檢查訂單狀態並將待實現分潤轉為待提現分潤。
+// 只有當訂單狀態為「已完成」時才會執行分潤轉移。
+// 優先次推薦人與對應分潤金（手動修改或官方連結手動填寫），次之推薦人與對應分潤金（推薦連結自動帶入）。
 export async function applyReferralCommission(orderPage: unknown): Promise<void> {
   if (!orderPage || typeof orderPage !== "object" || !("properties" in orderPage)) return;
   if (!MEMBERS_DB_ID) return;
 
   const props = (orderPage as { properties: Record<string, any> }).properties;
 
-  // 驗證訂單狀態是否為「已完成」，只有已完成才進行分潮轉移
+  // 驗證訂單狀態是否為「已完成」，只有已完成才進行分潤轉移
   const statusProp = props["訂單狀態"];
   const orderStatus = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
   if (orderStatus !== "已完成") {
     return;
   }
 
-  // 優先使用次推薦人與對應分潮金（手動修改或官方連結手動填寫）
+  // 優先使用次推薦人與對應分潤金（手動修改或官方連結手動填寫）
   const secondaryEmail = readRichText(props["推薦人信箱2"]);
-  const secondaryCommission = readNumber(props["分潮2"]);
+  const secondaryCommission = readNumber(props["分潤2"]);
   if (secondaryEmail && secondaryCommission > 0) {
     await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
   }
 
-  // 其次使用推薦人與對應分潮金（推薦連結自動帶入）
+  // 其次使用推薦人與對應分潤金（推薦連結自動帶入）
   const primaryEmail = readRichText(props["推薦人信箱"]);
-  const primaryCommission = readNumber(props["分潮"]);
-  // 確保推薦人信箱存在，才進行分潮（防止孤立的分潮金額）
+  const primaryCommission = readNumber(props["分潤"]);
+  // 確保推薦人信箱存在，才進行分潤（防止孤立的分潤金額）
   if (primaryEmail && primaryCommission > 0) {
     await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);
   } else if (!primaryEmail && primaryCommission > 0) {
     console.warn(
-      `[applyReferralCommission] 訂單有分潮金額 ${primaryCommission} 但缺少推薦人信箱，無法入帳。訂單ID: ${props.Order_ID?.title?.[0]?.plain_text}`
+      `[applyReferralCommission] 訂單有分潤金額 ${primaryCommission} 但缺少推薦人信箱，無法入帳。訂單ID: ${props.Order_ID?.title?.[0]?.plain_text}`
     );
   }
 }

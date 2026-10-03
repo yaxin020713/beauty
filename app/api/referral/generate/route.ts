@@ -156,13 +156,13 @@ export async function POST(request: NextRequest) {
           一年內累計消費金額: {
             number: 0,
           },
-          歷史累積分潮: {
+          歷史累積分潤: {
             number: 0,
           },
-          待提現分潮: {
+          待提現分潤: {
             number: 0,
           },
-          待實現分潮: {
+          待實現分潤: {
             number: 0,
           },
           撥款處理中: {
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
       console.log("[api/referral/generate] 新會員記錄已建立, ID:", memberId);
     }
 
-    // 獲取完整會員資料（分潮成果、會員等級、銀行資訊等），供 /account 頁面一次顯示
+    // 獲取完整會員資料（分潤成果、會員等級、銀行資訊等），供 /account 頁面一次顯示
     let totalCommission = 0;
     let availableCommission = 0;
     let unrealizedCommission = 0;
@@ -195,14 +195,14 @@ export async function POST(request: NextRequest) {
     if ("properties" in memberResponse) {
       const props = memberResponse.properties;
 
-      if (props.歷史累積分潮 && "number" in props.歷史累積分潮) {
-        totalCommission = (props.歷史累積分潮 as any).number || 0;
+      if (props.歷史累積分潤 && "number" in props.歷史累積分潤) {
+        totalCommission = (props.歷史累積分潤 as any).number || 0;
       }
-      if (props.待提現分潮 && "number" in props.待提現分潮) {
-        availableCommission = (props.待提現分潮 as any).number || 0;
+      if (props.待提現分潤 && "number" in props.待提現分潤) {
+        availableCommission = (props.待提現分潤 as any).number || 0;
       }
-      if (props.待實現分潮 && "number" in props.待實現分潮) {
-        unrealizedCommission = (props.待實現分潮 as any).number || 0;
+      if (props.待實現分潤 && "number" in props.待實現分潤) {
+        unrealizedCommission = (props.待實現分潤 as any).number || 0;
       }
       if (props.撥款處理中 && "number" in props.撥款處理中) {
         pendingCommission = (props.撥款處理中 as any).number || 0;
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log("[api/referral/generate] 分潮金額:", totalCommission);
+    console.log("[api/referral/generate] 分潤金額:", totalCommission);
 
     const siteUrl = getSiteUrlFromRequest(request);
 
