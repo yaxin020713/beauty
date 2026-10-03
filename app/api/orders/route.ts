@@ -69,13 +69,14 @@ async function resolveReferrer(
 
     if (!email) return null;
 
-    const isSelfReferral = email.trim().toLowerCase() === buyerEmail.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
+    const isSelfReferral = normalizedEmail === buyerEmail.trim().toLowerCase();
     if (isSelfReferral) {
       console.warn(`[api/orders] 偵測到自我推薦，忽略推薦碼 ${code}: ${buyerEmail}`);
       return null;
     }
 
-    return { code, email };
+    return { code, email: normalizedEmail };
   } catch (err) {
     console.warn(`[api/orders] 查詢推薦碼 ${code} 失敗:`, err);
     return null;
