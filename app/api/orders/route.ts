@@ -252,6 +252,7 @@ export async function POST(request: NextRequest) {
       Total_Price: { number: totalPrice },
       Total_Weight_kg: { number: totalWeightKg },
       "訂單狀態": { select: { name: "新訂單" } },
+      "訂單日期": { date: { start: new Date().toISOString().split("T")[0] } },
     };
 
     // 推薦碼和推薦人信箱（自我推薦不寫入，避免留下可被誤判為有效推薦的紀錄）
