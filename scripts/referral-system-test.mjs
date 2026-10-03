@@ -116,7 +116,7 @@ async function testSetup() {
 
       // 讀取初始分潤
       if ("properties" in referrerPage) {
-        const totalProp = referrerPage.properties["累積分潤"];
+        const totalProp = referrerPage.properties["歷史累積分潤"];
         const availableProp = referrerPage.properties["待提現分潤"];
         if (totalProp?.type === "number") {
           testState.initialTotalCommission = totalProp.number || 0;
@@ -402,7 +402,7 @@ async function testCommissionAccrual() {
       if (referrerQuery.results.length > 0) {
         const referrerPage = referrerQuery.results[0];
         if ("properties" in referrerPage) {
-          const totalProp = referrerPage.properties["累積分潤"];
+          const totalProp = referrerPage.properties["歷史累積分潤"];
           const availableProp = referrerPage.properties["待提現分潤"];
 
           const currentTotal = totalProp?.type === "number" ? totalProp.number : 0;
@@ -411,7 +411,7 @@ async function testCommissionAccrual() {
           const totalIncreased = currentTotal > testState.initialTotalCommission;
           const availableIncreased = currentAvailable > testState.initialAvailableCommission;
 
-          check("累積分潤已增加", totalIncreased, `${testState.initialTotalCommission} → ${currentTotal}`);
+          check("歷史累積分潤已增加", totalIncreased, `${testState.initialTotalCommission} → ${currentTotal}`);
           check(
             "待提現分潤已增加",
             availableIncreased,

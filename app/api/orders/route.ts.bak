@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. 推薦人的累積分潤：不在下單當下發放，而是待訂單狀態轉為「已完成」時
+    // 3. 推薦人的歷史累積分潤：不在下單當下發放，而是待訂單狀態轉為「已完成」時
     //    才由管理面板手動操作或每日自動排程呼叫 applyReferralCommission() 入帳
     //    （分潤金額與推薦人信箱已於上方寫入訂單頁面的 分潤 / 推薦人信箱 屬性）
 
@@ -385,7 +385,7 @@ export async function POST(request: NextRequest) {
               一年內累計消費金額: {
                 number: totalPrice,
               },
-              累積分潤: {
+              歷史累積分潤: {
                 number: 0,
               },
               待提現分潤: {

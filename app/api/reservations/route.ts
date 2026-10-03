@@ -300,7 +300,7 @@ export async function POST(request: NextRequest) {
               Email: { title: [{ text: { content: customerEmail.toLowerCase() } }] },
               會員等級: { select: { name: "銅級" } },
               一年內累計消費金額: { number: 0 },
-              累積分潤: { number: 0 },
+              歷史累積分潤: { number: 0 },
               待提現分潤: { number: 0 },
               處理中分潤: { number: 0 },
               訂單數: { number: 1 },

@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
           一年內累計消費金額: {
             number: 0,
           },
-          累積分潤: {
+          歷史累積分潤: {
             number: 0,
           },
           待提現分潤: {
@@ -191,8 +191,8 @@ export async function POST(request: NextRequest) {
     if ("properties" in memberResponse) {
       const props = memberResponse.properties;
 
-      if (props.累積分潤 && "number" in props.累積分潤) {
-        totalCommission = (props.累積分潤 as any).number || 0;
+      if (props.歷史累積分潤 && "number" in props.歷史累積分潤) {
+        totalCommission = (props.歷史累積分潤 as any).number || 0;
       }
       if (props.待提現分潤 && "number" in props.待提現分潤) {
         availableCommission = (props.待提現分潤 as any).number || 0;

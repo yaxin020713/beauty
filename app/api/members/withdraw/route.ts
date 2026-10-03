@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 更新會員資料：清空待提現分潤（全額），增加處理中分潤（實際撥款金額，已扣手續費），
-    // 並記錄本次提現日期；累積分潤是終身總額，不受提現影響
+    // 並記錄本次提現日期；歷史累積分潤是終身總額，不受提現影響
     await notion.pages.update({
       page_id: memberPage.id,
       properties: {

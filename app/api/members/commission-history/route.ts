@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       const orderDate = (page as any).created_time || "";
 
       // 訂單狀態：用來標示這筆分潤是否已經實際入帳給推薦人
-      // （分潤僅在訂單轉為「已完成」時才會計入累積分潤，見 applyReferralCommission）
+      // （分潤僅在訂單轉為「已完成」時才會計入歷史累積分潤，見 applyReferralCommission）
       const statusProp = props["訂單狀態"];
       const status =
         statusProp?.type === "select" && statusProp.select
