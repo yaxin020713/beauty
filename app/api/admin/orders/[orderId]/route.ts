@@ -66,9 +66,9 @@ export async function PATCH(
         // 轉移待實現分潬到待提現分潬
         const props = (orderPageForCommission as any).properties;
         const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
-        const primaryCommission = props.分潬 && "number" in props.分潬 ? props.分潬.number || 0 : 0;
+        const primaryCommission = props.分潮 && "number" in props.分潮 ? props.分潮.number || 0 : 0;
         const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
-        const secondaryCommission = props.分潬2 && "number" in props.分潬2 ? props.分潬2.number || 0 : 0;
+        const secondaryCommission = props.分潮2 && "number" in props.分潮2 ? props.分潮2.number || 0 : 0;
 
         if (primaryEmail && primaryCommission > 0) {
           await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);

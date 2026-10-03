@@ -97,8 +97,8 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   });
 }
 
-// 把分潤加入待實現分潇（下單當下）：
-// - 待實現分潇：已下單但訂單未完成的分潇，訂單完成 8 天後轉入尚未提現分潇
+// 把分潤加入待實現分潬（下單當下）：
+// - 待實現分潬：已下單但訂單未完成的分潬，訂單完成 8 天後轉入尚未提現分潬
 export async function creditUnrealizedCommission(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 
@@ -115,7 +115,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
   const referrerPage = referrerQuery.results[0];
   let currentUnrealizedCommission = 0;
   if ("properties" in referrerPage) {
-    const unrealizedProp = referrerPage.properties.待實現分潇;
+    const unrealizedProp = referrerPage.properties.待實現分潬;
     if (unrealizedProp && "number" in unrealizedProp && typeof unrealizedProp.number === "number") {
       currentUnrealizedCommission = unrealizedProp.number || 0;
     }
@@ -124,7 +124,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      待實現分潇: { number: currentUnrealizedCommission + amount },
+      待實現分潬: { number: currentUnrealizedCommission + amount },
     },
   });
 }

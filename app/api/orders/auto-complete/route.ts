@@ -4,7 +4,7 @@ import { notion, ORDERS_DB_ID, MEMBERS_DB_ID } from "@/lib/notion";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5分鐘超時
 
-// 將推薦人的待實現分潇轉到待提現分潇
+// 將推薦人的待實現分潬轉到待提現分潬
 async function moveUnrealizedToAvailable(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 
@@ -24,29 +24,29 @@ async function moveUnrealizedToAvailable(email: string, amount: number): Promise
   let currentTotalCommission = 0;
 
   if ("properties" in referrerPage) {
-    const unrealizedProp = referrerPage.properties.待實現分潇;
+    const unrealizedProp = referrerPage.properties.待實現分潬;
     if (unrealizedProp && "number" in unrealizedProp && typeof unrealizedProp.number === "number") {
       currentUnrealizedCommission = unrealizedProp.number || 0;
     }
 
-    const availableProp = referrerPage.properties.尚未提現分潇;
+    const availableProp = referrerPage.properties.尚未提現分潬;
     if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
       currentAvailableCommission = availableProp.number || 0;
     }
 
-    const totalProp = referrerPage.properties.累積分潇;
+    const totalProp = referrerPage.properties.累積分潬;
     if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
       currentTotalCommission = totalProp.number || 0;
     }
   }
 
-  // 將分潇從待實現轉到待提現，並更新累積分潇（只計一次）
+  // 將分潬從待實現轉到待提現，並更新累積分潬（只計一次）
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      待實現分潇: { number: Math.max(0, currentUnrealizedCommission - amount) },
-      尚未提現分潇: { number: currentAvailableCommission + amount },
-      累積分潇: { number: currentTotalCommission + amount },
+      待實現分潬: { number: Math.max(0, currentUnrealizedCommission - amount) },
+      尚未提現分潬: { number: currentAvailableCommission + amount },
+      累積分潬: { number: currentTotalCommission + amount },
     },
   });
 }
@@ -119,9 +119,9 @@ export async function POST(request: NextRequest) {
 
           // 將推薦人的待實現分潇轉到待提現分潇
           const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
-          const primaryCommission = props.分潇 && "number" in props.分潇 ? props.分潇.number || 0 : 0;
+          const primaryCommission = props.分潮 && "number" in props.分潮 ? props.分潮.number || 0 : 0;
           const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
-          const secondaryCommission = props.分潇2 && "number" in props.分潇2 ? props.分潇2.number || 0 : 0;
+          const secondaryCommission = props.分潮2 && "number" in props.分潮2 ? props.分潮2.number || 0 : 0;
 
           // 轉移推薦人分潇：同時轉移主推薦人與次推薦人（如果存在）
           if (primaryEmail && primaryCommission > 0) {
