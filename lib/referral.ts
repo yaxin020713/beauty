@@ -40,25 +40,25 @@ export async function moveUnrealizedCommissionToAvailable(email: string, amount:
       currentAvailableCommission = availableProp.number || 0;
     }
 
-    const totalProp = referrerPage.properties.歷史累積分潮;
+    const totalProp = referrerPage.properties.歷史累積分潤;
     if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
       currentTotalCommission = totalProp.number || 0;
     }
   }
 
-  // 將分潤從待實現轉到待提現，並更新歷史累積分潮（只計一次）
+  // 將分潤從待實現轉到待提現，並更新歷史累積分潤（只計一次）
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
       待實現分潤: { number: Math.max(0, currentUnrealizedCommission - amount) },
       待提現分潤: { number: currentAvailableCommission + amount },
-      歷史累積分潮: { number: currentTotalCommission + amount },
+      歷史累積分潤: { number: currentTotalCommission + amount },
     },
   });
 }
 
 // 把分潤入帳給單一位推薦人：
-// - 歷史累積分潮：終身總額，只增不減，純粹作為歷史紀錄
+// - 歷史累積分潤：終身總額，只增不減，純粹作為歷史紀錄
 // - 待提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
 async function creditMemberCommission(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
@@ -77,7 +77,7 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   let currentTotalCommission = 0;
   let currentAvailableCommission = 0;
   if ("properties" in referrerPage) {
-    const totalProp = referrerPage.properties.歷史累積分潮;
+    const totalProp = referrerPage.properties.歷史累積分潤;
     if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
       currentTotalCommission = totalProp.number || 0;
     }
@@ -91,7 +91,7 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      歷史累積分潮: { number: currentTotalCommission + amount },
+      歷史累積分潤: { number: currentTotalCommission + amount },
       待提現分潤: { number: currentAvailableCommission + amount },
     },
   });
