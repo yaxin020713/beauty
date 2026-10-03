@@ -88,7 +88,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
           歷史累積分潤: {
             number: 0,
           },
-          處理中分潮: {
+          處理中分潤: {
             number: 0,
           },
         },
