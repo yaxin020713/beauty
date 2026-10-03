@@ -88,7 +88,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
           歷史累積分潤: {
             number: 0,
           },
-          撥款處理中: {
+          處理中分潮: {
             number: 0,
           },
         },
@@ -137,7 +137,6 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   const secondaryCommission = readNumber(props["分潤2"]);
   if (secondaryEmail && secondaryCommission > 0) {
     await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
-    return;
   }
 
   // 其次使用推薦人與對應分潤金（推薦連結自動帶入）
