@@ -57,46 +57,6 @@ export async function moveUnrealizedCommissionToAvailable(email: string, amount:
   });
 }
 
-// 把分潤入帳給單一位推薦人：
-// - 歷史累積分潤：終身總額，只增不減，純粹作為歷史紀錄
-// - 待提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
-async function creditMemberCommission(email: string, amount: number): Promise<void> {
-  if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
-
-  const referrerQuery = await notion.databases.query({
-    database_id: MEMBERS_DB_ID,
-    filter: {
-      property: "Email",
-      title: { equals: email },
-    },
-  });
-
-  if (referrerQuery.results.length === 0) return;
-
-  const referrerPage = referrerQuery.results[0];
-  let currentTotalCommission = 0;
-  let currentAvailableCommission = 0;
-  if ("properties" in referrerPage) {
-    const totalProp = referrerPage.properties.歷史累積分潤;
-    if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
-      currentTotalCommission = totalProp.number || 0;
-    }
-
-    const availableProp = referrerPage.properties.待提現分潤;
-    if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
-      currentAvailableCommission = availableProp.number || 0;
-    }
-  }
-
-  await notion.pages.update({
-    page_id: referrerPage.id,
-    properties: {
-      歷史累積分潤: { number: currentTotalCommission + amount },
-      待提現分潤: { number: currentAvailableCommission + amount },
-    },
-  });
-}
-
 // 把分潤加入待實現分潤（下單當下）：
 // - 待實現分潤：已下單但訂單未完成的分潤，訂單完成 8 天後轉入待提現分潤
 export async function creditUnrealizedCommission(email: string, amount: number): Promise<void> {
@@ -129,7 +89,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
   });
 }
 
-// 讀取訂單頁面上的分潤資訊，入帳給推薦人。
+// 讀取訂單頁面上的分潤資訊，將待實現分潤轉為待提現分潤。
 // 優先次推薦人與對應分潤金（手動修改或官方連結手動填寫），次之推薦人與對應分潤金（推薦連結自動帶入）。
 // 呼叫時機：訂單狀態轉為「已完成」時（管理員手動操作或每日自動排程），
 // 而非下單當下，因此呼叫端須自行確保不會對同一筆訂單重複呼叫。
@@ -143,7 +103,7 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   const secondaryEmail = readRichText(props["推薦人信箱2"]);
   const secondaryCommission = readNumber(props["分潤2"]);
   if (secondaryEmail && secondaryCommission > 0) {
-    await creditMemberCommission(secondaryEmail, secondaryCommission);
+    await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
     return;
   }
 
@@ -152,7 +112,7 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   const primaryCommission = readNumber(props["分潤"]);
   // 確保推薦人信箱存在，才進行分潤（防止孤立的分潤金額）
   if (primaryEmail && primaryCommission > 0) {
-    await creditMemberCommission(primaryEmail, primaryCommission);
+    await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);
   } else if (!primaryEmail && primaryCommission > 0) {
     console.warn(
       `[applyReferralCommission] 訂單有分潤金額 ${primaryCommission} 但缺少推薦人信箱，無法入帳。訂單ID: ${props.Order_ID?.title?.[0]?.plain_text}`
