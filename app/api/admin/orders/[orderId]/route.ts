@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
-import { moveUnrealizedCommissionToAvailable } from "@/lib/referral";
+import { applyReferralCommission } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
@@ -61,21 +61,18 @@ export async function PATCH(
       properties: updateProps,
     });
 
-    if (orderPageForCommission && typeof orderPageForCommission === "object" && "properties" in orderPageForCommission) {
+    // 若狀態變成「已完成」，需要手動更新訂單頁面的狀態並處理分潤
+    if (orderPageForCommission) {
       try {
-        // 轉移待實現分潤到待提現分潤
-        const props = (orderPageForCommission as any).properties;
-        const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
-        const primaryCommission = props.分潤 && "number" in props.分潤 ? props.分潤.number || 0 : 0;
-        const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
-        const secondaryCommission = props.分潤2 && "number" in props.分潤2 ? props.分潤2.number || 0 : 0;
-
-        if (primaryEmail && primaryCommission > 0) {
-          await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);
-        }
-        if (secondaryEmail && secondaryCommission > 0) {
-          await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
-        }
+        // 更新 orderPageForCommission 的狀態為「已完成」，以便 applyReferralCommission 能正確檢查
+        const updatedOrderPage = {
+          ...orderPageForCommission,
+          properties: {
+            ...(orderPageForCommission as any).properties,
+            訂單狀態: { select: { name: "已完成" } },
+          },
+        };
+        await applyReferralCommission(updatedOrderPage);
       } catch (error) {
         console.error("[api/admin/orders/[orderId]] 分潤轉移失敗:", error);
       }
