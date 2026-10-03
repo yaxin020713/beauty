@@ -207,6 +207,8 @@ export async function POST(request: NextRequest) {
       referrers.push(linkMatch);
     }
 
+    console.log(`[api/orders] 訂單 ${orderId} - 推薦碼解析結果: formMatch=${formMatch?.code || 'null'}, linkMatch=${linkMatch?.code || 'null'}, referrers.length=${referrers.length}`);
+
     let totalReferralCommission = 0;
     if (referrers.length > 0) {
       // 計算分潤：遍歷訂單品項，查詢每個產品的分潤字段（與推薦人數量無關，只算一次）
@@ -341,18 +343,24 @@ export async function POST(request: NextRequest) {
 
     // 3. 推薦人的待實現分潤：下單當下立即加入推薦人的「待實現分潤」
     //    訂單狀態轉為「已完成」時（出貨滿 8 天），自動轉入「待提現分潤」
+    console.log(`[api/orders] 訂單 ${orderId} - 準備寫入待實現分潤: referrer1=${referrer1?.email || 'null'} (${referrer1Commission}), referrer2=${referrer2?.email || 'null'} (${referrer2Commission})`);
+
     if (referrer1 && referrer1Commission > 0) {
       try {
+        console.log(`[api/orders] 訂單 ${orderId} - 開始為推薦人 ${referrer1.email} 添加待實現分潤 ${referrer1Commission}`);
         await creditUnrealizedCommission(referrer1.email, referrer1Commission);
+        console.log(`[api/orders] 訂單 ${orderId} - 成功為推薦人 ${referrer1.email} 添加待實現分潤 ${referrer1Commission}`);
       } catch (error) {
-        console.warn(`[api/orders] 為推薦人 ${referrer1.email} 添加待實現分潤失敗:`, error instanceof Error ? error.message : error);
+        console.error(`[api/orders] 訂單 ${orderId} - 為推薦人 ${referrer1.email} 添加待實現分潤失敗:`, error instanceof Error ? error.message : error, error);
       }
     }
     if (referrer2 && referrer2Commission > 0) {
       try {
+        console.log(`[api/orders] 訂單 ${orderId} - 開始為推薦人 ${referrer2.email} 添加待實現分潤 ${referrer2Commission}`);
         await creditUnrealizedCommission(referrer2.email, referrer2Commission);
+        console.log(`[api/orders] 訂單 ${orderId} - 成功為推薦人 ${referrer2.email} 添加待實現分潤 ${referrer2Commission}`);
       } catch (error) {
-        console.warn(`[api/orders] 為推薦人 ${referrer2.email} 添加待實現分潤失敗:`, error instanceof Error ? error.message : error);
+        console.error(`[api/orders] 訂單 ${orderId} - 為推薦人 ${referrer2.email} 添加待實現分潤失敗:`, error instanceof Error ? error.message : error, error);
       }
     }
 
