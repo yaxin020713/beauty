@@ -70,7 +70,34 @@ export async function creditUnrealizedCommission(email: string, amount: number):
     },
   });
 
-  if (referrerQuery.results.length === 0) return;
+  if (referrerQuery.results.length === 0) {
+    // 推薦人還沒有會員記錄，建立新的會員記錄
+    try {
+      await notion.pages.create({
+        parent: { database_id: MEMBERS_DB_ID },
+        properties: {
+          Email: {
+            title: [{ text: { content: email.toLowerCase() } }],
+          },
+          待實現分潤: {
+            number: amount,
+          },
+          待提現分潤: {
+            number: 0,
+          },
+          歷史累積分潤: {
+            number: 0,
+          },
+          撥款處理中: {
+            number: 0,
+          },
+        },
+      });
+    } catch (err) {
+      console.warn(`[creditUnrealizedCommission] 為推薦人 ${email} 建立會員記錄失敗:`, err);
+    }
+    return;
+  }
 
   const referrerPage = referrerQuery.results[0];
   let currentUnrealizedCommission = 0;
