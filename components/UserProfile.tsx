@@ -948,7 +948,7 @@ export default function UserProfile() {
           分潤明細載入失敗：{commissionHistoryError}
         </div>
       )}
-      {commissionRecords.filter(r => r.isOver8Days).length > 0 && (
+      {commissionRecords.length > 0 && (
         <div className="rounded-lg border border-taupe-200 bg-white p-6">
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -966,7 +966,7 @@ export default function UserProfile() {
 
           {showHistory && (
             <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
-              {commissionRecords.filter(r => r.isOver8Days).map((record) => (
+              {commissionRecords.map((record) => (
                 <div
                   key={record.orderId}
                   className="flex items-center justify-between rounded-lg border border-taupe-100 bg-taupe-50 p-3"
@@ -988,7 +988,13 @@ export default function UserProfile() {
                     <p className="text-sm font-bold text-emerald-600">
                       +NT${record.commission}
                     </p>
-                    <p className="text-xs mt-1 text-emerald-600">已入帳</p>
+                    <p
+                      className={`text-xs mt-1 ${
+                        record.isOver8Days ? "text-emerald-600" : "text-taupe-400"
+                      }`}
+                    >
+                      {record.isOver8Days ? "已入帳" : "訂單完成8天後入帳"}
+                    </p>
                   </div>
                 </div>
               ))}
