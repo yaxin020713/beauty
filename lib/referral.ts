@@ -10,9 +10,56 @@ function readNumber(prop: any): number {
   return prop?.type === "number" ? prop.number || 0 : 0;
 }
 
+// 將推薦人的待實現分潤轉到待提現分潤（訂單完成時調用）
+export async function moveUnrealizedCommissionToAvailable(email: string, amount: number): Promise<void> {
+  if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
+
+  const referrerQuery = await notion.databases.query({
+    database_id: MEMBERS_DB_ID,
+    filter: {
+      property: "Email",
+      title: { equals: email },
+    },
+  });
+
+  if (referrerQuery.results.length === 0) return;
+
+  const referrerPage = referrerQuery.results[0];
+  let currentUnrealizedCommission = 0;
+  let currentAvailableCommission = 0;
+  let currentTotalCommission = 0;
+
+  if ("properties" in referrerPage) {
+    const unrealizedProp = referrerPage.properties.待實現分潬;
+    if (unrealizedProp && "number" in unrealizedProp && typeof unrealizedProp.number === "number") {
+      currentUnrealizedCommission = unrealizedProp.number || 0;
+    }
+
+    const availableProp = referrerPage.properties.尚未提現分潬;
+    if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
+      currentAvailableCommission = availableProp.number || 0;
+    }
+
+    const totalProp = referrerPage.properties.累積分潬;
+    if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
+      currentTotalCommission = totalProp.number || 0;
+    }
+  }
+
+  // 將分潬從待實現轉到待提現，並更新累積分潬（只計一次）
+  await notion.pages.update({
+    page_id: referrerPage.id,
+    properties: {
+      待實現分潬: { number: Math.max(0, currentUnrealizedCommission - amount) },
+      尚未提現分潬: { number: currentAvailableCommission + amount },
+      累積分潬: { number: currentTotalCommission + amount },
+    },
+  });
+}
+
 // 把分潤入帳給單一位推薦人：
 // - 累積分潤：終身總額，只增不減，純粹作為歷史紀錄
-// - 尚未提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
+// - 尚未提現分潮：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
 async function creditMemberCommission(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 

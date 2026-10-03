@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
-import { applyReferralCommission } from "@/lib/referral";
+import { moveUnrealizedCommissionToAvailable } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +40,7 @@ export async function PATCH(
     }
 
     // 若這次操作要把訂單狀態改為「已完成」，須先確認目前狀態尚未是「已完成」，
-    // 避免管理員重複保存同一狀態時，分潤被重複入帳給推薦人
+    // 避免管理員重複保存同一狀態時，分潬被重複入帳給推薦人
     let orderPageForCommission: unknown = null;
     if (body.status === "已完成") {
       const currentPage = await notion.pages.retrieve({ page_id: pageId });
@@ -63,9 +63,23 @@ export async function PATCH(
 
     if (orderPageForCommission) {
       try {
-        await applyReferralCommission(orderPageForCommission);
+        // 轉移待實現分潬到待提現分潬
+        if ("properties" in orderPageForCommission) {
+          const props = (orderPageForCommission as any).properties;
+          const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
+          const primaryCommission = props.分潬 && "number" in props.分潬 ? props.分潬.number || 0 : 0;
+          const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
+          const secondaryCommission = props.分潬2 && "number" in props.分潬2 ? props.分潬2.number || 0 : 0;
+
+          if (primaryEmail && primaryCommission > 0) {
+            await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);
+          }
+          if (secondaryEmail && secondaryCommission > 0) {
+            await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
+          }
+        }
       } catch (error) {
-        console.error("[api/admin/orders/[orderId]] 分潤入帳失敗:", error);
+        console.error("[api/admin/orders/[orderId]] 分潬轉移失敗:", error);
       }
     }
 
