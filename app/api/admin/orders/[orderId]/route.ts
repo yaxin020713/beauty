@@ -41,11 +41,11 @@ export async function PATCH(
 
     // 若這次操作要把訂單狀態改為「已完成」，須先確認目前狀態尚未是「已完成」，
     // 避免管理員重複保存同一狀態時，分潬被重複入帳給推薦人
-    let orderPageForCommission: unknown = null;
+    let orderPageForCommission: any = null;
     if (body.status === "已完成") {
       const currentPage = await notion.pages.retrieve({ page_id: pageId });
-      if ("properties" in currentPage) {
-        const statusProp = currentPage.properties["訂單狀態"];
+      if (currentPage && typeof currentPage === "object" && "properties" in currentPage) {
+        const statusProp = (currentPage as any).properties["訂單狀態"];
         const currentStatus =
           statusProp?.type === "select" && statusProp.select
             ? (statusProp.select as any).name
@@ -61,22 +61,20 @@ export async function PATCH(
       properties: updateProps,
     });
 
-    if (orderPageForCommission) {
+    if (orderPageForCommission && typeof orderPageForCommission === "object" && "properties" in orderPageForCommission) {
       try {
         // 轉移待實現分潬到待提現分潬
-        if ("properties" in orderPageForCommission) {
-          const props = (orderPageForCommission as any).properties;
-          const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
-          const primaryCommission = props.分潬 && "number" in props.分潬 ? props.分潬.number || 0 : 0;
-          const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
-          const secondaryCommission = props.分潬2 && "number" in props.分潬2 ? props.分潬2.number || 0 : 0;
+        const props = (orderPageForCommission as any).properties;
+        const primaryEmail = props.推薦人信箱 && "rich_text" in props.推薦人信箱 ? props.推薦人信箱.rich_text[0]?.plain_text : "";
+        const primaryCommission = props.分潬 && "number" in props.分潬 ? props.分潬.number || 0 : 0;
+        const secondaryEmail = props.推薦人信箱2 && "rich_text" in props.推薦人信箱2 ? props.推薦人信箱2.rich_text[0]?.plain_text : "";
+        const secondaryCommission = props.分潬2 && "number" in props.分潬2 ? props.分潬2.number || 0 : 0;
 
-          if (primaryEmail && primaryCommission > 0) {
-            await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);
-          }
-          if (secondaryEmail && secondaryCommission > 0) {
-            await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
-          }
+        if (primaryEmail && primaryCommission > 0) {
+          await moveUnrealizedCommissionToAvailable(primaryEmail, primaryCommission);
+        }
+        if (secondaryEmail && secondaryCommission > 0) {
+          await moveUnrealizedCommissionToAvailable(secondaryEmail, secondaryCommission);
         }
       } catch (error) {
         console.error("[api/admin/orders/[orderId]] 分潬轉移失敗:", error);
