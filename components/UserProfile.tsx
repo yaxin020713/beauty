@@ -41,6 +41,8 @@ type CommissionRecord = {
   status: string;
   credited: boolean;
   note: string;
+  shipDate?: string;
+  isOver8Days?: boolean;
 };
 
 type WithdrawalRecord = {
@@ -903,7 +905,11 @@ export default function UserProfile() {
           <div className="rounded-lg bg-amber-50 p-4">
             <p className="text-xs text-amber-600 mb-1">待實現分潤</p>
             <p className="text-2xl font-bold text-amber-600">
-              NT${userData.unrealizedCommission || 0}
+              NT${
+                commissionRecords
+                  .filter(r => !r.isOver8Days)
+                  .reduce((sum, r) => sum + r.commission, 0) || 0
+              }
             </p>
             <p className="text-xs text-taupe-400 mt-1">
               訂單未滿 8 天
@@ -945,7 +951,7 @@ export default function UserProfile() {
           分潤明細載入失敗：{commissionHistoryError}
         </div>
       )}
-      {commissionRecords.length > 0 && (
+      {commissionRecords.filter(r => r.isOver8Days).length > 0 && (
         <div className="rounded-lg border border-taupe-200 bg-white p-6">
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -963,7 +969,7 @@ export default function UserProfile() {
 
           {showHistory && (
             <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
-              {commissionRecords.map((record) => (
+              {commissionRecords.filter(r => r.isOver8Days).map((record) => (
                 <div
                   key={record.orderId}
                   className="flex items-center justify-between rounded-lg border border-taupe-100 bg-taupe-50 p-3"
@@ -985,13 +991,7 @@ export default function UserProfile() {
                     <p className="text-sm font-bold text-emerald-600">
                       +NT${record.commission}
                     </p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        record.credited ? "text-emerald-600" : "text-taupe-400"
-                      }`}
-                    >
-                      {record.credited ? "已入帳" : "訂單完成後入帳"}
-                    </p>
+                    <p className="text-xs mt-1 text-emerald-600">已入帳</p>
                   </div>
                 </div>
               ))}
@@ -1080,7 +1080,7 @@ export default function UserProfile() {
             <strong className="text-emerald-600">待提現分潤</strong> — 訂單出貨滿 8 天後確認完成，可以提現的部分
           </li>
           <li>
-            <strong className="text-amber-600">待實現分潤</strong> — 被推薦人已完成下單，但訂單尚未出貨完成，無法提領的部分
+            <strong className="text-amber-600">待實現分潤</strong> — 被推薦人已下單，但尚未滿 8 天，訂單完成 8 天後才會入帳
           </li>
           <li>
             <strong className="text-sapphire-600">撥款處理中</strong> — 已申請提現，正在處理中的部分（5 個工作天內匯入）

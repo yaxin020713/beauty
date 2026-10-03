@@ -12,6 +12,8 @@ type CommissionRecord = {
   status: string;
   credited: boolean;
   note: string;
+  shipDate?: string;
+  isOver8Days?: boolean;
 };
 
 export async function GET(request: NextRequest) {
@@ -119,6 +121,19 @@ export async function GET(request: NextRequest) {
         itemsDetail = itemsProp.rich_text[0].plain_text;
       }
 
+      // 提取出貨日期
+      const shipDateProp = props.出貨日期;
+      const shipDate = shipDateProp && "date" in shipDateProp ? (shipDateProp as any).date?.start : null;
+
+      // 判斷是否滿 8 天
+      let isOver8Days = false;
+      if (shipDate) {
+        const eightDaysMs = 8 * 24 * 60 * 60 * 1000;
+        const shipDateMs = new Date(shipDate).getTime();
+        const deadlineMs = shipDateMs + eightDaysMs;
+        isOver8Days = Date.now() >= deadlineMs;
+      }
+
       if (commission > 0) {
         records.push({
           orderId,
@@ -129,6 +144,8 @@ export async function GET(request: NextRequest) {
           status,
           credited: status === "已完成",
           note,
+          shipDate: shipDate || undefined,
+          isOver8Days,
         });
       }
     }
