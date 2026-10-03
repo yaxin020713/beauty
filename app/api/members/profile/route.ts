@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
       database_id: MEMBERS_DB_ID,
       filter: {
         property: "Email",
-        title: { equals: email },
+        title: { equals: email.toLowerCase() },
       },
     });
 
