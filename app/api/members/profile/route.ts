@@ -62,7 +62,7 @@ async function calculateUnrealizedCommission(referralCode: string): Promise<numb
           // 判斷該推薦碼是主推薦人還是次推薦人，找到對應的分潤金額
           const primaryCode = props.推薦碼 && "rich_text" in props.推薦碼 ? props.推薦碼.rich_text[0]?.plain_text : "";
           const secondaryCode = props.推薦碼2 && "rich_text" in props.推薦碼2 ? props.推薦碼2.rich_text[0]?.plain_text : "";
-          
+
           if (primaryCode === referralCode) {
             const commissionProp = props.分潤;
             if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
@@ -171,12 +171,16 @@ export async function GET(request: NextRequest) {
         memberData.totalCommission = (props.歷史累積分潤 as any).number || 0;
       }
 
+      if (props.待實現分潤 && "number" in props.待實現分潤) {
+        memberData.unrealizedCommissionStored = (props.待實現分潤 as any).number || 0;
+      }
+
       if (props.待提現分潤 && "number" in props.待提現分潤) {
         memberData.availableCommission = (props.待提現分潤 as any).number || 0;
       }
 
-      if (props.處理中分潤 && "number" in props.處理中分潤) {
-        memberData.pendingCommission = (props.處理中分潤 as any).number || 0;
+      if (props.撥款處理中 && "number" in props.撥款處理中) {
+        memberData.pendingCommission = (props.撥款處理中 as any).number || 0;
       }
 
       if (props.預設711超商店號 && "rich_text" in props.預設711超商店號) {
@@ -323,10 +327,13 @@ export async function POST(request: NextRequest) {
       properties.歷史累積分潤 = {
         number: 0,
       };
+      properties.待實現分潤 = {
+        number: 0,
+      };
       properties.待提現分潤 = {
         number: 0,
       };
-      properties.處理中分潤 = {
+      properties.撥款處理中 = {
         number: 0,
       };
 
