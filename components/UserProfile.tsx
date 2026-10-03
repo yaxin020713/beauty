@@ -903,13 +903,9 @@ export default function UserProfile() {
             </p>
           </div>
           <div className="rounded-lg bg-amber-50 p-4">
-            <p className="text-xs text-amber-600 mb-1">待實現分潤</p>
+            <p className="text-xs text-amber-600 mb-1">待實現分潮</p>
             <p className="text-2xl font-bold text-amber-600">
-              NT${
-                commissionRecords
-                  .filter(r => !r.isOver8Days)
-                  .reduce((sum, r) => sum + r.commission, 0) || 0
-              }
+              NT${userData.unrealizedCommission || 0}
             </p>
           </div>
           <div className="rounded-lg bg-sapphire-50 p-4">
