@@ -18,7 +18,7 @@ export async function moveUnrealizedCommissionToAvailable(email: string, amount:
     database_id: MEMBERS_DB_ID,
     filter: {
       property: "Email",
-      title: { equals: email },
+      title: { equals: email.toLowerCase() },
     },
   });
 
@@ -66,7 +66,7 @@ export async function creditUnrealizedCommission(email: string, amount: number):
     database_id: MEMBERS_DB_ID,
     filter: {
       property: "Email",
-      title: { equals: email },
+      title: { equals: email.toLowerCase() },
     },
   });
 
