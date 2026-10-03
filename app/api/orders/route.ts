@@ -338,20 +338,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. 推薦人的待實現分潇：下單當下立即加入推薦人的「待實現分潇」
-    //    訂單狀態轉為「已完成」時（出貨滿 8 天），自動轉入「尚未提現分潇」
+    // 3. 推薦人的待實現分潤：下單當下立即加入推薦人的「待實現分潤」
+    //    訂單狀態轉為「已完成」時（出貨滿 8 天），自動轉入「尚未提現分潤」
     if (referrer1 && referrer1Commission > 0) {
       try {
         await creditUnrealizedCommission(referrer1.email, referrer1Commission);
       } catch (error) {
-        console.warn(`[api/orders] 為推薦人 ${referrer1.email} 添加待實現分潇失敗:`, error instanceof Error ? error.message : error);
+        console.warn(`[api/orders] 為推薦人 ${referrer1.email} 添加待實現分潤失敗:`, error instanceof Error ? error.message : error);
       }
     }
     if (referrer2 && referrer2Commission > 0) {
       try {
         await creditUnrealizedCommission(referrer2.email, referrer2Commission);
       } catch (error) {
-        console.warn(`[api/orders] 為推薦人 ${referrer2.email} 添加待實現分潇失敗:`, error instanceof Error ? error.message : error);
+        console.warn(`[api/orders] 為推薦人 ${referrer2.email} 添加待實現分潤失敗:`, error instanceof Error ? error.message : error);
       }
     }
 

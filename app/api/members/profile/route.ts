@@ -4,7 +4,7 @@ import { generateReferralCode, recordMarketingOptIn } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
-// 計算待實現分潇：已確認的訂單但未滿 8 天交付期限
+// 計算待實現分潤：已確認的訂單但未滿 8 天交付期限
 async function calculateUnrealizedCommission(referralCode: string): Promise<number> {
   const ORDERS_DB_ID = process.env.NOTION_ORDERS_DB_ID;
   if (!ORDERS_DB_ID || !referralCode) return 0;
@@ -12,7 +12,7 @@ async function calculateUnrealizedCommission(referralCode: string): Promise<numb
   // 設置 5 秒超時，防止慢查詢阻塞會員資料加載
   const timeoutPromise = new Promise<number>((resolve) => {
     setTimeout(() => {
-      console.warn("[api/members/profile] 待實現分潇計算超時，返回 0");
+      console.warn("[api/members/profile] 待實現分潤計算超時，返回 0");
       resolve(0);
     }, 5000);
   });
@@ -44,7 +44,7 @@ async function calculateUnrealizedCommission(referralCode: string): Promise<numb
         const statusProp = props.訂單狀態;
         const status = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
 
-        // 跳過已完成的訂單（分潇已實現）
+        // 跳過已完成的訂單（分潤已實現）
         if (status === "已完成") continue;
 
         // 讀取實際出貨日期（出貨日期欄位）
@@ -57,19 +57,19 @@ async function calculateUnrealizedCommission(referralCode: string): Promise<numb
         const shipDate = new Date(shipDateStr).getTime();
         const deadlineTime = shipDate + eightDaysMs;
 
-        // 只計算未達期限的訂單的分潇
+        // 只計算未達期限的訂單的分潤
         if (now < deadlineTime) {
-          // 判斷該推薦碼是主推薦人還是次推薦人，找到對應的分潇金額
+          // 判斷該推薦碼是主推薦人還是次推薦人，找到對應的分潤金額
           const primaryCode = props.推薦碼 && "rich_text" in props.推薦碼 ? props.推薦碼.rich_text[0]?.plain_text : "";
           const secondaryCode = props.推薦碼2 && "rich_text" in props.推薦碼2 ? props.推薦碼2.rich_text[0]?.plain_text : "";
           
           if (primaryCode === referralCode) {
-            const commissionProp = props.分潇;
+            const commissionProp = props.分潤;
             if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
               unrealizedTotal += commissionProp.number || 0;
             }
           } else if (secondaryCode === referralCode) {
-            const commissionProp = props.分潇2;
+            const commissionProp = props.分潤2;
             if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
               unrealizedTotal += commissionProp.number || 0;
             }
@@ -79,7 +79,7 @@ async function calculateUnrealizedCommission(referralCode: string): Promise<numb
 
       return unrealizedTotal;
     } catch (error) {
-      console.error("[api/members/profile] 計算待實現分潇失敗:", error);
+      console.error("[api/members/profile] 計算待實現分潤失敗:", error);
       return 0;
     }
   })();
