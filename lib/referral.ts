@@ -89,15 +89,21 @@ export async function creditUnrealizedCommission(email: string, amount: number):
   });
 }
 
-// 讀取訂單頁面上的分潤資訊，將待實現分潤轉為待提現分潤。
+// 檢查訂單狀態並將待實現分潤轉為待提現分潤。
+// 只有當訂單狀態為「已完成」時才會執行分潤轉移。
 // 優先次推薦人與對應分潤金（手動修改或官方連結手動填寫），次之推薦人與對應分潤金（推薦連結自動帶入）。
-// 呼叫時機：訂單狀態轉為「已完成」時（管理員手動操作或每日自動排程），
-// 而非下單當下，因此呼叫端須自行確保不會對同一筆訂單重複呼叫。
 export async function applyReferralCommission(orderPage: unknown): Promise<void> {
   if (!orderPage || typeof orderPage !== "object" || !("properties" in orderPage)) return;
   if (!MEMBERS_DB_ID) return;
 
   const props = (orderPage as { properties: Record<string, any> }).properties;
+
+  // 驗證訂單狀態是否為「已完成」，只有已完成才進行分潤轉移
+  const statusProp = props["訂單狀態"];
+  const orderStatus = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
+  if (orderStatus !== "已完成") {
+    return;
+  }
 
   // 優先使用次推薦人與對應分潤金（手動修改或官方連結手動填寫）
   const secondaryEmail = readRichText(props["推薦人信箱2"]);
