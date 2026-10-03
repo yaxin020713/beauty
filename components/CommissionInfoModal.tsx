@@ -34,7 +34,7 @@ export default function CommissionInfoModal({ isOpen, onClose }: CommissionInfoM
           <section>
             <h3 className="mb-2 font-medium text-ink">分潤何時入帳</h3>
             <p>
-              分潤不是下單當下就入帳，而是等訂單狀態轉為「已完成」才會計入您的待提現分潤——訂單出貨滿 8 天會自動轉為已完成，或由管理員手動確認完成。訂單尚未完成前，分潤明細會顯示「訂單完成後入帳」。
+              分潤不是下單當下就入帳，而是等訂單狀態轉為「已完成」才會計入您的待提現分潤——訂單出貨滿 8 天會自動轉為已完成，或由管理員手動確認完成。訂單尚未完成前，分潤明細會顯示「訂單完成8天後入帳」。
             </p>
           </section>
 

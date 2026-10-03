@@ -29,7 +29,7 @@ async function moveUnrealizedToAvailable(email: string, amount: number): Promise
       currentUnrealizedCommission = unrealizedProp.number || 0;
     }
 
-    const availableProp = referrerPage.properties.尚未提現分潤;
+    const availableProp = referrerPage.properties.待提現分潤;
     if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
       currentAvailableCommission = availableProp.number || 0;
     }
@@ -45,7 +45,7 @@ async function moveUnrealizedToAvailable(email: string, amount: number): Promise
     page_id: referrerPage.id,
     properties: {
       待實現分潤: { number: Math.max(0, currentUnrealizedCommission - amount) },
-      尚未提現分潤: { number: currentAvailableCommission + amount },
+      待提現分潤: { number: currentAvailableCommission + amount },
       累積分潤: { number: currentTotalCommission + amount },
     },
   });

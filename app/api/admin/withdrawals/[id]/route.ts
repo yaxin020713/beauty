@@ -82,7 +82,7 @@ export async function PATCH(
     let currentAvailable = 0;
     let currentPendingWithdraw = 0;
     if ("properties" in memberPage) {
-      const availableProp = memberPage.properties.尚未提現分潤;
+      const availableProp = memberPage.properties.待提現分潤;
       const pendingProp = memberPage.properties.處理中分潤;
       if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
         currentAvailable = availableProp.number || 0;
@@ -111,13 +111,13 @@ export async function PATCH(
         },
       });
     } else {
-      // 異常（例如銀行帳號有誤）：整筆金額退回尚未提現分潤，會員需修正資料後重新申請；
+      // 異常（例如銀行帳號有誤）：整筆金額退回待提現分潤，會員需修正資料後重新申請；
       // 同時清除最近提現日期，避免 30 天冷卻期擋住這次的重新申請
       await notion.pages.update({
         page_id: memberPage.id,
         properties: {
           處理中分潤: { number: Math.max(0, currentPendingWithdraw - payoutAmount) },
-          尚未提現分潤: { number: currentAvailable + amount },
+          待提現分潤: { number: currentAvailable + amount },
           最近提現日期: { date: null },
         },
       });

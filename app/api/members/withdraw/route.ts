@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     let bankAccount = "";
 
     if ("properties" in memberPage) {
-      const availableProp = memberPage.properties.尚未提現分潤;
+      const availableProp = memberPage.properties.待提現分潤;
       const pendingProp = memberPage.properties.處理中分潤;
       const lastWithdrawProp = memberPage.properties.最近提現日期;
       const bankCodeProp = memberPage.properties.銀行代碼;
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 提現一律將目前全部「尚未提現分潤」一次提出，且需達最低門檻
+    // 提現一律將目前全部「待提現分潤」一次提出，且需達最低門檻
     const amount = currentAvailable;
     if (amount < MIN_WITHDRAW_AMOUNT) {
       return NextResponse.json(
@@ -157,12 +157,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 更新會員資料：清空尚未提現分潤（全額），增加處理中分潤（實際撥款金額，已扣手續費），
+    // 更新會員資料：清空待提現分潤（全額），增加處理中分潤（實際撥款金額，已扣手續費），
     // 並記錄本次提現日期；累積分潤是終身總額，不受提現影響
     await notion.pages.update({
       page_id: memberPage.id,
       properties: {
-        尚未提現分潤: { number: currentAvailable - amount },
+        待提現分潤: { number: currentAvailable - amount },
         處理中分潤: { number: currentPendingWithdraw + payoutAmount },
         最近提現日期: { date: { start: today } },
       },

@@ -117,7 +117,7 @@ async function testSetup() {
       // 讀取初始分潤
       if ("properties" in referrerPage) {
         const totalProp = referrerPage.properties["累積分潤"];
-        const availableProp = referrerPage.properties["尚未提現分潤"];
+        const availableProp = referrerPage.properties["待提現分潤"];
         if (totalProp?.type === "number") {
           testState.initialTotalCommission = totalProp.number || 0;
         }
@@ -403,7 +403,7 @@ async function testCommissionAccrual() {
         const referrerPage = referrerQuery.results[0];
         if ("properties" in referrerPage) {
           const totalProp = referrerPage.properties["累積分潤"];
-          const availableProp = referrerPage.properties["尚未提現分潤"];
+          const availableProp = referrerPage.properties["待提現分潤"];
 
           const currentTotal = totalProp?.type === "number" ? totalProp.number : 0;
           const currentAvailable = availableProp?.type === "number" ? availableProp.number : 0;
@@ -413,7 +413,7 @@ async function testCommissionAccrual() {
 
           check("累積分潤已增加", totalIncreased, `${testState.initialTotalCommission} → ${currentTotal}`);
           check(
-            "尚未提現分潤已增加",
+            "待提現分潤已增加",
             availableIncreased,
             `${testState.initialAvailableCommission} → ${currentAvailable}`
           );
@@ -530,7 +530,7 @@ async function testWithdrawal() {
               if (referrerQuery2.results.length > 0) {
                 const referrerPage2 = referrerQuery2.results[0];
                 if ("properties" in referrerPage2) {
-                  const availableProp = referrerPage2.properties["尚未提現分潤"];
+                  const availableProp = referrerPage2.properties["待提現分潤"];
                   const pendingProp = referrerPage2.properties["處理中分潤"];
 
                   const currentAvailable =
@@ -538,7 +538,7 @@ async function testWithdrawal() {
                   const currentPending = pendingProp?.type === "number" ? pendingProp.number : 0;
 
                   check(
-                    "提現後：尚未提現分潤已清空",
+                    "提現後：待提現分潤已清空",
                     currentAvailable === 0,
                     `${currentAvailable} 元`
                   );

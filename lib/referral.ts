@@ -35,31 +35,31 @@ export async function moveUnrealizedCommissionToAvailable(email: string, amount:
       currentUnrealizedCommission = unrealizedProp.number || 0;
     }
 
-    const availableProp = referrerPage.properties.尚未提現分潤;
+    const availableProp = referrerPage.properties.待提現分潤;
     if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
       currentAvailableCommission = availableProp.number || 0;
     }
 
-    const totalProp = referrerPage.properties.累積分潤;
+    const totalProp = referrerPage.properties.歷史累積分潮;
     if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
       currentTotalCommission = totalProp.number || 0;
     }
   }
 
-  // 將分潤從待實現轉到待提現，並更新累積分潤（只計一次）
+  // 將分潤從待實現轉到待提現，並更新歷史累積分潮（只計一次）
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
       待實現分潤: { number: Math.max(0, currentUnrealizedCommission - amount) },
-      尚未提現分潤: { number: currentAvailableCommission + amount },
-      累積分潤: { number: currentTotalCommission + amount },
+      待提現分潤: { number: currentAvailableCommission + amount },
+      歷史累積分潮: { number: currentTotalCommission + amount },
     },
   });
 }
 
 // 把分潤入帳給單一位推薦人：
-// - 累積分潤：終身總額，只增不減，純粹作為歷史紀錄
-// - 尚未提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
+// - 歷史累積分潮：終身總額，只增不減，純粹作為歷史紀錄
+// - 待提現分潤：目前可提現的餘額，訂單完成時增加、提現時扣減（見 /api/members/withdraw）
 async function creditMemberCommission(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 
@@ -77,12 +77,12 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   let currentTotalCommission = 0;
   let currentAvailableCommission = 0;
   if ("properties" in referrerPage) {
-    const totalProp = referrerPage.properties.累積分潤;
+    const totalProp = referrerPage.properties.歷史累積分潮;
     if (totalProp && "number" in totalProp && typeof totalProp.number === "number") {
       currentTotalCommission = totalProp.number || 0;
     }
 
-    const availableProp = referrerPage.properties.尚未提現分潤;
+    const availableProp = referrerPage.properties.待提現分潤;
     if (availableProp && "number" in availableProp && typeof availableProp.number === "number") {
       currentAvailableCommission = availableProp.number || 0;
     }
@@ -91,14 +91,14 @@ async function creditMemberCommission(email: string, amount: number): Promise<vo
   await notion.pages.update({
     page_id: referrerPage.id,
     properties: {
-      累積分潤: { number: currentTotalCommission + amount },
-      尚未提現分潤: { number: currentAvailableCommission + amount },
+      歷史累積分潮: { number: currentTotalCommission + amount },
+      待提現分潤: { number: currentAvailableCommission + amount },
     },
   });
 }
 
 // 把分潤加入待實現分潤（下單當下）：
-// - 待實現分潤：已下單但訂單未完成的分潤，訂單完成 8 天後轉入尚未提現分潤
+// - 待實現分潤：已下單但訂單未完成的分潤，訂單完成 8 天後轉入待提現分潤
 export async function creditUnrealizedCommission(email: string, amount: number): Promise<void> {
   if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
 

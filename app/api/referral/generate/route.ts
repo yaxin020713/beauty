@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           累積分潤: {
             number: 0,
           },
-          尚未提現分潤: {
+          待提現分潤: {
             number: 0,
           },
           處理中分潤: {
@@ -194,8 +194,8 @@ export async function POST(request: NextRequest) {
       if (props.累積分潤 && "number" in props.累積分潤) {
         totalCommission = (props.累積分潤 as any).number || 0;
       }
-      if (props.尚未提現分潤 && "number" in props.尚未提現分潤) {
-        availableCommission = (props.尚未提現分潤 as any).number || 0;
+      if (props.待提現分潤 && "number" in props.待提現分潤) {
+        availableCommission = (props.待提現分潤 as any).number || 0;
       }
       if (props.處理中分潤 && "number" in props.處理中分潤) {
         pendingCommission = (props.處理中分潤 as any).number || 0;

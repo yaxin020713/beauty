@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. 推薦人的待實現分潤：下單當下立即加入推薦人的「待實現分潤」
-    //    訂單狀態轉為「已完成」時（出貨滿 8 天），自動轉入「尚未提現分潤」
+    //    訂單狀態轉為「已完成」時（出貨滿 8 天），自動轉入「待提現分潤」
     if (referrer1 && referrer1Commission > 0) {
       try {
         await creditUnrealizedCommission(referrer1.email, referrer1Commission);
@@ -409,7 +409,7 @@ export async function POST(request: NextRequest) {
               累積分潤: {
                 number: 0,
               },
-              尚未提現分潤: {
+              待提現分潤: {
                 number: 0,
               },
               處理中分潤: {
