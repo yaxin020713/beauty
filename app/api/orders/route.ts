@@ -424,7 +424,7 @@ export async function POST(request: NextRequest) {
               歷史累積分潤: {
                 number: 0,
               },
-              撥款處理中: {
+              處理中分潤: {
                 number: 0,
               },
             },

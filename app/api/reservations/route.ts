@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID, PRODUCTS_DB_ID, MEMBERS_DB_ID, updateProductReservedQuantity } from "@/lib/notion";
-import { recordTermsAgreementIfNeeded, recordMarketingOptIn } from "@/lib/referral";
+import { recordTermsAgreementIfNeeded, recordMarketingOptIn, creditUnrealizedCommission } from "@/lib/referral";
 
 interface ReservationItem {
   productId: string;
@@ -197,6 +197,10 @@ export async function POST(request: NextRequest) {
     // 情況B：推薦連結進入，手動修改碼 → 推薦碼2 + 推薦人信箱2 + 分潤2（次要分潤金）
     // 情況C：官方連結進入，手動填寫碼 → 推薦碼2 + 推薦人信箱2 + 分潤2（次要分潤金）
 
+    // 記錄這張訂單實際應該入帳「待實現分潤」的推薦人信箱與金額
+    let commissionReferrerEmail: string | null = null;
+    let commissionAmount = 0;
+
     if (manualReferralCode && urlReferralCode && manualReferralCode === urlReferralCode) {
       // 情況A：推薦連結進入未修改（manualCode自動填充等於urlCode）
       const referrer = await resolveReferrer(urlReferralCode, customerEmail);
@@ -209,6 +213,8 @@ export async function POST(request: NextRequest) {
         };
         // 分潤金全部存入分潤（主要字段）
         properties["分潤"] = { number: totalCommission };
+        commissionReferrerEmail = referrer.email;
+        commissionAmount = totalCommission;
       }
     } else if (manualReferralCode && urlReferralCode && manualReferralCode !== urlReferralCode) {
       // 情況B：推薦連結進入但手動修改碼
@@ -222,6 +228,8 @@ export async function POST(request: NextRequest) {
         };
         // 分潤金全部存入分潤2（次要字段），推薦碼和推薦人信箱留空
         properties["分潤2"] = { number: totalCommission };
+        commissionReferrerEmail = secondaryReferrer.email;
+        commissionAmount = totalCommission;
       }
     } else if (manualReferralCode && !urlReferralCode) {
       // 情況C：官方連結進入，手動填寫碼
@@ -235,6 +243,8 @@ export async function POST(request: NextRequest) {
         };
         // 分潤金全部存入分潤2（次要字段），推薦碼和推薦人信箱留空
         properties["分潤2"] = { number: totalCommission };
+        commissionReferrerEmail = secondaryReferrer.email;
+        commissionAmount = totalCommission;
       }
     } else if (urlReferralCode && !manualReferralCode) {
       // 推薦連結進入，未填寫manualCode（邊界情況）
@@ -248,6 +258,8 @@ export async function POST(request: NextRequest) {
         };
         // 分潤金全部存入分潤（主要字段）
         properties["分潤"] = { number: totalCommission };
+        commissionReferrerEmail = referrer.email;
+        commissionAmount = totalCommission;
       }
     } else if (totalCommission > 0) {
       // 無推薦碼情況：仍存儲分潤金（但無推薦人，分潤不會入帳）
@@ -258,6 +270,21 @@ export async function POST(request: NextRequest) {
       parent: { database_id: ORDERS_DB_ID },
       properties,
     });
+
+    // 把這筆訂單的分潤加進推薦人的「待實現分潤」（下單當下即入帳，訂單完成後才轉入待提現分潤）
+    if (commissionReferrerEmail && commissionAmount > 0) {
+      try {
+        await creditUnrealizedCommission(commissionReferrerEmail, commissionAmount);
+        console.log(
+          `[api/reservations] 已為推薦人 ${commissionReferrerEmail} 入帳待實現分潤 ${commissionAmount}（訂單 ${orderId}）`
+        );
+      } catch (err) {
+        console.error(
+          `[api/reservations] 為推薦人 ${commissionReferrerEmail} 入帳待實現分潤失敗（訂單 ${orderId}）:`,
+          err instanceof Error ? err.message : err
+        );
+      }
+    }
 
     // 補記錄條款同意時間（若該會員之前是選擇「稍後再填」略過完成會員檔案，就會在這裡第一次留下同意紀錄）
     await recordTermsAgreementIfNeeded(customerEmail);
