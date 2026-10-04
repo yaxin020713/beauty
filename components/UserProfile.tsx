@@ -987,7 +987,7 @@ export default function UserProfile() {
                         record.credited ? "text-emerald-600" : "text-taupe-400"
                       }`}
                     >
-                      {record.credited ? "已入帳" : "訂單完成8天後入帳"}
+                      {record.credited ? "已入帳" : "訂單完成後入帳"}
                     </p>
                   </div>
                 </div>

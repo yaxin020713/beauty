@@ -352,7 +352,7 @@ function OrdersTab({ orders, onUpdated }: { orders: OrderItem[]; onUpdated: () =
   // 資料庫中狀態為 pending 的紀錄，逐一寄出並回填為 sent（需先在 Claude 帳號授權 Notion 與 Gmail 連接器）
   const handleCopyDispatchPrompt = async () => {
     const prompt = [
-      "請幫我處理待發送的訂單通知信：",
+      "請幫我處理待發送的訂單通知信(https://app.notion.com/p/3e9df88eee9780798319f15e22d3f0f1?v=3e9df88eee978059bcea000c936cefd3)：",
       "1. 在 Notion 找到「待發送郵件」資料庫（欄位包含 Order_ID、Customer_Name、Customer_Email、Email_Subject、Email_Body、Template_Type、Status）。",
       "2. 篩選出 Status 為 pending 的所有紀錄。",
       "3. 對每一筆紀錄，用 Email_Subject 當標題、Email_Body 當內文，寄送到 Customer_Email。",
