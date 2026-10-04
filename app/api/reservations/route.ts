@@ -194,12 +194,13 @@ export async function POST(request: NextRequest) {
 
     // 處理推薦碼邏輯
     // 情況A：推薦連結進入，未修改 → 推薦碼 + 推薦人信箱 + 分潤（主要分潤金）
-    // 情況B：推薦連結進入，手動修改碼 → 推薦碼2 + 推薦人信箱2 + 分潤2（次要分潤金）
+    // 情況B：推薦連結進入，手動修改碼，且兩者是不同人 → 分潤各半：
+    //        推薦碼/推薦人信箱/分潤 記連結推薦人（取較小的一半），
+    //        推薦碼2/推薦人信箱2/分潤2 記手動輸入的推薦人（取較大的一半）
     // 情況C：官方連結進入，手動填寫碼 → 推薦碼2 + 推薦人信箱2 + 分潤2（次要分潤金）
 
-    // 記錄這張訂單實際應該入帳「待實現分潤」的推薦人信箱與金額
-    let commissionReferrerEmail: string | null = null;
-    let commissionAmount = 0;
+    // 記錄這張訂單實際應該入帳「待實現分潤」的推薦人信箱與金額（可能同時有兩位）
+    const commissionCredits: { email: string; amount: number }[] = [];
 
     if (manualReferralCode && urlReferralCode && manualReferralCode === urlReferralCode) {
       // 情況A：推薦連結進入未修改（manualCode自動填充等於urlCode）
@@ -213,23 +214,45 @@ export async function POST(request: NextRequest) {
         };
         // 分潤金全部存入分潤（主要字段）
         properties["分潤"] = { number: totalCommission };
-        commissionReferrerEmail = referrer.email;
-        commissionAmount = totalCommission;
+        if (totalCommission > 0) {
+          commissionCredits.push({ email: referrer.email, amount: totalCommission });
+        }
       }
     } else if (manualReferralCode && urlReferralCode && manualReferralCode !== urlReferralCode) {
       // 情況B：推薦連結進入但手動修改碼
-      const secondaryReferrer = await resolveReferrer(manualReferralCode, customerEmail);
-      if (secondaryReferrer) {
-        properties["推薦碼2"] = {
-          rich_text: [{ text: { content: secondaryReferrer.code } }],
-        };
-        properties["推薦人信箱2"] = {
-          rich_text: [{ text: { content: secondaryReferrer.email } }],
-        };
-        // 分潤金全部存入分潤2（次要字段），推薦碼和推薦人信箱留空
-        properties["分潤2"] = { number: totalCommission };
-        commissionReferrerEmail = secondaryReferrer.email;
-        commissionAmount = totalCommission;
+      const linkReferrer = await resolveReferrer(urlReferralCode, customerEmail);
+      const manualReferrer = await resolveReferrer(manualReferralCode, customerEmail);
+      const isSamePerson =
+        !!linkReferrer &&
+        !!manualReferrer &&
+        linkReferrer.email.toLowerCase() === manualReferrer.email.toLowerCase();
+
+      if (linkReferrer && manualReferrer && !isSamePerson) {
+        // 兩個推薦碼都有效，且確實是不同人 → 分潤各半
+        const linkShare = Math.floor(totalCommission / 2);
+        const manualShare = Math.ceil(totalCommission / 2);
+
+        properties["推薦碼"] = { rich_text: [{ text: { content: linkReferrer.code } }] };
+        properties["推薦人信箱"] = { rich_text: [{ text: { content: linkReferrer.email } }] };
+        if (linkShare > 0) properties["分潤"] = { number: linkShare };
+
+        properties["推薦碼2"] = { rich_text: [{ text: { content: manualReferrer.code } }] };
+        properties["推薦人信箱2"] = { rich_text: [{ text: { content: manualReferrer.email } }] };
+        if (manualShare > 0) properties["分潤2"] = { number: manualShare };
+
+        if (linkShare > 0) commissionCredits.push({ email: linkReferrer.email, amount: linkShare });
+        if (manualShare > 0) commissionCredits.push({ email: manualReferrer.email, amount: manualShare });
+      } else {
+        // 只有一方查得到有效推薦人（或兩者其實是同一人）→ 該推薦人全額分潤
+        const soleReferrer = manualReferrer ?? linkReferrer;
+        if (soleReferrer) {
+          properties["推薦碼2"] = { rich_text: [{ text: { content: soleReferrer.code } }] };
+          properties["推薦人信箱2"] = { rich_text: [{ text: { content: soleReferrer.email } }] };
+          properties["分潤2"] = { number: totalCommission };
+          if (totalCommission > 0) {
+            commissionCredits.push({ email: soleReferrer.email, amount: totalCommission });
+          }
+        }
       }
     } else if (manualReferralCode && !urlReferralCode) {
       // 情況C：官方連結進入，手動填寫碼
@@ -243,8 +266,9 @@ export async function POST(request: NextRequest) {
         };
         // 分潤金全部存入分潤2（次要字段），推薦碼和推薦人信箱留空
         properties["分潤2"] = { number: totalCommission };
-        commissionReferrerEmail = secondaryReferrer.email;
-        commissionAmount = totalCommission;
+        if (totalCommission > 0) {
+          commissionCredits.push({ email: secondaryReferrer.email, amount: totalCommission });
+        }
       }
     } else if (urlReferralCode && !manualReferralCode) {
       // 推薦連結進入，未填寫manualCode（邊界情況）
@@ -258,8 +282,9 @@ export async function POST(request: NextRequest) {
         };
         // 分潤金全部存入分潤（主要字段）
         properties["分潤"] = { number: totalCommission };
-        commissionReferrerEmail = referrer.email;
-        commissionAmount = totalCommission;
+        if (totalCommission > 0) {
+          commissionCredits.push({ email: referrer.email, amount: totalCommission });
+        }
       }
     } else if (totalCommission > 0) {
       // 無推薦碼情況：仍存儲分潤金（但無推薦人，分潤不會入帳）
@@ -271,16 +296,16 @@ export async function POST(request: NextRequest) {
       properties,
     });
 
-    // 把這筆訂單的分潤加進推薦人的「待實現分潤」（下單當下即入帳，訂單完成後才轉入待提現分潤）
-    if (commissionReferrerEmail && commissionAmount > 0) {
+    // 把這筆訂單的分潤加進對應推薦人的「待實現分潤」（下單當下即入帳，訂單完成後才轉入待提現分潤）
+    for (const credit of commissionCredits) {
       try {
-        await creditUnrealizedCommission(commissionReferrerEmail, commissionAmount);
+        await creditUnrealizedCommission(credit.email, credit.amount);
         console.log(
-          `[api/reservations] 已為推薦人 ${commissionReferrerEmail} 入帳待實現分潤 ${commissionAmount}（訂單 ${orderId}）`
+          `[api/reservations] 已為推薦人 ${credit.email} 入帳待實現分潤 ${credit.amount}（訂單 ${orderId}）`
         );
       } catch (err) {
         console.error(
-          `[api/reservations] 為推薦人 ${commissionReferrerEmail} 入帳待實現分潤失敗（訂單 ${orderId}）:`,
+          `[api/reservations] 為推薦人 ${credit.email} 入帳待實現分潤失敗（訂單 ${orderId}）:`,
           err instanceof Error ? err.message : err
         );
       }
