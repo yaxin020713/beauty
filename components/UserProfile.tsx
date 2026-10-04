@@ -41,8 +41,6 @@ type CommissionRecord = {
   status: string;
   credited: boolean;
   note: string;
-  shipDate?: string;
-  isOver8Days?: boolean;
 };
 
 type WithdrawalRecord = {
@@ -986,10 +984,10 @@ export default function UserProfile() {
                     </p>
                     <p
                       className={`text-xs mt-1 ${
-                        record.isOver8Days ? "text-emerald-600" : "text-taupe-400"
+                        record.credited ? "text-emerald-600" : "text-taupe-400"
                       }`}
                     >
-                      {record.isOver8Days ? "已入帳" : "訂單完成8天後入帳"}
+                      {record.credited ? "已入帳" : "訂單完成8天後入帳"}
                     </p>
                   </div>
                 </div>
