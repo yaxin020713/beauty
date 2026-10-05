@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID, PRODUCTS_DB_ID, MEMBERS_DB_ID, updateProductReservedQuantity } from "@/lib/notion";
 import { recordTermsAgreementIfNeeded, recordMarketingOptIn, creditUnrealizedCommission } from "@/lib/referral";
+import { calculateMembershipLevel } from "@/lib/membership";
 
 interface ReservationItem {
   productId: string;
@@ -121,6 +122,8 @@ export async function POST(request: NextRequest) {
     // Items_Detail 只包含商品列表，收貨方式已有專門欄位
     const fullItemsDetail = itemsDetail;
 
+    const orderTotal = totalAmount || (totalPrice + shippingFee);
+
     // 保存到 Orders 表
     const properties: Record<string, any> = {
       "Order_ID": {
@@ -139,7 +142,7 @@ export async function POST(request: NextRequest) {
         rich_text: [{ text: { content: customerEmail } }],
       },
       "Total_Price": {
-        number: totalAmount || (totalPrice + shippingFee),
+        number: orderTotal,
       },
       "訂單狀態": {
         select: { name: "新訂單" },
@@ -330,18 +333,27 @@ export async function POST(request: NextRequest) {
         if (customerQuery.results.length > 0) {
           const customerPage = customerQuery.results[0];
           let currentOrderCount = 0;
+          let currentSpending = 0;
           if ("properties" in customerPage) {
             const countProp = customerPage.properties.訂單數;
             if (countProp && "number" in countProp && typeof countProp.number === "number") {
               currentOrderCount = countProp.number || 0;
             }
+            const spendingProp = customerPage.properties.一年內累計消費金額;
+            if (spendingProp && "number" in spendingProp && typeof spendingProp.number === "number") {
+              currentSpending = spendingProp.number || 0;
+            }
           }
+
+          const newSpending = currentSpending + orderTotal;
 
           await notion.pages.update({
             page_id: customerPage.id,
             properties: {
               訂單數: { number: currentOrderCount + 1 },
               上次預定日期: { date: { start: today } },
+              一年內累計消費金額: { number: newSpending },
+              會員等級: { select: { name: calculateMembershipLevel(newSpending) } },
             },
           });
         } else {
@@ -350,8 +362,8 @@ export async function POST(request: NextRequest) {
             parent: { database_id: MEMBERS_DB_ID },
             properties: {
               Email: { title: [{ text: { content: customerEmail.toLowerCase() } }] },
-              會員等級: { select: { name: "銅級" } },
-              一年內累計消費金額: { number: 0 },
+              會員等級: { select: { name: calculateMembershipLevel(orderTotal) } },
+              一年內累計消費金額: { number: orderTotal },
               歷史累積分潤: { number: 0 },
               待提現分潤: { number: 0 },
               處理中分潤: { number: 0 },
