@@ -4,6 +4,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import UserProfile from "@/components/UserProfile";
+import CartDrawer from "@/components/CartDrawer";
 import { useAuth } from "@/components/CartContext";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -73,6 +74,7 @@ export default function AccountPage() {
       </main>
 
       <Footer />
+      <CartDrawer />
     </div>
   );
 }

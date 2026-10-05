@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CartDrawer from "@/components/CartDrawer";
 import { useAuth } from "@/components/CartContext";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -132,6 +133,7 @@ export default function OrdersPage() {
           </div>
         </main>
         <Footer />
+        <CartDrawer />
       </div>
     );
   }
@@ -362,6 +364,7 @@ export default function OrdersPage() {
       </main>
 
       <Footer />
+      <CartDrawer />
     </div>
   );
 }
