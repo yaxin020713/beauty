@@ -4,90 +4,6 @@ import { generateReferralCode, recordMarketingOptIn } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
-// 計算待實現分潤：已確認的訂單但未滿 8 天交付期限
-async function calculateUnrealizedCommission(referralCode: string): Promise<number> {
-  const ORDERS_DB_ID = process.env.NOTION_ORDERS_DB_ID;
-  if (!ORDERS_DB_ID || !referralCode) return 0;
-
-  // 設置 5 秒超時，防止慢查詢阻塞會員資料加載
-  const timeoutPromise = new Promise<number>((resolve) => {
-    setTimeout(() => {
-      console.warn("[api/members/profile] 待實現分潤計算超時，返回 0");
-      resolve(0);
-    }, 5000);
-  });
-
-  const calculationPromise = (async () => {
-    try {
-      const eightDaysMs = 8 * 24 * 60 * 60 * 1000;
-      const now = Date.now();
-
-      // 查詢使用該推薦碼的所有訂單（同時查主推薦碼和次推薦碼）
-      const response = await notion.databases.query({
-        database_id: ORDERS_DB_ID,
-        filter: {
-          or: [
-            { property: "推薦碼", rich_text: { equals: referralCode } },
-            { property: "推薦碼2", rich_text: { equals: referralCode } },
-          ],
-        },
-      });
-
-      let unrealizedTotal = 0;
-
-      for (const order of response.results) {
-        if (!("properties" in order)) continue;
-
-        const props = order.properties;
-
-        // 讀取訂單狀態
-        const statusProp = props.訂單狀態;
-        const status = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
-
-        // 跳過已完成的訂單（分潤已實現）
-        if (status === "已完成") continue;
-
-        // 讀取實際出貨日期（出貨日期欄位）
-        const shipDateProp = props.出貨日期;
-        const shipDateStr = shipDateProp && "date" in shipDateProp ? (shipDateProp as any).date?.start : null;
-
-        if (!shipDateStr) continue;
-
-        // 計算出貨日 + 8 天的時間戳
-        const shipDate = new Date(shipDateStr).getTime();
-        const deadlineTime = shipDate + eightDaysMs;
-
-        // 只計算未達期限的訂單的分潤
-        if (now < deadlineTime) {
-          // 判斷該推薦碼是主推薦人還是次推薦人，找到對應的分潤金額
-          const primaryCode = props.推薦碼 && "rich_text" in props.推薦碼 ? props.推薦碼.rich_text[0]?.plain_text : "";
-          const secondaryCode = props.推薦碼2 && "rich_text" in props.推薦碼2 ? props.推薦碼2.rich_text[0]?.plain_text : "";
-
-          if (primaryCode === referralCode) {
-            const commissionProp = props.分潤;
-            if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
-              unrealizedTotal += commissionProp.number || 0;
-            }
-          } else if (secondaryCode === referralCode) {
-            const commissionProp = props.分潤2;
-            if (commissionProp && "number" in commissionProp && typeof commissionProp.number === "number") {
-              unrealizedTotal += commissionProp.number || 0;
-            }
-          }
-        }
-      }
-
-      return unrealizedTotal;
-    } catch (error) {
-      console.error("[api/members/profile] 計算待實現分潤失敗:", error);
-      return 0;
-    }
-  })();
-
-  // 返回先完成的結果（超時或計算完成）
-  return Promise.race([calculationPromise, timeoutPromise]);
-}
-
 type MemberData = {
   email: string;
   birthday?: string; // YYYY-MM-DD
@@ -98,7 +14,6 @@ type MemberData = {
   contactPhone?: string;
   agreedToTerms?: boolean;
   marketingOptIn?: boolean;
-  unrealizedCommission?: number; // 待實現分潤：已確認但未達條件的分潤
 };
 
 export async function GET(request: NextRequest) {
@@ -201,14 +116,6 @@ export async function GET(request: NextRequest) {
 
       if (props.行銷訂閱 && "checkbox" in props.行銷訂閱) {
         memberData.marketingOptIn = !!(props.行銷訂閱 as any).checkbox;
-      }
-
-      // 計算待實現分潤
-      if (props.推薦碼 && "rich_text" in props.推薦碼) {
-        const referralCode = (props.推薦碼 as any).rich_text?.[0]?.plain_text;
-        if (referralCode) {
-          memberData.unrealizedCommission = await calculateUnrealizedCommission(referralCode);
-        }
       }
     }
 
