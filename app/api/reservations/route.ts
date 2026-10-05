@@ -330,40 +330,34 @@ export async function POST(request: NextRequest) {
 
         const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" });
 
+        // 消費金額/會員等級不在這裡計入：訂單狀態還只是「新訂單」，可能之後被取消或標記「異常中」
+        // 而永遠不會完成。改在 creditMembershipSpendingOnCompletion（訂單轉為「已完成」時）才計入，
+        // 避免無法完成的訂單把金額卡在會員等級裡扣不回來。
         if (customerQuery.results.length > 0) {
           const customerPage = customerQuery.results[0];
           let currentOrderCount = 0;
-          let currentSpending = 0;
           if ("properties" in customerPage) {
             const countProp = customerPage.properties.訂單數;
             if (countProp && "number" in countProp && typeof countProp.number === "number") {
               currentOrderCount = countProp.number || 0;
             }
-            const spendingProp = customerPage.properties.一年內累計消費金額;
-            if (spendingProp && "number" in spendingProp && typeof spendingProp.number === "number") {
-              currentSpending = spendingProp.number || 0;
-            }
           }
-
-          const newSpending = currentSpending + orderTotal;
 
           await notion.pages.update({
             page_id: customerPage.id,
             properties: {
               訂單數: { number: currentOrderCount + 1 },
               上次預定日期: { date: { start: today } },
-              一年內累計消費金額: { number: newSpending },
-              會員等級: { select: { name: calculateMembershipLevel(newSpending) } },
             },
           });
         } else {
-          // 顧客還不存在，建立新的會員記錄
+          // 顧客還不存在，建立新的會員記錄（消費金額/等級先以 0/銅級 起始）
           await notion.pages.create({
             parent: { database_id: MEMBERS_DB_ID },
             properties: {
               Email: { title: [{ text: { content: customerEmail.toLowerCase() } }] },
-              會員等級: { select: { name: calculateMembershipLevel(orderTotal) } },
-              一年內累計消費金額: { number: orderTotal },
+              會員等級: { select: { name: calculateMembershipLevel(0) } },
+              一年內累計消費金額: { number: 0 },
               歷史累積分潤: { number: 0 },
               待提現分潤: { number: 0 },
               處理中分潤: { number: 0 },

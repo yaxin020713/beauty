@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
-import { applyReferralCommission } from "@/lib/referral";
+import { applyReferralCommission, creditMembershipSpendingOnCompletion } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
@@ -71,8 +71,9 @@ export async function GET(request: NextRequest) {
             },
           };
           await applyReferralCommission(updatedPage);
+          await creditMembershipSpendingOnCompletion(updatedPage);
         } catch (err) {
-          console.error(`[api/cron/complete-orders] 訂單 ${page.id} 分潤入帳失敗:`, err);
+          console.error(`[api/cron/complete-orders] 訂單 ${page.id} 分潤入帳或會員等級更新失敗:`, err);
         }
 
         updatedCount++;

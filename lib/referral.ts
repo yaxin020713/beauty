@@ -1,4 +1,5 @@
 import { notion, MEMBERS_DB_ID } from "./notion";
+import { calculateMembershipLevel } from "./membership";
 
 function readRichText(prop: any): string {
   return prop?.type === "rich_text" && Array.isArray(prop.rich_text)
@@ -162,6 +163,64 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   } else if (!primaryEmail && primaryCommission > 0) {
     console.warn(
       `[applyReferralCommission] 訂單有分潤金額 ${primaryCommission} 但缺少推薦人信箱，無法入帳。訂單ID: ${props.Order_ID?.title?.[0]?.plain_text}`
+    );
+  }
+}
+
+// 訂單狀態轉為「已完成」時，才將該筆金額計入顧客的「一年內累計消費金額」並重新計算會員等級。
+// 選擇在完成時才計入（而非下單當下），是因為訂單後來可能被取消或標記「異常中」而永遠不會完成，
+// 若下單當下就計入，這類訂單的金額會卡在會員等級裡無法扣回，等級會被灌水。
+export async function creditMembershipSpendingOnCompletion(orderPage: unknown): Promise<void> {
+  if (!orderPage || typeof orderPage !== "object" || !("properties" in orderPage)) return;
+  if (!MEMBERS_DB_ID) return;
+
+  const props = (orderPage as { properties: Record<string, any> }).properties;
+
+  const statusProp = props["訂單狀態"];
+  const orderStatus = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
+  if (orderStatus !== "已完成") return;
+
+  const customerEmail = readRichText(props["聯繫用Email"]).toLowerCase();
+  const orderTotal = readNumber(props["Total_Price"]);
+  if (!customerEmail || orderTotal <= 0) return;
+
+  try {
+    const customerQuery = await notion.databases.query({
+      database_id: MEMBERS_DB_ID,
+      filter: {
+        property: "Email",
+        title: { equals: customerEmail },
+      },
+    });
+
+    if (customerQuery.results.length === 0) {
+      console.warn(
+        `[creditMembershipSpendingOnCompletion] 找不到會員記錄 (${customerEmail})，無法計入消費金額`
+      );
+      return;
+    }
+
+    const customerPage = customerQuery.results[0];
+    let currentSpending = 0;
+    if ("properties" in customerPage) {
+      const spendingProp = customerPage.properties.一年內累計消費金額;
+      if (spendingProp && "number" in spendingProp && typeof spendingProp.number === "number") {
+        currentSpending = spendingProp.number || 0;
+      }
+    }
+
+    const newSpending = currentSpending + orderTotal;
+    await notion.pages.update({
+      page_id: customerPage.id,
+      properties: {
+        一年內累計消費金額: { number: newSpending },
+        會員等級: { select: { name: calculateMembershipLevel(newSpending) } },
+      },
+    });
+  } catch (err) {
+    console.error(
+      `[creditMembershipSpendingOnCompletion] 更新會員消費金額失敗 (${customerEmail}):`,
+      err
     );
   }
 }

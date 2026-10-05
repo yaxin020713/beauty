@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
-import { applyReferralCommission } from "@/lib/referral";
+import { applyReferralCommission, creditMembershipSpendingOnCompletion } from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
@@ -73,8 +73,9 @@ export async function PATCH(
           },
         };
         await applyReferralCommission(updatedOrderPage);
+        await creditMembershipSpendingOnCompletion(updatedOrderPage);
       } catch (error) {
-        console.error("[api/admin/orders/[orderId]] 分潤轉移失敗:", error);
+        console.error("[api/admin/orders/[orderId]] 分潤轉移或會員等級更新失敗:", error);
       }
     }
 
