@@ -163,6 +163,11 @@ export default function OrdersPage() {
             </p>
           </div>
 
+          {/* 垃圾郵件提醒：付款/出貨通知信偶爾會被信箱判定為垃圾信 */}
+          <div className="mb-6 rounded-lg bg-amber-50 px-4 py-3 text-xs text-amber-700">
+            📧 付款通知、出貨通知等信件會寄到您註冊的 Email。若遲遲沒有收到，請記得檢查「垃圾郵件」或「促銷」資料夾，避免信件被篩掉而錯過付款期限。
+          </div>
+
           {/* 錯誤訊息 */}
           {error && (
             <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-600">
