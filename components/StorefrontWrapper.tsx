@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAuth, useCart } from "./CartContext";
+import { useCart } from "./CartContext";
 import LoginModal from "./LoginModal";
 
 export default function StorefrontWrapper({
@@ -10,7 +10,6 @@ export default function StorefrontWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading, openLoginModal } = useAuth();
   const { setReferralCode } = useCart();
   const searchParams = useSearchParams();
 
@@ -21,12 +20,6 @@ export default function StorefrontWrapper({
       setReferralCode(ref.toUpperCase());
     }
   }, [searchParams, setReferralCode]);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      openLoginModal();
-    }
-  }, [isLoading, user, openLoginModal]);
 
   return (
     <>
