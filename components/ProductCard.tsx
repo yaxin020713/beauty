@@ -5,10 +5,11 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, ShoppingCart } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
-import { useCart } from "@/components/CartContext";
+import { useCart, useAuth } from "@/components/CartContext";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
+  const { user, openLoginModal } = useAuth();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
@@ -60,6 +61,11 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   const handleAddToCart = async (e?: React.MouseEvent<HTMLElement>) => {
+    if (!user) {
+      openLoginModal();
+      return;
+    }
+
     setLoading(true);
     try {
       // 先加載變體

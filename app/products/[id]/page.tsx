@@ -5,13 +5,15 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, ShoppingCart } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/types";
-import { useCart } from "@/components/CartContext";
+import { useCart, useAuth } from "@/components/CartContext";
+import LoginModal from "@/components/LoginModal";
 import { cn } from "@/lib/utils";
 
 export default function ProductPage() {
   const params = useParams();
   const productId = params.id as string;
   const { addToCart, openCart } = useCart();
+  const { user, openLoginModal } = useAuth();
   const imageRef = useRef<HTMLDivElement>(null);
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -57,6 +59,11 @@ export default function ProductPage() {
 
   const handleAddToCart = () => {
     if (!product || (variants.length > 0 && !selectedVariant)) return;
+
+    if (!user) {
+      openLoginModal();
+      return;
+    }
 
     // 觸發飛行動畫
     const imageElement = imageRef.current;
@@ -117,6 +124,8 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <LoginModal />
+
       {/* 飛行動畫 */}
       {flyingItem && (
         <motion.div
