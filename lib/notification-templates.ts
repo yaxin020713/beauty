@@ -23,7 +23,7 @@ export interface NotificationData {
   trackingNumber?: string; // 7-11 貨運單號，出貨時才會有
 }
 
-const TRACKING_QUERY_URL = "https://eservice.7-11.com.tw/E-Tracking/search.aspx";
+const TRACKING_QUERY_URL = "https://eservice.7-11.com.tw/e-tracking/search.aspx";
 
 // 有填貨運單號才附上追蹤區塊；沒有就回傳空字串，不留下多餘空行
 function formatTrackingBlock(trackingNumber?: string): string {
