@@ -12,6 +12,20 @@ const MEMBERSHIP_TIERS = (
   Object.keys(MEMBERSHIP_THRESHOLDS) as Array<keyof typeof MEMBERSHIP_THRESHOLDS>
 ).map((name) => ({ name, threshold: MEMBERSHIP_THRESHOLDS[name] }));
 
+// 分潤明細每筆訂單的狀態標籤：已取消/異常中要讓推薦人清楚看到，不能只顯示「訂單完成後入帳」
+function getCommissionStatusLabel(status: string, credited: boolean): { text: string; className: string } {
+  if (status === "已取消") {
+    return { text: "訂單已取消，不列入分潤", className: "text-red-500" };
+  }
+  if (status === "異常中") {
+    return { text: "訂單異常中，請留意", className: "text-amber-600" };
+  }
+  if (credited) {
+    return { text: "已入帳", className: "text-emerald-600" };
+  }
+  return { text: "訂單完成後入帳", className: "text-taupe-400" };
+}
+
 type UserData = {
   email: string;
   referralCode: string;
@@ -979,16 +993,21 @@ export default function UserProfile() {
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-emerald-600">
-                      +NT${record.commission}
-                    </p>
                     <p
-                      className={`text-xs mt-1 ${
-                        record.credited ? "text-emerald-600" : "text-taupe-400"
+                      className={`text-sm font-bold ${
+                        record.status === "已取消"
+                          ? "text-taupe-400 line-through"
+                          : "text-emerald-600"
                       }`}
                     >
-                      {record.credited ? "已入帳" : "訂單完成後入帳"}
+                      +NT${record.commission}
                     </p>
+                    {(() => {
+                      const label = getCommissionStatusLabel(record.status, record.credited);
+                      return (
+                        <p className={`text-xs mt-1 ${label.className}`}>{label.text}</p>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notion, ORDERS_DB_ID } from "@/lib/notion";
-import { applyReferralCommission, creditMembershipSpendingOnCompletion } from "@/lib/referral";
+import {
+  applyReferralCommission,
+  creditMembershipSpendingOnCompletion,
+  reverseUnrealizedCommissionOnCancellation,
+} from "@/lib/referral";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +60,23 @@ export async function PATCH(
       }
     }
 
+    // 若這次操作要把訂單狀態改為「已取消」，同樣須先確認目前狀態尚未是「已取消」，
+    // 避免重複扣回推薦人的待實現分潤
+    let orderPageForCancellation: any = null;
+    if (body.status === "已取消") {
+      const currentPage = await notion.pages.retrieve({ page_id: pageId });
+      if (currentPage && typeof currentPage === "object" && "properties" in currentPage) {
+        const statusProp = (currentPage as any).properties["訂單狀態"];
+        const currentStatus =
+          statusProp?.type === "select" && statusProp.select
+            ? (statusProp.select as any).name
+            : "";
+        if (currentStatus !== "已取消") {
+          orderPageForCancellation = currentPage;
+        }
+      }
+    }
+
     await notion.pages.update({
       page_id: pageId,
       properties: updateProps,
@@ -76,6 +97,22 @@ export async function PATCH(
         await creditMembershipSpendingOnCompletion(updatedOrderPage);
       } catch (error) {
         console.error("[api/admin/orders/[orderId]] 分潤轉移或會員等級更新失敗:", error);
+      }
+    }
+
+    // 若狀態變成「已取消」，扣回已記在推薦人待實現分潤裡的這筆訂單分潤
+    if (orderPageForCancellation) {
+      try {
+        const updatedOrderPage = {
+          ...orderPageForCancellation,
+          properties: {
+            ...(orderPageForCancellation as any).properties,
+            訂單狀態: { select: { name: "已取消" } },
+          },
+        };
+        await reverseUnrealizedCommissionOnCancellation(updatedOrderPage);
+      } catch (error) {
+        console.error("[api/admin/orders/[orderId]] 取消訂單扣回待實現分潤失敗:", error);
       }
     }
 

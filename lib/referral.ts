@@ -167,6 +167,64 @@ export async function applyReferralCommission(orderPage: unknown): Promise<void>
   }
 }
 
+// 扣回單一推薦人的待實現分潤（訂單取消時調用）。只動待實現分潤：
+// 待提現分潤與歷史累積分潤只有在訂單「已完成」轉入時才會增加，被取消的訂單不可能已經轉入，
+// 這兩個欄位不需要、也不應該被這裡動到。
+async function deductUnrealizedCommission(email: string, amount: number): Promise<void> {
+  if (!email || amount <= 0 || !MEMBERS_DB_ID) return;
+
+  const referrerQuery = await notion.databases.query({
+    database_id: MEMBERS_DB_ID,
+    filter: {
+      property: "Email",
+      title: { equals: email.toLowerCase() },
+    },
+  });
+
+  if (referrerQuery.results.length === 0) return;
+
+  const referrerPage = referrerQuery.results[0];
+  let currentUnrealizedCommission = 0;
+  if ("properties" in referrerPage) {
+    const unrealizedProp = referrerPage.properties.待實現分潤;
+    if (unrealizedProp && "number" in unrealizedProp && typeof unrealizedProp.number === "number") {
+      currentUnrealizedCommission = unrealizedProp.number || 0;
+    }
+  }
+
+  await notion.pages.update({
+    page_id: referrerPage.id,
+    properties: {
+      待實現分潤: { number: Math.max(0, currentUnrealizedCommission - amount) },
+    },
+  });
+}
+
+// 訂單狀態轉為「已取消」時，把這筆訂單原本記在推薦人「待實現分潤」裡的分潤扣回。
+// 跟 applyReferralCommission 一樣要分別處理主/次推薦人（推薦人信箱/分潤、推薦人信箱2/分潤2）。
+export async function reverseUnrealizedCommissionOnCancellation(orderPage: unknown): Promise<void> {
+  if (!orderPage || typeof orderPage !== "object" || !("properties" in orderPage)) return;
+  if (!MEMBERS_DB_ID) return;
+
+  const props = (orderPage as { properties: Record<string, any> }).properties;
+
+  const statusProp = props["訂單狀態"];
+  const orderStatus = statusProp && "select" in statusProp ? (statusProp as any).select?.name : "";
+  if (orderStatus !== "已取消") return;
+
+  const secondaryEmail = readRichText(props["推薦人信箱2"]);
+  const secondaryCommission = readNumber(props["分潤2"]);
+  if (secondaryEmail && secondaryCommission > 0) {
+    await deductUnrealizedCommission(secondaryEmail, secondaryCommission);
+  }
+
+  const primaryEmail = readRichText(props["推薦人信箱"]);
+  const primaryCommission = readNumber(props["分潤"]);
+  if (primaryEmail && primaryCommission > 0) {
+    await deductUnrealizedCommission(primaryEmail, primaryCommission);
+  }
+}
+
 // 訂單狀態轉為「已完成」時，才將該筆金額計入顧客的「一年內累計消費金額」並重新計算會員等級。
 // 選擇在完成時才計入（而非下單當下），是因為訂單後來可能被取消或標記「異常中」而永遠不會完成，
 // 若下單當下就計入，這類訂單的金額會卡在會員等級裡無法扣回，等級會被灌水。
