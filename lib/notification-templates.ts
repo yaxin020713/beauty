@@ -20,6 +20,15 @@ export interface NotificationData {
   shippingDate?: string; // 訂單的實際出貨日期（YYYY-MM-DD），未填時以台灣今天為出貨日
   storeLocationAddress?: string; // 超商位址
   shippingAddress?: string; // 7-11取貨點完整資訊
+  trackingNumber?: string; // 7-11 貨運單號，出貨時才會有
+}
+
+const TRACKING_QUERY_URL = "https://eservice.7-11.com.tw/E-Tracking/search.aspx";
+
+// 有填貨運單號才附上追蹤區塊；沒有就回傳空字串，不留下多餘空行
+function formatTrackingBlock(trackingNumber?: string): string {
+  if (!trackingNumber) return "";
+  return `\n🚚 貨運追蹤\n─────────────────────────\n貨運單號：${trackingNumber}\n查詢網址：${TRACKING_QUERY_URL}\n`;
 }
 
 // 出貨通知是在出貨當天生成，訂單尚未記錄出貨日期時就以今天為準
@@ -120,7 +129,7 @@ export const DEFAULT_TEMPLATES: Record<string, NotificationTemplate> = {
 批次名稱：{{批次名稱}}
 已付金額：NT$ {{應付金額}}
 出貨日期：{{出貨日期}}
-
+{{貨運追蹤區塊}}
 📋 訂購品項
 ─────────────────────────
 {{訂單詳情}}
@@ -157,7 +166,8 @@ export function renderTemplate(
     .replace(/{{銀行代碼}}/g, data.bankCode || "")
     .replace(/{{銀行帳號}}/g, data.bankAccount)
     .replace(/{{訂單詳情}}/g, data.itemsDetail || "")
-    .replace(/{{超商店號}}/g, data.store7_11 || "");
+    .replace(/{{超商店號}}/g, data.store7_11 || "")
+    .replace(/{{貨運追蹤區塊}}/g, () => formatTrackingBlock(data.trackingNumber));
 }
 
 /**
