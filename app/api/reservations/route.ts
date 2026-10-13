@@ -144,6 +144,9 @@ export async function POST(request: NextRequest) {
       "Total_Price": {
         number: orderTotal,
       },
+      "訂單日期": {
+        date: { start: new Date().toISOString().split("T")[0] },
+      },
       "訂單狀態": {
         select: { name: "新訂單" },
       },
